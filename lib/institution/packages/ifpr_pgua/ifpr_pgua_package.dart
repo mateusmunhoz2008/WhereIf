@@ -101,8 +101,8 @@ class IfprPguaPackage implements InstitutionPackage {
   InstitutionBackendConfig get backend => const InstitutionBackendConfig(
         runtime: InstitutionBackendRuntime.hybridDemo,
         firebaseOptionsKey: 'ifpr-pgua',
-        firebaseProjectId: 'auth-injustice-ifpr',
-        storageBucket: 'auth-injustice-ifpr.firebasestorage.app',
+        firebaseProjectId: 'whereif-87272',
+        storageBucket: 'whereif-87272.firebasestorage.app',
         firestoreDatabaseId: '(default)',
         schemaVersion: 1,
       );
