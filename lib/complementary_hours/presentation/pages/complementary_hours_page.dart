@@ -32,6 +32,7 @@ class _ComplementaryHoursPageState extends State<ComplementaryHoursPage> {
     super.initState();
     _viewModel = injector.get<ComplementaryHoursViewModel>();
     unawaited(_viewModel.commands.loadSummary());
+    unawaited(_viewModel.commands.loadSummary(forceRefresh: true));
   }
 
   void _openSettings() {

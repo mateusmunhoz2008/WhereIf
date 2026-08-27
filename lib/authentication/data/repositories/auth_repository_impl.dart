@@ -13,6 +13,9 @@ class AuthRepositoryImpl implements IAuthRepository {
   AuthRepositoryImpl(this._authService);
 
   @override
+  Future<void> initSession() => _authService.initSession();
+
+  @override
   AuthSession? get currentSession => _authService.currentSession;
 
   @override

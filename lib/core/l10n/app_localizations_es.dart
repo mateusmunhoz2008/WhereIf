@@ -378,6 +378,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get eventDetailsUnavailable => 'Evento no disponible.';
 
   @override
+  String get eventEditorImageUploadUnavailable =>
+      'La carga de imágenes desde el dispositivo aún no está disponible. Elige una imagen del catálogo.';
+
+  @override
   String get notificationEvent => 'Evento';
 
   @override

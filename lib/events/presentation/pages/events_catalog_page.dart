@@ -32,6 +32,7 @@ class _EventsCatalogPageState extends State<EventsCatalogPage> {
     super.initState();
     _viewModel = injector.get<EventsCatalogViewModel>();
     unawaited(_viewModel.commands.loadCatalog());
+    unawaited(_viewModel.commands.loadCatalog(forceRefresh: true)); 
   }
 
   void _openEvent(BuildContext context, EventPreview event) {

@@ -9,6 +9,7 @@ abstract interface class IAuthRepository {
   AuthSession? get currentSession;
   Signal<AuthSession?> get sessionSignal;
 
+  Future<void> initSession();  
   Future<AuthSessionResult> signIn(String email, String password);
   Future<AuthSessionResult> signInWithGoogle();
   Future<AuthSessionResult> signUp({

@@ -138,6 +138,7 @@
   "eventsLoadError": "Não foi possível carregar os eventos.",
   "eventsEmpty": "Nenhum evento.",
   "eventDetailsUnavailable": "Evento indisponível.",
+  "eventEditorImageUploadUnavailable": "Upload de imagem do dispositivo ainda não está disponível. Escolha uma imagem do catálogo.",
 
   "notificationEvent": "Evento",
   "notificationReminder": "Lembrete",

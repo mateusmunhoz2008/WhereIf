@@ -796,6 +796,12 @@ abstract class AppLocalizations {
   /// **'Event unavailable.'**
   String get eventDetailsUnavailable;
 
+  /// No description provided for @eventEditorImageUploadUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading an image from your device is not yet available. Choose an image from the catalog'**
+  String get eventEditorImageUploadUnavailable;
+
   /// No description provided for @notificationEvent.
   ///
   /// In en, this message translates to:

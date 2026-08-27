@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:autth_injustice_app/app_startup/domain/repositories/i_app_entry_repository.dart';
 import 'package:autth_injustice_app/authentication/presentation/navigation/auth_routes.dart';
+import 'package:autth_injustice_app/authentication/data/repositories/i_auth_repository.dart';
 import 'package:autth_injustice_app/authorization/domain/services/authorization_service.dart';
 import 'package:autth_injustice_app/core/di/dependency_injection.dart';
 import 'package:autth_injustice_app/institution/presentation/institution_scope.dart';
@@ -55,11 +56,13 @@ class _SplashPageState extends State<SplashPage>
   }
 
   Future<void> _initializeApp() async {
+    final authRepository = injector.get<IAuthRepository>();
     final authorizationService = injector.get<AuthorizationService>();
     final appEntryRepository = injector.get<IAppEntryRepository>();
 
     final initialization = await Future.wait([
       Future.delayed(const Duration(milliseconds: 800)),
+      authRepository.initSession(),
       appEntryRepository.hasCompletedInitialPage(),
     ]);
     final hasCompletedInitialPage = initialization.last as bool;
