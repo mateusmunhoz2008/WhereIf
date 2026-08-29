@@ -23,6 +23,7 @@ class FirebaseAuthService implements IAuthService {
   final GoogleSignIn _googleSignIn;
   final IAccountRemoteStorage _accountStorage;
   Future<void>? _googleInitialization;
+  Future<void>? _sessionInitialization;
 
   final Signal<AuthSession?> _currentSessionSignal = Signal<AuthSession?>(null);
 
@@ -67,9 +68,22 @@ class FirebaseAuthService implements IAuthService {
     return initial;
   }
 
-  Future<AuthSession> _buildSession(fb.User fbUser) async {
+  Future<AuthSession> _buildSession(
+    fb.User fbUser, {
+    bool refreshToken = false,
+  }) async {
+    fb.IdTokenResult tokenResult;
+    if (refreshToken) {
+      try {
+        tokenResult = await fbUser.getIdTokenResult(true);
+      } catch (_) {
+        tokenResult = await fbUser.getIdTokenResult();
+      }
+    } else {
+      tokenResult = await fbUser.getIdTokenResult();
+    }
+
     final account = await _loadOrCreateAccount(fbUser);
-    final tokenResult = await fbUser.getIdTokenResult();
     final tokenExp = tokenResult.expirationTime ??
         DateTime.now().add(const Duration(minutes: 50));
     return AuthSession(
@@ -86,19 +100,8 @@ class FirebaseAuthService implements IAuthService {
   // Listener do Firebase Auth
   // ──────────────────────────────────────────────
 
-  void _onAuthStateChanged(fb.User? user) async {
+  void _onAuthStateChanged(fb.User? user) {
     if (user == null) {
-      _currentSessionSignal.value = null;
-      return;
-    }
-    // Evita sobrescrever uma sessão já carregada (ex: vinda do initSession)
-    if (_currentSessionSignal.value != null) return;
-
-    try {
-      final session = await _buildSession(user);
-      if (_firebaseAuth.currentUser?.uid != user.uid) return;
-      _setSession(session);
-    } catch (_) {
       _currentSessionSignal.value = null;
     }
   }
@@ -171,7 +174,20 @@ class FirebaseAuthService implements IAuthService {
   AuthSession? get currentSession => _currentSessionSignal.value;
 
   @override
-  Future<void> initSession() async {
+  Future<void> initSession() {
+    final currentInitialization = _sessionInitialization;
+    if (currentInitialization != null) return currentInitialization;
+
+    final initialization = _restoreSession();
+    _sessionInitialization = initialization;
+    return initialization.whenComplete(() {
+      if (identical(_sessionInitialization, initialization)) {
+        _sessionInitialization = null;
+      }
+    });
+  }
+
+  Future<void> _restoreSession() async {
     final user = _firebaseAuth.currentUser;
     if (user == null) {
       _currentSessionSignal.value = null;
@@ -179,7 +195,8 @@ class FirebaseAuthService implements IAuthService {
     }
 
     try {
-      final session = await _buildSession(user);
+      final session = await _buildSession(user, refreshToken: true);
+      if (_firebaseAuth.currentUser?.uid != user.uid) return;
       _setSession(session);
     } catch (_) {
       _currentSessionSignal.value = null;

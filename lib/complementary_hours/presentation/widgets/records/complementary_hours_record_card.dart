@@ -1,4 +1,5 @@
 import 'package:autth_injustice_app/complementary_hours/domain/models/complementary_hours_record.dart';
+import 'package:autth_injustice_app/core/formatters/hours_minutes_formatter.dart';
 import 'package:autth_injustice_app/core/l10n/l10n_extensions.dart';
 import 'package:autth_injustice_app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -133,7 +134,7 @@ class _RecordCardContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = context.onTertiary;
     final date = DateFormat('dd/MM/yyyy').format(record.eventDate);
-    final hours = record.hours;
+    final durationMinutes = record.durationMinutes;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -209,15 +210,15 @@ class _RecordCardContent extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14 * scale),
               ),
               child: Text(
-                hours != null
-                    ? '${_formatHours(hours)} h'
+                durationMinutes != null
+                    ? HoursMinutesFormatter.formatMinutes(durationMinutes)
                     : context.l10n.complementaryHoursNoWorkload,
                 textAlign: TextAlign.end,
                 style: context.text.labelLarge?.copyWith(
                   color: context.onTertiary.withValues(
-                    alpha: hours == null ? 0.52 : 1,
+                    alpha: durationMinutes == null ? 0.52 : 1,
                   ),
-                  fontSize: (hours == null ? 11 : 13) * scale,
+                  fontSize: (durationMinutes == null ? 11 : 13) * scale,
                 ),
               ),
             ),
@@ -225,11 +226,6 @@ class _RecordCardContent extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static String _formatHours(double value) {
-    if (value == value.roundToDouble()) return value.toInt().toString();
-    return value.toStringAsFixed(1).replaceAll('.', ',');
   }
 }
 

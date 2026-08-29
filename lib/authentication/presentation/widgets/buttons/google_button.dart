@@ -7,10 +7,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class GoogleSignInButton extends StatefulWidget {
   final VoidCallback onTap;
+  final bool compact;
 
   const GoogleSignInButton({
     super.key,
     required this.onTap,
+    this.compact = false,
   });
 
   @override
@@ -22,7 +24,7 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
 
   @override
   Widget build(BuildContext context) {
-    final compact = context.responsive.isVeryCompact;
+    final compact = widget.compact || context.responsive.isVeryCompact;
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),

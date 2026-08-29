@@ -1,3 +1,4 @@
+import 'package:autth_injustice_app/complementary_hours/domain/services/complementary_hours_change_notifier.dart';
 import 'package:autth_injustice_app/events/presentation/commands/events_commands.dart';
 
 import 'event_details_state_viewmodel.dart';
@@ -6,13 +7,16 @@ class EventDetailsCommands {
   final EventDetailsState state;
   final LoadEventDetailsCommand _loadEventDetailsCommand;
   final SetEventPersonalRecordCommand _setEventPersonalRecordCommand;
+  final ComplementaryHoursChangeNotifier _hoursChangeNotifier;
 
   EventDetailsCommands({
     required this.state,
     required LoadEventDetailsCommand loadEventDetailsCommand,
     required SetEventPersonalRecordCommand setEventPersonalRecordCommand,
+    required ComplementaryHoursChangeNotifier hoursChangeNotifier,
   })  : _loadEventDetailsCommand = loadEventDetailsCommand,
-        _setEventPersonalRecordCommand = setEventPersonalRecordCommand;
+        _setEventPersonalRecordCommand = setEventPersonalRecordCommand,
+        _hoursChangeNotifier = hoursChangeNotifier;
 
   Future<void> loadEvent(String eventId) async {
     if (state.loading.value) return;
@@ -47,7 +51,10 @@ class EventDetailsCommands {
       ));
 
       result.fold(
-        onSuccess: state.setAddedToPersonalHistory,
+        onSuccess: (added) {
+          state.setAddedToPersonalHistory(added);
+          _hoursChangeNotifier.notifyChanged();
+        },
         onFailure: (failure) => state.showError(failure.msg),
       );
     } finally {

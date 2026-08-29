@@ -1,4 +1,3 @@
-import 'package:autth_injustice_app/authentication/data/services/remote/i_auth_service.dart';
 import 'package:autth_injustice_app/core/di/dependency_injection.dart';
 import 'package:autth_injustice_app/core/l10n/app_localizations.dart';
 import 'package:autth_injustice_app/core/l10n/locale_controller.dart';
@@ -30,9 +29,6 @@ Future<void> main() async {
   await Firebase.initializeApp(options: firebaseOptions);
 
   setupDependencies(institutionPackage: institutionPackage);
-
-  final authService = injector.get<IAuthService>();
-  await authService.initSession();
 
   final themeController = injector.get<ThemeController>();
   final localeController = injector.get<LocaleController>();

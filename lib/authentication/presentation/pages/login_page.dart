@@ -39,6 +39,8 @@ class _LoginPageState extends State<LoginPage>
 
   late final TextEditingController _emailCtrl;
   late final TextEditingController _passCtrl;
+  late final FocusNode _emailFocus;
+  late final FocusNode _passwordFocus;
 
   late final AnimationController _animController;
   late final Animation<Offset> _headerSlide;
@@ -55,6 +57,8 @@ class _LoginPageState extends State<LoginPage>
 
     _emailCtrl = TextEditingController();
     _passCtrl = TextEditingController();
+    _emailFocus = FocusNode();
+    _passwordFocus = FocusNode();
 
     _animController = AnimationController(
       vsync: this,
@@ -105,6 +109,8 @@ class _LoginPageState extends State<LoginPage>
   void dispose() {
     _emailCtrl.dispose();
     _passCtrl.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
     _animController.dispose();
     super.dispose();
   }
@@ -171,31 +177,33 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   Widget build(BuildContext context) {
-    final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
     final responsive = context.responsive;
-
-    // Variáveis auxiliares para compressão em telas pequenas
     final isVerySmall = context.isVerySmallScreen;
-
-    // Se a tela for muito pequena, subimos o bottom sheet um pouco mais
-    // e reduzimos os espaçamentos internos para o botão do Google caber sem scroll.
-    final double sheetTopRatio = isVerySmall ? 0.22 : context.authSheetTopRatio;
-    final double gapFormTop = responsive.scaled(
-      isVerySmall ? 14 : context.formTopSpacing,
-      min: 12,
-      max: 40,
-    );
+    final useCompactLayout =
+        responsive.heightClass.index <= AppHeightClass.compact.index ||
+            responsive.isVeryCompact;
+    final sheetTopRatio = switch (responsive.heightClass) {
+      AppHeightClass.veryShort => 0.15,
+      AppHeightClass.short => 0.19,
+      AppHeightClass.compact => 0.24,
+      _ => context.authSheetTopRatio,
+    };
     final double gapFields =
-        responsive.scaled(isVerySmall ? 10 : 16, min: 9, max: 16);
+        responsive.scaled(useCompactLayout ? 8 : 16, min: 7, max: 16);
     final double gapSmall =
-        responsive.scaled(isVerySmall ? 7 : 12, min: 6, max: 12);
-    final double gapBottom = responsive.scaled(
-      isVerySmall ? 13 : context.formBottomSpacing,
-      min: 12,
-      max: 44,
+        responsive.scaled(useCompactLayout ? 6 : 12, min: 5, max: 12);
+    final double actionGap = responsive.scaled(
+      useCompactLayout ? 24 : 42,
+      min: 20,
+      max: 46,
     );
-    final shellBottomClearance =
-        keyboardHeight > 0 ? 0.0 : responsive.scaled(94, min: 82, max: 106);
+    final formTopPadding =
+        responsive.scaled(useCompactLayout ? 25 : 18, min: 14, max: 30);
+    final shellIsCompact = isVerySmall || context.screenSize.width < 360;
+    final shellBottomClearance = shellIsCompact ? 82.0 : 99.0;
+    final headerTopSpacing = isVerySmall
+        ? responsive.scaled(8, min: 6, max: 10)
+        : context.headerTopSpacing;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -222,7 +230,7 @@ class _LoginPageState extends State<LoginPage>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        SizedBox(height: context.headerTopSpacing),
+                        SizedBox(height: headerTopSpacing),
                         SlideTransition(
                           position: _headerSlide,
                           child: FadeTransition(
@@ -234,7 +242,7 @@ class _LoginPageState extends State<LoginPage>
                                 color: context.colors.onPrimary,
                                 fontSize: responsive.scaled(
                                   36,
-                                  min: 27,
+                                  min: useCompactLayout ? 25 : 27,
                                   max: 36,
                                 ),
                               ),
@@ -274,16 +282,10 @@ class _LoginPageState extends State<LoginPage>
                       ),
                       child: SafeArea(
                         top: false,
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
+                        child: Padding(
                           padding: context.extraPagePadding.copyWith(
-                            top: isVerySmall
-                                ? 16
-                                : null, // Margem menor no topo do sheet se necessário
-                            bottom: context.extraPagePadding.bottom +
-                                keyboardHeight +
-                                shellBottomClearance +
-                                (isVerySmall ? 12 : 20),
+                            top: formTopPadding,
+                            bottom: shellBottomClearance,
                           ),
                           child: SlideTransition(
                             position: _formSlide,
@@ -295,17 +297,24 @@ class _LoginPageState extends State<LoginPage>
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
-                                    SizedBox(height: gapFormTop),
                                     AuthTextField(
                                       controller: _emailCtrl,
+                                      focusNode: _emailFocus,
                                       hintText: context.l10n.email,
                                       keyboardType: TextInputType.emailAddress,
+                                      textInputAction: TextInputAction.next,
+                                      onFieldSubmitted: (_) {
+                                        _passwordFocus.requestFocus();
+                                      },
                                     ),
                                     SizedBox(height: gapFields),
                                     AuthTextField(
                                       controller: _passCtrl,
+                                      focusNode: _passwordFocus,
                                       hintText: context.l10n.password,
                                       isPassword: true,
+                                      textInputAction: TextInputAction.done,
+                                      onFieldSubmitted: (_) => _handleLogin(),
                                     ),
                                     AuthErrorBanner(
                                       error: _viewModel.state.errorMessage,
@@ -344,7 +353,7 @@ class _LoginPageState extends State<LoginPage>
                                             );
                                           }),
                                     ),
-                                    SizedBox(height: gapFormTop),
+                                    SizedBox(height: actionGap),
                                     Watch((context) {
                                       final isLoading =
                                           _viewModel.state.loading.value;
@@ -353,63 +362,91 @@ class _LoginPageState extends State<LoginPage>
                                         color: context.onTertiary
                                             .withValues(alpha: 0.08),
                                         foregroundColor: context.onTertiary,
+                                        height: useCompactLayout ? 46 : 56,
                                         isLoading: isLoading,
                                         onPressed:
                                             isLoading ? null : _handleLogin,
                                       );
                                     }),
-                                    SizedBox(height: gapSmall),
-                                    Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Padding(
-                                        padding:
-                                            const EdgeInsets.only(left: 8.0),
-                                        child: AuthTextButtonRich(
-                                          style: context.text.bodyMedium,
-                                          baseText:
-                                              context.l10n.dontHaveAccount,
-                                          actionText: context.l10n.signupButton,
-                                          actionColor: context.colors.secondary,
-                                          onTap: () {
-                                            hideKeyboard();
-                                            context.push(AuthPaths.register);
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: gapBottom),
-                                    Row(
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
                                       children: [
-                                        const Expanded(
-                                          child: Divider(
-                                            color: Color(0xFF424242),
-                                            thickness: 1,
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16),
-                                          child: Text(
-                                            context.l10n.or,
-                                            style: TextStyle(
-                                              color: Colors.grey.shade500,
-                                              fontSize: context
-                                                  .text.bodySmall?.fontSize,
+                                        SizedBox(height: gapSmall),
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(
+                                              left: 8,
+                                            ),
+                                            child: AuthTextButtonRich(
+                                              style: context.text.bodyMedium,
+                                              baseText:
+                                                  context.l10n.dontHaveAccount,
+                                              actionText:
+                                                  context.l10n.signupButton,
+                                              actionColor:
+                                                  context.colors.secondary,
+                                              onTap: () {
+                                                hideKeyboard();
+                                                context.push(
+                                                  AuthPaths.register,
+                                                );
+                                              },
                                             ),
                                           ),
                                         ),
-                                        Expanded(
-                                          child: Divider(
-                                            color: Colors.grey.shade800,
-                                            thickness: 1,
+                                        SizedBox(
+                                          height: responsive.scaled(
+                                            useCompactLayout ? 10 : 18,
+                                            min: 8,
+                                            max: 18,
                                           ),
+                                        ),
+                                        Row(
+                                          children: [
+                                            const Expanded(
+                                              child: Divider(
+                                                color: Color(0xFF424242),
+                                                thickness: 1,
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal:
+                                                    useCompactLayout ? 10 : 16,
+                                              ),
+                                              child: Text(
+                                                context.l10n.or,
+                                                style: TextStyle(
+                                                  color: Colors.grey.shade500,
+                                                  fontSize: context
+                                                      .text.bodySmall?.fontSize,
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Divider(
+                                                color: Colors.grey.shade800,
+                                                thickness: 1,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(
+                                          height: responsive.scaled(
+                                            useCompactLayout ? 9 : 15,
+                                            min: 8,
+                                            max: 15,
+                                          ),
+                                        ),
+                                        GoogleSignInButton(
+                                          compact: useCompactLayout,
+                                          onTap: _handleGoogleLogin,
                                         ),
                                       ],
                                     ),
-                                    SizedBox(height: gapBottom),
-                                    GoogleSignInButton(
-                                        onTap: _handleGoogleLogin),
-                                    SizedBox(height: isVerySmall ? 16 : 24),
+                                    const Spacer(),
                                   ],
                                 ),
                               ),

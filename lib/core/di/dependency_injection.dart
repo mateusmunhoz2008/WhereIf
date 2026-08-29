@@ -30,6 +30,7 @@ import 'package:autth_injustice_app/complementary_hours/domain/facades/i_complem
 import 'package:autth_injustice_app/complementary_hours/data/repositories/i_complementary_hours_repository.dart';
 import 'package:autth_injustice_app/complementary_hours/domain/usecases/complementary_hours_usecases_impl.dart';
 import 'package:autth_injustice_app/complementary_hours/domain/usecases/i_complementary_hours_usecases.dart';
+import 'package:autth_injustice_app/complementary_hours/domain/services/complementary_hours_change_notifier.dart';
 import 'package:autth_injustice_app/complementary_hours/presentation/viewmodels/records/complementary_hours_records_viewmodel.dart';
 import 'package:autth_injustice_app/complementary_hours/presentation/viewmodels/summary/complementary_hours_viewmodel.dart';
 import 'package:autth_injustice_app/core/l10n/locale_controller.dart';
@@ -134,6 +135,9 @@ void _registerAuthentication() {
 }
 
 void _registerStudentFeatures() {
+  injector.addSingleton<ComplementaryHoursChangeNotifier>(
+    ComplementaryHoursChangeNotifier.new,
+  );
   injector.addSingleton<IEventsRepository>(EventsRepositoryImpl.new);
   injector.addSingleton<IGetEventsCatalogUseCase>(GetEventsCatalogUseCase.new);
   injector.addSingleton<IGetManagementEventsCatalogUseCase>(

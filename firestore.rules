@@ -1,0 +1,70 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function ownsAccount(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function hasRole(role) {
+      return signedIn()
+        && get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.get('role', 'student') == role;
+    }
+
+    function canManageEvents() {
+      return hasRole('eventManager') || hasRole('administrator');
+    }
+
+    function canManageAccounts() {
+      return hasRole('administrator');
+    }
+
+    match /events/{eventId} {
+      // Events are public catalog data. The app hides scheduled events until
+      // publishAt; enforcing that delay securely requires a trusted backend.
+      allow read: if true;
+      allow create, update, delete: if canManageEvents();
+    }
+
+    match /accounts/{uid} {
+      allow create: if ownsAccount(uid)
+        && request.resource.data.role == 'student';
+      allow read: if ownsAccount(uid) || canManageAccounts();
+      allow update: if canManageAccounts()
+        || (ownsAccount(uid)
+          && request.resource.data.role == resource.data.role);
+      allow delete: if ownsAccount(uid) || canManageAccounts();
+
+      match /personalActivityRecords/{eventId} {
+        function event() {
+          return get(/databases/$(database)/documents/events/$(eventId)).data;
+        }
+
+        function matchesEvent() {
+          return exists(/databases/$(database)/documents/events/$(eventId))
+            && request.resource.data.keys().hasOnly([
+              'eventName',
+              'eventDate',
+              'durationMinutes'
+            ])
+            && request.resource.data.eventName == event().title
+            && request.resource.data.eventDate == event().startsAt
+            && request.resource.data.durationMinutes
+              == event().get('complementaryMinutes', null);
+        }
+
+        allow read: if ownsAccount(uid) || canManageAccounts();
+        allow create, update: if ownsAccount(uid) && matchesEvent();
+        allow delete: if ownsAccount(uid) || canManageAccounts();
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
