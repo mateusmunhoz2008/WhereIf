@@ -114,10 +114,8 @@ class SettingsLanguageBadge extends StatelessWidget {
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(99),
           border: Border.all(
-            color: context.secondary.withValues(
-              alpha: context.isDarkMode ? 0.3 : 0.12
-            )
-          ),
+              color: context.secondary
+                  .withValues(alpha: context.isDarkMode ? 0.3 : 0.12)),
         ),
         child: Text(
           languageCode.toUpperCase(),
@@ -125,6 +123,63 @@ class SettingsLanguageBadge extends StatelessWidget {
           style: context.text.labelSmall?.copyWith(
             color: context.onTertiary,
             fontSize: 11 * textScale,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SettingsValueBadge extends StatelessWidget {
+  final String value;
+  final double scale;
+  final double textScale;
+
+  const SettingsValueBadge({
+    super.key,
+    required this.value,
+    required this.scale,
+    required this.textScale,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 220),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween(
+            begin: const Offset(0.08, 0),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        ),
+      ),
+      child: Container(
+        key: ValueKey(value),
+        constraints: BoxConstraints(minWidth: 70 * scale),
+        padding: EdgeInsets.symmetric(
+          horizontal: 10 * scale,
+          vertical: 7 * scale,
+        ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(
+            color: context.secondary.withValues(
+              alpha: context.isDarkMode ? 0.30 : 0.12,
+            ),
+          ),
+        ),
+        child: Text(
+          value,
+          maxLines: 1,
+          textAlign: TextAlign.center,
+          style: context.text.labelSmall?.copyWith(
+            color: context.onTertiary,
+            fontSize: 10.5 * textScale,
           ),
         ),
       ),

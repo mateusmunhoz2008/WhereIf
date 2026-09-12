@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "mapId": "ifpr-pgua-main-campus",
+  "zones": [
+    {
+      "id": "bloco-central",
+      "nodeName": "bloco_central",
+      "label": "Bloco Central",
+      "focus": {
+        "useVisualCenter": true,
+        "constrainToNavigation": true,
+        "direction": [0.86, 0.3, -0.41],
+        "distanceScale": 0.92,
+        "targetOffset": [5.0, -0.8, -4.0]
+      },
+      "interior": null
+    },
+    {
+      "id": "bloco-didatico",
+      "nodeName": "bloco_didatico",
+      "label": "Bloco Didático",
+      "focus": {
+        "useVisualCenter": true,
+        "constrainToNavigation": true,
+        "direction": [-0.97, 0.3, -0.22],
+        "distanceScale": 1.0,
+        "targetOffset": [0.0, -0.6, 0.0]
+      },
+      "interior": null
+    },
+    {
+      "id": "portaria",
+      "nodeName": "portaria",
+      "label": "Portaria",
+      "focus": {
+        "useVisualCenter": true,
+        "constrainToNavigation": true,
+        "direction": [0.58, 0.34, -0.74],
+        "distanceScale": 0.85,
+        "targetOffset": [-18.0, -0.4, -14.0]
+      },
+      "interior": null
+    }
+  ]
+}

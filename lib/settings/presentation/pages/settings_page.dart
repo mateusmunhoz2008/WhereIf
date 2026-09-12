@@ -11,6 +11,7 @@ import 'package:autth_injustice_app/settings/presentation/viewmodels/settings/se
 import 'package:autth_injustice_app/settings/presentation/navigation/settings_routes.dart';
 import 'package:autth_injustice_app/settings/presentation/widgets/settings/settings_option_tile.dart';
 import 'package:autth_injustice_app/settings/presentation/widgets/settings/settings_panel.dart';
+import 'package:autth_injustice_app/map/domain/models/map_graphics_quality.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -84,6 +85,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 _viewModel.state.notificationsEnabled.value;
             final signingOut = _viewModel.state.loading.value;
             final languageCode = Localizations.localeOf(context).languageCode;
+            final mapGraphicsQuality =
+                _viewModel.mapGraphicsController.quality.value;
 
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(
@@ -159,6 +162,26 @@ class _SettingsPageState extends State<SettingsPage> {
                               value: context.isDarkMode,
                               activeTrackColor: context.secondary,
                               onChanged: _viewModel.commands.setDarkMode,
+                            ),
+                          ),
+                          SettingsOptionTile(
+                            icon: Icons.view_in_ar_outlined,
+                            label: context.l10n.settingsMapGraphics,
+                            scale: scale,
+                            textScale: textScale,
+                            onTap: () =>
+                                _viewModel.commands.setMapGraphicsQuality(
+                              mapGraphicsQuality == MapGraphicsQuality.complete
+                                  ? MapGraphicsQuality.light
+                                  : MapGraphicsQuality.complete,
+                            ),
+                            trailing: SettingsValueBadge(
+                              value: mapGraphicsQuality ==
+                                      MapGraphicsQuality.complete
+                                  ? context.l10n.settingsMapGraphicsComplete
+                                  : context.l10n.settingsMapGraphicsLight,
+                              scale: scale,
+                              textScale: textScale,
                             ),
                           ),
                           SettingsOptionTile(

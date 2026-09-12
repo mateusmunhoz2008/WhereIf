@@ -7,6 +7,7 @@ import 'package:autth_injustice_app/core/theme/theme_controller.dart';
 import 'package:autth_injustice_app/institution/application/institution_package_registry.dart';
 import 'package:autth_injustice_app/institution/data/firebase/institution_firebase_options_registry.dart';
 import 'package:autth_injustice_app/institution/presentation/institution_scope.dart';
+import 'package:autth_injustice_app/map/presentation/viewmodels/map_graphics_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,9 +31,10 @@ Future<void> main() async {
 
   setupDependencies(institutionPackage: institutionPackage);
 
+  await injector.get<MapGraphicsController>().initialize();
+
   final themeController = injector.get<ThemeController>();
   final localeController = injector.get<LocaleController>();
-
   runApp(
     Watch(
       (_) => MaterialApp.router(

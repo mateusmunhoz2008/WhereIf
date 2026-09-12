@@ -92,9 +92,13 @@ class IfprPguaPackage implements InstitutionPackage {
       );
 
   @override
-  InstitutionMapManifest get map => const InstitutionMapManifest.unconfigured(
+  InstitutionMapManifest get map => const InstitutionMapManifest(
         mapId: 'ifpr-pgua-main-campus',
+        version: 1,
         rendererKey: 'three-js-gltf',
+        format: InstitutionMapFormat.glb,
+        primaryResource: IfprPguaAssets.campusMapStandard,
+        metadataResource: IfprPguaAssets.campusMapMetadata,
       );
 
   @override
@@ -109,7 +113,7 @@ class IfprPguaPackage implements InstitutionPackage {
 
   @override
   InstitutionFeaturesConfig get features => const InstitutionFeaturesConfig(
-        map: false,
+        map: true,
         complementaryHours: true,
         eventManagement: true,
         eventImageGallery: true,

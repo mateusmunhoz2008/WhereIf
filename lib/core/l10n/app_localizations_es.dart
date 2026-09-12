@@ -1241,4 +1241,32 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get eventEditorDiscardChangesMessage =>
       'Los cambios realizados en este evento se perderán.';
+
+  @override
+  String get mapInteractionHint => 'Arrastra para explorar y toca un bloque';
+
+  @override
+  String get mapResetView => 'Volver al ángulo cero';
+
+  @override
+  String get mapInteriorComingSoon => 'Interior próximamente';
+
+  @override
+  String get mapSearch => 'Buscar en el mapa';
+
+  @override
+  String get mapSearchComingSoon =>
+      'La búsqueda de aulas y bloques estará disponible próximamente.';
+
+  @override
+  String get mapRotate => 'Arrastra para girar el mapa';
+
+  @override
+  String get settingsMapGraphics => 'Gráficos del mapa';
+
+  @override
+  String get settingsMapGraphicsLight => 'Ligero';
+
+  @override
+  String get settingsMapGraphicsComplete => 'Completo';
 }

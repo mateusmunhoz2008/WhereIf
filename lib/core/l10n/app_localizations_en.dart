@@ -1226,4 +1226,32 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get eventEditorDiscardChangesMessage =>
       'The changes made to this event will be lost.';
+
+  @override
+  String get mapInteractionHint => 'Drag to explore and tap a building';
+
+  @override
+  String get mapResetView => 'Reset map rotation';
+
+  @override
+  String get mapInteriorComingSoon => 'Interior coming soon';
+
+  @override
+  String get mapSearch => 'Search the map';
+
+  @override
+  String get mapSearchComingSoon =>
+      'Room and building search will be available soon.';
+
+  @override
+  String get mapRotate => 'Drag to rotate the map';
+
+  @override
+  String get settingsMapGraphics => 'Map graphics';
+
+  @override
+  String get settingsMapGraphicsLight => 'Light';
+
+  @override
+  String get settingsMapGraphicsComplete => 'Complete';
 }

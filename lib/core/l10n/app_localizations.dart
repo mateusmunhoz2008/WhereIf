@@ -2313,6 +2313,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The changes made to this event will be lost.'**
   String get eventEditorDiscardChangesMessage;
+
+  /// No description provided for @mapInteractionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to explore and tap a building'**
+  String get mapInteractionHint;
+
+  /// No description provided for @mapResetView.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset map rotation'**
+  String get mapResetView;
+
+  /// No description provided for @mapInteriorComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Interior coming soon'**
+  String get mapInteriorComingSoon;
+
+  /// No description provided for @mapSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search the map'**
+  String get mapSearch;
+
+  /// No description provided for @mapSearchComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Room and building search will be available soon.'**
+  String get mapSearchComingSoon;
+
+  /// No description provided for @mapRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to rotate the map'**
+  String get mapRotate;
+
+  /// No description provided for @settingsMapGraphics.
+  ///
+  /// In en, this message translates to:
+  /// **'Map graphics'**
+  String get settingsMapGraphics;
+
+  /// No description provided for @settingsMapGraphicsLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get settingsMapGraphicsLight;
+
+  /// No description provided for @settingsMapGraphicsComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get settingsMapGraphicsComplete;
 }
 
 class _AppLocalizationsDelegate

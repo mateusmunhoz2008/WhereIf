@@ -60,6 +60,8 @@ import 'package:autth_injustice_app/notifications/domain/usecases/i_notification
 import 'package:autth_injustice_app/notifications/domain/usecases/notifications_usecases_impl.dart';
 import 'package:autth_injustice_app/notifications/presentation/viewmodels/notifications/notifications_viewmodel.dart';
 import 'package:autth_injustice_app/notifications/presentation/viewmodels/notification_editor/notification_editor_viewmodel.dart';
+import 'package:autth_injustice_app/map/data/services/map_graphics_preferences.dart';
+import 'package:autth_injustice_app/map/presentation/viewmodels/map_graphics_controller.dart';
 import 'package:autth_injustice_app/settings/presentation/viewmodels/change_email/change_email_viewmodel.dart';
 import 'package:autth_injustice_app/settings/presentation/viewmodels/change_name/change_name_viewmodel.dart';
 import 'package:autth_injustice_app/settings/presentation/viewmodels/change_password/change_password_viewmodel.dart';
@@ -92,6 +94,8 @@ void setupDependencies({
   );
   injector.addSingleton<AuthorizationService>(AuthorizationService.new);
   injector.addSingleton<IAppEntryRepository>(AppEntryRepositoryImpl.new);
+  injector.addSingleton<MapGraphicsPreferences>(MapGraphicsPreferences.new);
+  injector.addSingleton<MapGraphicsController>(MapGraphicsController.new);
   _registerAuthentication();
   _registerStudentFeatures();
   _registerAccountManagement();

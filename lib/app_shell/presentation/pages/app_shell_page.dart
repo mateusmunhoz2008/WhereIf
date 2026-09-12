@@ -99,76 +99,102 @@ class _GlassNavigationBar extends StatelessWidget {
             constraints: BoxConstraints(
               maxWidth: isCompact ? 332 : 460,
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(isCompact ? 20 : 25),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: colors.surface.withValues(
-                      alpha: isDark ? 0.70 : 0.76,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(isCompact ? 20 : 25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(
+                      alpha: isDark ? 0.30 : 0.16,
                     ),
-                    borderRadius: BorderRadius.circular(isCompact ? 20 : 25),
-                    border: Border.all(
-                      color: colors.onSurface.withValues(
-                        alpha: isDark ? 0.12 : 0.08,
-                      ),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colors.tertiary.withValues(
-                          alpha: isDark ? 0.28 : 0.14,
-                        ),
-                        blurRadius: 24,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
+                    blurRadius: 28,
+                    offset: const Offset(0, 12),
                   ),
-                  child: SizedBox(
-                    height: isCompact ? 56 : 68,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _NavItem(
-                            icon: Icons.map_outlined,
-                            selectedIcon: Icons.map,
-                            label: context.l10n.navigationMap,
-                            selected: currentIndex == 0,
-                            onTap: () => onSelected(0),
-                          ),
+                  BoxShadow(
+                    color: colors.secondary.withValues(
+                      alpha: isDark ? 0.09 : 0.06,
+                    ),
+                    blurRadius: 20,
+                    spreadRadius: -4,
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(isCompact ? 20 : 25),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(
+                    sigmaX: 26,
+                    sigmaY: 26,
+                    tileMode: TileMode.clamp,
+                  ),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: isDark
+                            ? [
+                                colors.surface.withValues(alpha: 0.54),
+                                colors.surface.withValues(alpha: 0.34),
+                              ]
+                            : [
+                                Colors.white.withValues(alpha: 0.62),
+                                colors.surface.withValues(alpha: 0.44),
+                              ],
+                      ),
+                      borderRadius: BorderRadius.circular(isCompact ? 20 : 25),
+                      border: Border.all(
+                        color: colors.onSurface.withValues(
+                          alpha: isDark ? 0.17 : 0.13,
                         ),
-                        Expanded(
-                          child: _NavItem(
-                            icon: canManageEvents
-                                ? Icons.dashboard_customize_outlined
-                                : Icons.calendar_month_outlined,
-                            selectedIcon: canManageEvents
-                                ? Icons.dashboard_customize_rounded
-                                : Icons.calendar_month,
-                            label: context.l10n.navigationEvents,
-                            selected: currentIndex == 1,
-                            onTap: () => onSelected(1),
+                      ),
+                    ),
+                    child: SizedBox(
+                      height: isCompact ? 56 : 68,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _NavItem(
+                              icon: Icons.map_outlined,
+                              selectedIcon: Icons.map,
+                              label: context.l10n.navigationMap,
+                              selected: currentIndex == 0,
+                              onTap: () => onSelected(0),
+                            ),
                           ),
-                        ),
-                        Expanded(
-                          child: _NavItem(
-                            icon: Icons.notifications_none_outlined,
-                            selectedIcon: Icons.notifications,
-                            label: context.l10n.navigationNotifications,
-                            selected: currentIndex == 2,
-                            onTap: () => onSelected(2),
+                          Expanded(
+                            child: _NavItem(
+                              icon: canManageEvents
+                                  ? Icons.dashboard_customize_outlined
+                                  : Icons.calendar_month_outlined,
+                              selectedIcon: canManageEvents
+                                  ? Icons.dashboard_customize_rounded
+                                  : Icons.calendar_month,
+                              label: context.l10n.navigationEvents,
+                              selected: currentIndex == 1,
+                              onTap: () => onSelected(1),
+                            ),
                           ),
-                        ),
-                        Expanded(
-                          child: _NavItem(
-                            icon: Icons.schedule_outlined,
-                            selectedIcon: Icons.access_time_filled_rounded,
-                            label: context.l10n.navigationHours,
-                            selected: currentIndex == 3,
-                            onTap: () => onSelected(3),
+                          Expanded(
+                            child: _NavItem(
+                              icon: Icons.notifications_none_outlined,
+                              selectedIcon: Icons.notifications,
+                              label: context.l10n.navigationNotifications,
+                              selected: currentIndex == 2,
+                              onTap: () => onSelected(2),
+                            ),
                           ),
-                        ),
-                      ],
+                          Expanded(
+                            child: _NavItem(
+                              icon: Icons.schedule_outlined,
+                              selectedIcon: Icons.access_time_filled_rounded,
+                              label: context.l10n.navigationHours,
+                              selected: currentIndex == 3,
+                              onTap: () => onSelected(3),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

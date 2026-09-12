@@ -45,6 +45,10 @@ void main() {
       );
       expect(ifpr.features.eventImageGallery, isTrue);
       expect(ifpr.events.presetImages, hasLength(7));
+      expect(
+        ifpr.map.primaryResource?.location,
+        endsWith('campus_exterior_standard.glb'),
+      );
     });
 
     test('bundles every declared institutional image', () async {
@@ -178,6 +182,10 @@ void main() {
     test('rejects an enabled map without a resource manifest', () {
       final invalid = _PackageOverride(
         base: ifpr,
+        map: const InstitutionMapManifest.unconfigured(
+          mapId: 'missing-map',
+          rendererKey: 'three-js-gltf',
+        ),
         features: const InstitutionFeaturesConfig(
           map: true,
           complementaryHours: true,

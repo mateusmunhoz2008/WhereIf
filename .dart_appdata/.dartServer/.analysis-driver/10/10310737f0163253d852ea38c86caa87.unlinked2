@@ -1,0 +1,1241 @@
+‚
+localeNameofdelegatelocalizationsDelegatessupportedLocalesuserManagementTitleuserManagementEmptyuserManagementSearchHintuserManagementSortNameAscending userManagementSortNameDescending!userManagementSortHoursDescending userManagementSortHoursAscendinguserManagementFilterAlluserManagementFilterStudentsuserManagementFilterManagersuserManagementRoleStudentuserManagementRoleEventManageruserManagementTotalHoursuserManagementNoResultsuserManagementLoadErroruserManagementUnauthorizeduserDetailsTitleuserDetailsHoursProgressuserDetailsRecordsTitleuserDetailsRecordsEmptyuserDetailsPromoteuserDetailsDemoteuserDetailsPromoteTitleuserDetailsPromoteMessageuserDetailsDemoteTitleuserDetailsDemoteMessageuserDetailsRoleUpdateduserDetailsLoadErroruserDetailsNotFounduserDetailsInvalidUseruserDetailsInvalidRoleuserDetailsRoleUnauthorizeduserDetailsRoleChangeError	welcomeTowhereIfcontinueButtonjoinTheteamemailpasswordforgotloginButtondontHaveAccountsignupButtonorgoogleButtonwhatYourcreatePasswordregisterNameTitle	firstNamelastNameinvalidFirstNameinvalidLastNameaccountInvalidFullNamefieldsRequiredinvalidFieldsauthEmailAlreadyInUseauthWeakPasswordauthNetworkErrorauthTooManyRequestsauthAccountDisabledauthUnexpectedErrorauthBackendUnavailableauthUserNotFoundauthGoogleCanceledemailRequiredinvalidEmailpasswordRequiredpasswordMinLength$passwordRequireLowercaseAndUppercasepasswordRequireNumberpasswordRequireSymbolpasswordStrengthEmptypasswordStrengthVeryWeakpasswordStrengthWeakpasswordStrengthFairpasswordStrengthGoodpasswordStrengthExcellentcheckEmailTitlecheckEmailSentTocheckEmailDescriptioncheckEmailResendcheckEmailLinkResentemailVerificationExpired emailVerificationUnexpectedErroremailVerificationResendFailedemailConfirmedTitleemailConfirmedSubtitleaccountConfirmedSubtitlepasswordResetTitlepasswordResetConfirmationpasswordResetButtonpasswordResetMismatchpasswordResetInvalidLinkpasswordResetFailedpasswordResetChangedTitlepasswordResetChangedSubtitleeventsTitlenavigationMapnavigationEventsnavigationNotificationsnavigationHours
+mapLoadingmapComingSoonfeaturedEventsfutureEventsaddToPersonalHistorypersonalHistoryAddedpersonalRecordUpdatingpersonalRecordNotice	viewOnMap
+accessLinkeventExternalLinkOpenErroreventsLoadErroreventsEmptyeventDetailsUnavailable!eventEditorImageUploadUnavailablenotificationEventnotificationRemindernotificationUpdatenotificationsTitlenotificationManagementCreate notificationManagementCreateHintnotificationEditorContentTitle!notificationEditorContentSubtitlenotificationEditorTitleLabel"notificationEditorDescriptionLabelnotificationEditorLinkTitlenotificationEditorLinkSubtitlenotificationEditorLinkLabelnotificationEditorLinkHintnotificationEditorReviewnotificationEditorReviewTitle notificationEditorReviewSubtitlenotificationEditorPublishnotificationEditorAudiencenotificationEditorAudienceAllnotificationEditorNotInformednotificationEditorInvalidTitle$notificationEditorInvalidDescription%notificationEditorInvalidExternalLink notificationEditorRequiredFieldsnotificationEditorPublishError"notificationManagementUnauthorizednotificationEditorDiscardTitle notificationEditorDiscardMessagenotificationEditorKeepEditingnotificationEditorDiscardnotificationEditorBackToReviewnotificationOpenLinknotificationOpenLinkErrornotificationsLoadErrorTitlenotificationsEmptyTitlenotificationsLoadErrorMessagenotificationsEmptyMessagenotificationTimeNownotificationTimeMinutesAgonotificationTimeHoursAgonotificationTimeYesterdaynotificationTimeDaysAgonotificationsFilterAllnotificationsFilterEventsnotificationsFilterRemindersnotificationsFilterUpdatessettingsTitlesettingsAccountSectionsettingsEditProfilesettingsDarkModesettingsNotificationssettingsLanguagesettingsSignOutsettingsSupportSectionsettingsHelpSupportsettingsAboutsettingsComingSoonsettingsSignOutTitlesettingsSignOutMessagesettingsCancelsettingsConfirmSignOutsettingsSignOutErroraboutDescriptionaboutVersionaboutAcademicProject	aboutTeamaboutDeveloperRoleaboutLegalInformationaboutPrivacyPolicyaboutTermsOfUsehelpIntroTitlehelpIntroDescriptionhelpTopicsTitlehelpPersonalHistoryTitlehelpPersonalHistoryDescriptionhelpHoursTitlehelpHoursDescriptionhelpRecordsTitlehelpRecordsDescriptionhelpNotificationsTitlehelpNotificationsDescriptionhelpAccountTitlehelpAccountDescriptionhelpContactTitlehelpContactDescriptionhelpCopyEmailhelpEmailCopiedaccountTitleaccountProfileSectionaccountSecuritySectionaccountChangeNameaccountChangeEmailaccountChangePasswordaccountDeleteaccountCurrentPasswordTitleaccountCurrentPasswordaccountCurrentPasswordRequiredaccountNewPasswordTitleaccountNewPasswordaccountPasswordMustDifferaccountChangePasswordButtonaccountPasswordChangedaccountNewEmailTitleaccountNewEmailaccountEmailChangedTitleaccountEmailChangedSubtitleaccountEmailChangedaccountNewNameTitleaccountNameChangedcommonRetrycommonCancelcommonDeletecomplementaryHoursTitle complementaryHoursInformalNoticecomplementaryHoursLoadError#complementaryHoursProgressSemanticscomplementaryHoursRecords"complementaryHoursRecordsLoadErrorcomplementaryHoursRecordsEmptycomplementaryHoursNoWorkloadcomplementaryHoursDeleteTitlecomplementaryHoursDeleteMessagecomplementaryHoursDeleteErrorcomplementaryHoursDeletednavigationManageEventseventManagementTitleeventManagementCounteventManagementCreateeventManagementCreateHinteventManagementScheduledeventManagementPublishedeventManagementOngoingeventManagementEndedeventManagementVieweventManagementEditeventManagementDeleteeventManagementDeleteTitleeventManagementDeleteMessageeventManagementDeletedeventManagementDeleteErroreventManagementCancelTitleeventManagementCancelMessage eventManagementCancelReasonLabeleventManagementCancelReasonHint"eventManagementInvalidCancelReason"eventManagementConfirmCancellation!eventManagementCampusNotification,eventManagementCancellationNotificationTitleeventManagementCancelledeventManagementCancelErroreventManagementEndeventManagementEndTitleeventManagementEndMessageeventManagementEndedMessageeventManagementEndErroreventManagementLoadErroreventManagementEmptyTitleeventManagementEmptyMessageeventManagementCreateComingSooneventManagementUnauthorizedeventEditorStep
+editorStepeventEditorIdentityTitleeventEditorIdentitySubtitleeventEditorTitleeventEditorCategoryeventEditorDateTitleeventEditorDateSubtitleeventEditorDateeventEditorTimeeventEditorChooseDateeventEditorChooseTimeeventEditorEndTitleeventEditorEndSubtitleeventEditorAutomaticEnd"eventEditorAutomaticEndDescriptioneventEditorManualEndeventEditorManualEndDescriptioneventEditorEndDateeventEditorEndTimeeventEditorLocationTitleeventEditorLocationSubtitleeventEditorLocationeventEditorDescriptionTitleeventEditorDescriptionSubtitleeventEditorDescriptioneventEditorExternalLinkeventEditorExternalLinkHinteventEditorHoursTitleeventEditorHoursSubtitleeventEditorHasHourseventEditorHourseventEditorMinuteseventEditorImageTitleeventEditorImageSubtitleeventEditorChooseImageeventEditorChangeImageeventEditorImageGalleryeventEditorUseDeviceImageeventEditorExpandImageeventEditorExpandGalleryeventEditorCollapseGalleryeventEditorImageSelectedeventEditorGalleryImageeventEditorRevieweventEditorReviewTitleeventEditorReviewSubtitleeventEditorPublishNoweventEditorScheduleeventEditorPublicationDateeventEditorPublicationTimeeventEditorPublisheventEditorScheduleEventeventEditorDateAndTimeeventEditorEndeventEditorManualEndRevieweventEditorComplementaryHourseventEditorNotOfferedeventEditorHoursAndMinuteseventEditorInvalidTitleeventEditorInvalidCategoryeventEditorMissingDateeventEditorFutureDateeventEditorMissingEndModeeventEditorEndAfterStarteventEditorInvalidLocationeventEditorInvalidDescriptioneventEditorInvalidExternalLinkeventEditorInvalidHourseventEditorMissingImageeventEditorImageErroreventEditorFuturePublicationeventEditorPublishBeforeEventeventEditorRequiredFieldseventEditorCreateErroreventEditorCreatedeventEditorDiscardTitleeventEditorDiscardMessageeventEditorKeepEditingeventEditorDiscardeventEditorNotInformedeventEditorBackToRevieweventEditorEditReviewTitleeventEditorEditReviewSubtitleeventEditorSaveChangeseventEditorUpdatedeventEditorUpdateErroreventEditorLoadErroreventEditorTryAgaineventEditorDiscardChangesTitle eventEditorDiscardChangesMessagemapInteractionHintmapResetViewmapInteriorComingSoon	mapSearchmapSearchComingSoon	mapRotatesettingsMapGraphicssettingsMapGraphicsLightsettingsMapGraphicsCompleteloadisSupportedshouldReloadAppLocalizations_AppLocalizationsDelegatelookupAppLocalizationsStringIntlcanonicalizedLocaletoStringBuildContextLocalizationsofLocalizationsDelegateListdynamicGlobalMaterialLocalizationsdelegateGlobalCupertinoLocalizationsGlobalWidgetsLocalizationsLocaleintoverrideFutureSynchronousFutureboolcontainslanguageCodeAppLocalizationsEnAppLocalizationsEsAppLocalizationsPtFlutterErrorLocalizationsDelegateĞ ®zqu¾8VPïÕiÃq       
+dart:async     package:flutter/foundation.dart  D   package:flutter/widgets.dart  l   8package:flutter_localizations/flutter_localizations.dart  €°   €Ï€Òintl€Òpackage:intl/intl.dart  €Ü   app_localizations_en.dart     app_localizations_es.dart  &   app_localizations_pt.dartÀ À(E‰f Ck€¯€Ù€Û %JLkm¼íò‚A‚‚¹‚¾‚Ë‚ö‚ûƒƒ\ƒ˜ƒºƒÂƒËƒĞƒìƒñ„<„K„P„]„p„—„µ„Ë………3…<…A…Z…_…ª…ù†G†R†W†¤†ó‡‡‡e‡§‡¬‡÷ˆCˆ’ˆèˆ÷‰‰=‰…‰‡‰£‰¥‰ÜŠ'Š,Š.ŠqŠ•Š—ŠéŠû‹‹W‹«‹Û‹âŒ(ŒwŒ¥Œó+V‚¬²´ö0CVhnp©°ÚíKR|œ¿Áÿ0U}ÄËõ‘‘B‘D‘Š‘‘‘»‘Ù’	’’R’Y’ƒ’¡’Ò’Ô““!“K“k“›““Ú“á”””C”E”‡””¸”Ë”÷”ù•;•B•l•ˆ•´•¶•õ•ü–&–8–a–c–§–®–Ø–ó—!—#—a—h—’—«—Ó—Õ˜˜˜C˜_˜†˜ˆ˜Å˜Ì˜ö™™?™A™™ˆ™²™êšššLšSš}š—š·š¹š÷šş›(›D›l›n›«›²›Ü›ñœœœWœ^œˆœ¦œÍœÏ8Moq¨¯ÙíMT~™ÀÂŸŸŸ2Ÿ‰Ÿ»Ÿ½Ÿù   * D j l ª ± Û¡0¡a¡c¡Ÿ¡¦¡Ğ¡ø¢¢ ¢Z¢a¢‹¢µ¢Ù¢Û£££E£b£…£‡£Ã£Ê£ô¤¤5¤7¤s¤z¤¤¤¿¤å¤ç¥(¥/¥Y¥’¥½¥¿¥ÿ¦¦0¦X¦‚¦„¦³¦º¦ä¦ü§§§D§K§u§‹§¢§¤§Ø§ß¨	¨¨=¨?¨l¨s¨¨³¨Ê¨Ì¨ö¨ı©'©9©M©O©z©©«©¾©Ó©Õªª
+ª4ªJªbªdªª—ªÁªäªúªü«-«4«^«q«Œ««Ã«Ê«ô¬¬8¬:¬l¬s¬¬²¬Î¬Ğ¬ø¬ÿ­)­9­K­M­­†­°­Ñ­í­ï®®$®N®h®€®‚®¶®½®ç®ı¯¯¯T¯[¯…¯¬¯Í¯Ï¯ş°°/°G°`°b°°—°Á°Ø°ğ°ò±(±/±Y±•±µ±·±ì±ó²²X²w²y²µ²¼²æ³³9³;³o³v³ ³Ç³å³ç´´!´K´t´‘´“´Î´Õ´ÿµ8µ]µ_µ•µœµÆ¶	¶)¶+¶a¶h¶’¶Ñ¶ñ¶ó·,·3·]·š·½·¿·ø·ÿ¸)¸P¸s¸u¸®¸µ¸ß¹¹6¹8¹t¹{¹¥¹åºººCºJºtº”º´º¶ºîºõ»»I»k»m» »§»Ñ»ó¼¼¼D¼K¼u¼’¼®¼°¼æ¼í½½<½\½^½•½œ½Æ½ÿ¾ ¾"¾l¾s¾¾Ê¾ş¿ ¿;¿B¿l¿•¿º¿¼¿÷¿şÀ @(À @QÀ @vÀ @xÀ @³À @ºÀ @äÀ AÀ A'À A)À AgÀ AnÀ A˜À A¯À A×À AÙÀ BÀ BÀ BDÀ BVÀ BzÀ B|À B¶À B½À BçÀ BùÀ CÀ CÀ CYÀ C`À CŠÀ CœÀ CÀÀ CÂÀ DÀ DÀ D2À DIÀ DrÀ DtÀ D©À D°À DÚÀ DøÀ EÀ EÀ EOÀ EVÀ E€À E À EÀÀ EÂÀ EıÀ FÀ F.À FWÀ F|À F~À F´À F»À FåÀ FşÀ GÀ G À GZÀ GaÀ G‹À GºÀ GŞÀ GàÀ HÀ H%À HOÀ H’À HºÀ H¼À IÀ I	À I3À IiÀ I™À I›À IŞÀ IåÀ JÀ J:À JgÀ JiÀ J¢À J©À JÓÀ JñÀ KÀ KÀ KRÀ KYÀ KƒÀ KÒÀ KøÀ KúÀ L8À L?À LiÀ L­À LÕÀ L×À MÀ MÀ M@À MgÀ M‰À M‹À MÊÀ MÑÀ MûÀ N!À NJÀ NLÀ N…À NŒÀ N¶À NÒÀ NõÀ N÷À O2À O9À OcÀ OŒÀ O±À O³À OñÀ OøÀ P"À PmÀ P•À P—À PĞÀ P×À QÀ Q0À QSÀ QUÀ Q”À Q›À QÅÀ QâÀ RÀ RÀ ROÀ RVÀ R€À RÃÀ RïÀ RñÀ S"À S)À SSÀ SgÀ S‚À S„À S·À S¾À SèÀ SùÀ TÀ TÀ TNÀ TUÀ TÀ T“À T³À TµÀ TòÀ TùÀ U#À U>À UeÀ UgÀ UœÀ U£À UÍÀ UàÀ UÿÀ VÀ V1À V8À VbÀ V~À V˜À VšÀ VÍÀ VÔÀ VşÀ WÀ W8À W:À WnÀ WuÀ WŸÀ WµÀ WÓÀ WÕÀ XÀ XÀ X8À XUÀ XqÀ XsÀ X­À X´À XŞÀ XıÀ Y!À Y#À Y]À YdÀ YÀ Y¯À YÓÀ YÕÀ ZÀ ZÀ ZBÀ ZfÀ ZŒÀ ZÀ ZÈÀ ZÏÀ ZùÀ [MÀ [qÀ [sÀ [¢À [©À [ÓÀ [ìÀ \À \À \7À \>À \hÀ \À \™À \›À \ÛÀ \âÀ ]À ]8À ]bÀ ]dÀ ]™À ] À ]ÊÀ ]óÀ ^À ^À ^EÀ ^LÀ ^vÀ ^À ^©À ^«À ^èÀ ^ïÀ _À _9À _`À _bÀ _©À _°À _ÚÀ `BÀ `sÀ `uÀ `¬À `³À `İÀ `ğÀ aÀ aÀ aMÀ aTÀ a~À a”À a¸À aºÀ aòÀ aùÀ b#À b7À bYÀ b[À b“À bšÀ bÄÀ bßÀ cÀ cÀ cEÀ cLÀ cvÀ c”À cÀÀ cÂÀ dÀ dÀ d9À daÀ d‘À d“À d×À dŞÀ eÀ e-À e[À e]À e¤À e«À eÕÀ f À fQÀ fSÀ f•À fœÀ fÆÀ fÙÀ gÀ gÀ gOÀ gVÀ g€À g™À gËÀ gÍÀ hÀ hÀ h?À h`À h‹À hÀ hÑÀ hØÀ iÀ iTÀ i‚À i„À iÅÀ iÌÀ iöÀ jÀ j<À j>À j~À j…À j¯À jÍÀ j÷À jùÀ k7À k>À khÀ k‰À k±À k³À köÀ kıÀ l'À lNÀ l{À l}À lÃÀ lÊÀ lôÀ mLÀ m|À m~À m½À mÄÀ mîÀ nÀ n9À n;À n{À n‚À n¬À nÂÀ nìÀ nîÀ o1À o8À obÀ oÀ o»À o½À p À pÀ p1À pKÀ pxÀ pzÀ p¾À pÅÀ pïÀ q'À qUÀ qWÀ q¡À q¨À qÒÀ rÀ rGÀ rIÀ r”À r›À rÅÀ rôÀ s)À s+À sqÀ sxÀ s¢À sÚÀ t
+À tÀ tPÀ tWÀ tÀ t·À tåÀ tçÀ u/À u6À u`À u¢À uÔÀ uÖÀ vÀ v!À vKÀ vnÀ vœÀ vÀ väÀ vëÀ wÀ wOÀ wÀ wÀ wÄÀ wËÀ wõÀ xÀ x<À x>À x}À x„À x®À xÃÀ xìÀ xîÀ y2À y9À ycÀ yÀ y­À y¯À yéÀ yğÀ zÀ z1À zUÀ zWÀ z–À zÀ zÇÀ zòÀ {À {À {^À {eÀ {À {¿À {êÀ {ìÀ |)À |0À |ZÀ |yÀ | À |¢À |åÀ |ìÀ }À }HÀ }uÀ }wÀ }¶À }½À }çÀ ~À ~AÀ ~CÀ ~|À ~ƒÀ ~­À ~¾À ~áÀ ~ãÀ #À *À TÀ qÀ ¢À ¤À âÀ éÀ €À €-À €\À €^À €À €¤À €ÎÀ €åÀ À À MÀ TÀ ~À œÀ ÊÀ ÌÀ ‚À ‚À ‚9À ‚JÀ ‚pÀ ‚rÀ ‚±À ‚¸À ‚âÀ ‚öÀ ƒÀ ƒ!À ƒcÀ ƒjÀ ƒ”À ƒ«À ƒ×À ƒÙÀ „À „ À „JÀ „_À „‰À „‹À „¾À „ÅÀ „ïÀ …À …"À …$À …`À …gÀ …‘À …¦À …ÌÀ …ÎÀ †À †À †8À †RÀ †uÀ †wÀ †­À †´À †ŞÀ †õÀ ‡À ‡À ‡RÀ ‡YÀ ‡ƒÀ ‡À ‡ÃÀ ‡ÅÀ ‡ûÀ ˆÀ ˆ,À ˆBÀ ˆbÀ ˆdÀ ˆ™À ˆ À ˆÊÀ ˆàÀ ˆÿÀ ‰À ‰=À ‰DÀ ‰nÀ ‰À ‰³À ‰µÀ ‰îÀ ‰õÀ ŠÀ Š=À Š`À ŠbÀ Š•À ŠœÀ ŠÆÀ ŠÙÀ ŠöÀ ŠøÀ ‹0À ‹7À ‹aÀ ‹’À ‹´À ‹¶À ‹ğÀ ‹÷À Œ!À Œ8À Œ\À Œ^À ŒšÀ Œ¡À ŒËÀ 
+À 0À 2À fÀ mÀ —À «À ÉÀ ËÀ À À 8À NÀ tÀ vÀ °À ·À áÀ À &À (À ^À eÀ À ÛÀ ûÀ ıÀ /À 6À `À uÀ ‘À “À ÍÀ ÔÀ şÀ ‘@À ‘dÀ ‘fÀ ‘•À ‘œÀ ‘ÆÀ ‘àÀ ‘ùÀ ‘ûÀ ’3À ’:À ’dÀ ’{À ’À ’ŸÀ ’ÚÀ ’áÀ “À “*À “OÀ “QÀ “‰À “À “ºÀ “ÖÀ “øÀ “úÀ ”/À ”6À ”`À ”zÀ ”™À ”›À ”ÏÀ ”ÖÀ • À •À •<À •>À •xÀ •À •©À •ìÀ –À –À –SÀ –ZÀ –„À –À –¼À –¾À –üÀ —À —-À —eÀ —À —À —ÓÀ —ÚÀ ˜À ˜¥À ˜êÀ ˜ìÀ ™ À ™'À ™QÀ ™†À ™¤À ™¦À ™àÀ ™çÀ šÀ šÁÀ šüÀ šşÀ ›4À ›;À ›eÀ ›ŒÀ ›¬À ›®À ›êÀ ›ñÀ œÀ œÀ œÄÀ œÆÀ À 	À 3À [À À ƒÀ ÅÀ ÌÀ öÀ qÀ À ŸÀ ÕÀ ÜÀ ŸÀ Ÿ9À ŸYÀ Ÿ[À Ÿ—À ŸÀ ŸÈÀ  VÀ  |À  ~À  ´À  »À  åÀ ¡À ¡#À ¡%À ¡aÀ ¡hÀ ¡’À ¡ÓÀ ¡ùÀ ¡ûÀ ¢.À ¢5À ¢_À ¢wÀ ¢”À ¢–À ¢ËÀ ¢ÒÀ ¢üÀ £À £>À £@À £rÀ £yÀ ££À £¸À £ÔÀ £ÖÀ ¤À ¤À ¤BÀ ¤WÀ ¤|À ¤~À ¤ºÀ ¤ÁÀ ¤ëÀ ¥À ¥'À ¥)À ¥`À ¥gÀ ¥‘À ¥ªÀ ¥ËÀ ¥ÍÀ ¦À ¦À ¦6À ¦PÀ ¦rÀ ¦tÀ ¦¯À ¦¶À ¦àÀ ¦ıÀ §"À §$À §WÀ §^À §ˆÀ §¤À §ÁÀ §ÃÀ ¨À ¨À ¨5À ¨aÀ ¨ŒÀ ¨À ¨ÊÀ ¨ÑÀ ¨ûÀ ©À ©?À ©AÀ ©…À ©ŒÀ ©¶À ©ßÀ ªÀ ªÀ ªLÀ ªSÀ ª}À ª¡À ªÈÀ ªÊÀ «À «	À «3À «MÀ «oÀ «qÀ «°À «·À «áÀ ¬&À ¬OÀ ¬QÀ ¬’À ¬™À ¬ÃÀ ¬àÀ ­À ­À ­IÀ ­PÀ ­zÀ ­¦À ­ÌÀ ­ÎÀ ®À ®À ®9À ®\À ®€À ®‚À ®·À ®¾À ®èÀ ®ÿÀ ¯À ¯ À ¯^À ¯eÀ ¯À ¯­À ¯ÕÀ ¯×À °À °À °IÀ °À °¸À °ºÀ °óÀ °úÀ ±$À ±MÀ ±pÀ ±rÀ ±«À ±²À ±ÜÀ ²À ²&À ²(À ²`À ²gÀ ²‘À ²¹À ²ÛÀ ²İÀ ³À ³À ³?À ³VÀ ³qÀ ³sÀ ³¥À ³¬À ³ÖÀ ³êÀ ´À ´À ´:À ´AÀ ´kÀ ´À ´›À ´À ´ÚÀ ´áÀ µÀ µ%À µLÀ µNÀ µ”À µ›À µÅÀ ¶+À ¶rÀ ¶tÀ ¶µÀ ¶¼À ¶æÀ ·À ·@À ·BÀ ·‹À ·’À ·¼À ·áÀ ¸1À ¸3À ¸rÀ ¸yÀ ¸£À ¸»À ¸äÀ ¸æÀ ¹.À ¹5À ¹_À ¹ˆÀ ¹ºÀ ¹¼À º À ºÀ º1À ºNÀ º|À º~À ºÀÀ ºÇÀ ºñÀ »À »<À »>À »À »ˆÀ »²À »ÎÀ »ûÀ »ıÀ ¼BÀ ¼IÀ ¼sÀ ¼ºÀ ¼÷À ¼ùÀ ½<À ½CÀ ½mÀ ½—À ½ÄÀ ½ÆÀ ¾À ¾À ¾6À ¾SÀ ¾|À ¾~À ¾ºÀ ¾ÁÀ ¾ëÀ ¾ÿÀ ¿%À ¿'À ¿aÀ ¿hÀ ¿’À ¿­À ¿ÑÀ ¿ÓÀ ÀÀ ÀÀ À>À À¼À ÀçÀ ÀéÀ Á$À Á+À ÁUÀ ÁlÀ Á‘À Á“À ÁÒÀ ÁÙÀ ÂÀ ÂÀ ÂHÀ ÂJÀ ÂˆÀ ÂÀ Â¹À ÂĞÀ ÂøÀ ÂúÀ Ã8À Ã?À ÃiÀ Ã€À Ã¨À ÃªÀ ÃæÀ ÃíÀ ÄÀ Ä,À ÄRÀ ÄTÀ ÄÀ Ä•À Ä¿À ÄÒÀ ÄöÀ ÄøÀ Å1À Å8À ÅbÀ ÅtÀ Å—À Å™À ÅÒÀ ÅÙÀ ÆÀ ÆÀ Æ8À Æ:À ÆuÀ Æ|À Æ¦À ÆºÀ ÆßÀ ÆáÀ Ç!À Ç(À ÇRÀ ÇmÀ Ç—À Ç™À ÇÛÀ ÇâÀ ÈÀ ÈIÀ ÈƒÀ È…À ÈÁÀ ÈÈÀ ÈòÀ ÉÀ É4À É6À ÉvÀ É}À É§À ÉĞÀ ÉúÀ ÉüÀ Ê<À ÊCÀ ÊmÀ ÊˆÀ Ê²À Ê´À ÊöÀ ÊıÀ Ë'À Ë¤À ËŞÀ ËàÀ Ì&À Ì-À ÌWÀ ÌxÀ Ì¨À ÌªÀ ÌïÀ ÌöÀ Í À Í`À ÍÀ Í‘À ÍÙÀ ÍàÀ Î
+À ÎCÀ ÎuÀ ÎwÀ Î¿À ÎÆÀ ÎğÀ Ï
+À Ï<À Ï>À Ï…À ÏŒÀ Ï¶À ÏæÀ ĞÀ ĞÀ ĞkÀ ĞrÀ ĞœÀ ĞÆÀ ÑÀ ÑÀ ÑPÀ ÑWÀ ÑÀ ÑµÀ ÑİÀ ÑßÀ ÒÀ Ò&À ÒPÀ ÒyÀ Ò£À Ò¥À ÒİÀ ÒäÀ ÓÀ ÓÀ ÓAÀ ÓCÀ Ó€À Ó‡À Ó±À ÓÉÀ ÓğÀ ÓòÀ Ô1À Ô8À ÔbÀ ÔŸÀ ÔÖÀ ÔØÀ ÕÀ Õ À ÕJÀ ÕdÀ ÕÀ Õ‘À ÕÎÀ ÕÕÀ ÕÿÀ Ö%À ÖLÀ ÖNÀ ÖŒÀ Ö“À Ö½À ÖáÀ ×	À ×À ×JÀ ×QÀ ×{À ×–À ×¿À ×ÁÀ ØÀ Ø	À Ø3À ØgÀ Ø’À Ø”À ØÙÀ ØàÀ Ù
+À ÙFÀ ÙuÀ ÙwÀ Ù¸À Ù¿À ÙéÀ ÚÀ ÚDÀ ÚFÀ Ú{À Ú‚À Ú¬À ÚÓÀ ÛÀ ÛÀ Û8À Û?À ÛiÀ ÛÀ Û¾À ÛÀÀ ÛşÀ ÜÀ Ü/À ÜOÀ ÜwÀ ÜyÀ ÜºÀ ÜÁÀ ÜëÀ İ:À İeÀ İgÀ İÀ İ¤À İÎÀ İçÀ ŞÀ Ş	À ŞBÀ ŞIÀ ŞsÀ Ş‰À Ş¬À Ş®À ŞèÀ ŞïÀ ßÀ ß;À ß_À ßaÀ ßÀ ß¥À ßÏÀ ßÿÀ à&À à(À à]À àdÀ àÀ à À à¿À àÁÀ àöÀ àıÀ á'À á9À áXÀ áZÀ á•À áœÀ áÆÀ áßÀ âÀ âÀ âAÀ âHÀ ârÀ â‹À â°À â²À âëÀ âòÀ ãÀ ãAÀ ãdÀ ãfÀ ã¢À ã©À ãÓÀ äÀ äDÀ äFÀ äƒÀ äŠÀ ä´À äÒÀ äùÀ äûÀ åCÀ åJÀ åtÀ å½À åïÀ åñÀ æ+À æ2À æ\À æwÀ æ›À æÀ æâÀ æéÀ çÀ çnÀ çÀ çŸÀ ç×À çŞÀ èÀ èÀ è@À èBÀ èzÀ èÀ è«À èÁÀ èãÀ èåÀ é#À é*À éTÀ ésÀ é›À éÀ éŞÀ éåÀ êÀ êXÀ êƒÀ ê…À ê¾À êÅÀ êïÀ ëÀ ë3À ë5À ëvÀ ë}À ë§À ëÇÀ ëòÀ ëôÀ ì8À ì?À ìiÀ ìÊÀ ìøÀ ìúÀ í6À í=À ígÀ í€À í¦À í¨À íåÀ íìÀ îÀ î<À îcÀ îeÀ î¦À î­À î×À îùÀ ï$À ï&À ïaÀ ïhÀ ï’À ï¨À ïÍÀ ïÏÀ ğÀ ğÀ ğ>À ğ‡À ğ¯À ğ±À ğêÀ ğñÀ ñÀ ñCÀ ñfÀ ñhÀ ñÀ ñ¥À ñÏÀ ñâÀ òÀ òÀ ò<À òCÀ òmÀ ò‚À ò¤À ò¦À òáÀ òèÀ óÀ ó0À óUÀ óWÀ ó•À óœÀ óÆÀ ôÀ ô*À ô,À ôhÀ ôoÀ ô™À ô³À ôÙÀ ôÛÀ õÀ õÀ õHÀ õbÀ õˆÀ õŠÀ õÇÀ õÎÀ õøÀ öÀ ö@À öBÀ öÀ öˆÀ ö²À öÕÀ öşÀ ÷ À ÷<À ÷CÀ ÷mÀ ÷‡À ÷­À ÷¯À ÷íÀ ÷ôÀ øÀ ø;À øcÀ øeÀ ø¥À ø¬À øÖÀ øôÀ ùÀ ù À ù^À ùeÀ ùÀ ù«À ùÓÀ ùÕÀ úÀ úÀ úCÀ ú_À úÀ úÀ úÇÀ úÎÀ úøÀ ûÀ û3À û5À ûqÀ ûxÀ û¢À ûÂÀ ûèÀ ûêÀ ü)À ü0À üZÀ ü­À üÖÀ üØÀ ıÀ ıÀ ıDÀ ı]À ı‚À ı„À ı½À ıÄÀ ıîÀ şÀ ş'À ş)À şiÀ şpÀ şšÀ ş¸À şâÀ şäÀ ÿ$À ÿ+À ÿUÀ ÿsÀ ÿÀ ÿŸÀ ÿ×À ÿŞÀ À #À EÀ GÀ …À ŒÀ ¶À ÒÀ úÀ üÀ8À?ÀiÀ„ÀªÀ¬ÀàÀçÀÀ"À@ÀBÀ‚À‰À³ÀãÀÀÀRÀYÀƒÀ™ÀÆÀÈÀÀ
+À4ÀMÀrÀtÀ´À»ÀåÀÀFÀHÀ…ÀŒÀ¶ÀíÀÀÀVÀ]À‡À®ÀØÀÚÀÀÀGÀtÀšÀœÀ×ÀŞÀÀ<ÀaÀcÀ¢À©ÀÓÀÿÀ	(À	*À	hÀ	oÀ	™À	ÊÀ	òÀ	ôÀ
+4À
+;À
+eÀ
+À
+ÈÀ
+ÊÀÀÀ>À|À©À«ÀïÀöÀ À_ÀÀÀÌÀÓÀıÀ.ÀUÀWÀ”À›ÀÅÀñÀÀÀUÀ\À†À¶ÀÛÀİÀÀ&ÀPÀÀºÀ¼ÀÿÀÀ0ÀnÀ›ÀÀÜÀãÀÀ<ÀeÀgÀ£ÀªÀÔÀıÀ#À%À]ÀdÀÀ·ÀÙÀÛÀÀÀIÀeÀŒÀÀÍÀÔÀşÀ5À^À`ÀœÀ£ÀÍÀçÀÀÀGÀNÀxÀÀ¯À±ÀíÀôÀÀ8À^À`ÀÀ¤ÀÎÀêÀÀÀSÀZÀ„ÀœÀÆÀÈÀÀÀ<ÀzÀ§À©ÀåÀìÀÀ0ÀVÀXÀÀ—ÀÁÀêÀÀÀJÀQÀ{À¤ÀÊÀÌÀÀÀ7ÀfÀŠÀŒÀÅÀÌÀöÀÀ0À2ÀvÀ}À§ÀÅÀóÀõÀ;ÀBÀlÀ¦ÀÖÀØÀÀÀAÀqÀ“À•ÀÇÀÎÀøÀÀ3À5ÀpÀwÀ¡ÀÃÀèÀêÀ À  À JÀ fÀ À À ºÀ ÁÀ ëÀ!)À!LÀ!NÀ!}À!„À!®À!ÒÀ!ëÀ!íÀ"&À"-À"WÀ"qÀ"”À"–À"ÔÀ"ÛÀ#À#À#@À#BÀ#ƒÀ#ŠÀ#´À#ÊÀ#õÀ#øÀ#úÀ$À$RÀ$xÀ$zÀ$‡À$¹À%
+À%À%À%À%DÀ%…À%‡À%”À%ÒÀ%ÕÀ%×À&À&JÀ&lÀ&|À& À&°À&ÔÀ&äÀ'À'À'À'&À'†À'ÖÀ((À(BÀ(E         C  k  €¯€Ò €Û     %      ‰ ‰,    ‰-‰-‰4 ‰P‰E‰R‰V‰W‰[‰\‰o‰‰p‰v‰w‰‰€‰‰g    ‰–‰‰‰– ŠwŠŠ‘ŠeŠ0bŠe ®ŒùŒú /JKZvw† ¡ŒÙŠ™ƒŒÙï/// A list of this localizations delegate along with the default localizations
+/// delegates.
+///
+/// Returns a list of localizations delegates containing this delegate along with
+/// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+/// and GlobalWidgetsLocalizations.delegate.
+///
+/// Additional delegates can be added by appending to this list in
+/// MaterialApp. This list does not have to be used at all if a custom list
+/// of delegates is preferred or required.-j%,&4:?;GMRNZ`ea¶€µ>/// A list of this localizations delegate's supported locales.f   rr€œúp/// No description provided for @userManagementTitle.
+///
+/// In en, this message translates to:
+/// **'Users'**   €©©}/// No description provided for @userManagementEmpty.
+///
+/// In en, this message translates to:
+/// **'No users available'**   ÃÃ€¸b€‡/// No description provided for @userManagementSearchHint.
+///
+/// In en, this message translates to:
+/// **'Search by name or email'**   €¿‘ €‡/// No description provided for @userManagementSortNameAscending.
+///
+/// In en, this message translates to:
+/// **'Name from A to Z'**   ‘F‘F€Á‘æ€ˆ/// No description provided for @userManagementSortNameDescending.
+///
+/// In en, this message translates to:
+/// **'Name from Z to A'**   ’’€Ã’®€‰/// No description provided for @userManagementSortHoursDescending.
+///
+/// In en, this message translates to:
+/// **'Most hours first'**   ’Ö’Ö€Ã“x€Š/// No description provided for @userManagementSortHoursAscending.
+///
+/// In en, this message translates to:
+/// **'Fewest hours first'**   “Ÿ“Ÿ€¢”)r/// No description provided for @userManagementFilterAll.
+///
+/// In en, this message translates to:
+/// **'All'**   ”G”G€®”Øy/// No description provided for @userManagementFilterStudents.
+///
+/// In en, this message translates to:
+/// **'Users'**   ”û”û€·••€‚/// No description provided for @userManagementFilterManagers.
+///
+/// In en, this message translates to:
+/// **'Event managers'**   •¸•¸€§–Eu/// No description provided for @userManagementRoleStudent.
+///
+/// In en, this message translates to:
+/// **'User'**   –e–e€º— €ƒ/// No description provided for @userManagementRoleEventManager.
+///
+/// In en, this message translates to:
+/// **'Event manager'**   —%—%€¬—¸{/// No description provided for @userManagementTotalHours.
+///
+/// In en, this message translates to:
+/// **'total hours'**   —×—×€­˜l}/// No description provided for @userManagementNoResults.
+///
+/// In en, this message translates to:
+/// **'No users found'**   ˜Š˜Š€³™%€ƒ/// No description provided for @userManagementLoadError.
+///
+/// In en, this message translates to:
+/// **'Unable to load users'**   ™C™C€Ï™÷€œ/// No description provided for @userManagementUnauthorized.
+///
+/// In en, this message translates to:
+/// **'You do not have permission to manage users'**   šš€š¤t/// No description provided for @userDetailsTitle.
+///
+/// In en, this message translates to:
+/// **'User details'**   š»š»€¯›Q~/// No description provided for @userDetailsHoursProgress.
+///
+/// In en, this message translates to:
+/// **'Hours progress'**   ›p›p€¦›şv/// No description provided for @userDetailsRecordsTitle.
+///
+/// In en, this message translates to:
+/// **'Records'**   œœ€¯œ³/// No description provided for @userDetailsRecordsEmpty.
+///
+/// In en, this message translates to:
+/// **'No records found'**   œÑœÑ€œZq/// No description provided for @userDetailsPromote.
+///
+/// In en, this message translates to:
+/// **'Promote'**   ss€™úo/// No description provided for @userDetailsDemote.
+///
+/// In en, this message translates to:
+/// **'Demote'**   €¬¦|/// No description provided for @userDetailsPromoteTitle.
+///
+/// In en, this message translates to:
+/// **'Promote user?'**   Ÿ¿Ÿ¿€© Qz/// No description provided for @userDetailsDemoteTitle.
+///
+/// In en, this message translates to:
+/// **'Demote user?'**   ¡e¡e€·¢€ˆ/// No description provided for @userDetailsRoleUpdated.
+///
+/// In en, this message translates to:
+/// **'Role updated successfully.'**   ¢"¢"€µ¢Â€ˆ/// No description provided for @userDetailsLoadError.
+///
+/// In en, this message translates to:
+/// **'Unable to load user details.'**   ¢İ¢İ€¦£oz/// No description provided for @userDetailsNotFound.
+///
+/// In en, this message translates to:
+/// **'User not found.'**   £‰£‰€ª¤{/// No description provided for @userDetailsInvalidUser.
+///
+/// In en, this message translates to:
+/// **'Invalid user.'**   ¤9¤9€ª¤Ì{/// No description provided for @userDetailsInvalidRole.
+///
+/// In en, this message translates to:
+/// **'Invalid role.'**   ¤é¤é€Ò¥Ÿ€/// No description provided for @userDetailsRoleUnauthorized.
+///
+/// In en, this message translates to:
+/// **'You do not have permission to change roles.'**   ¥Á¥Á€¿¦e€Œ/// No description provided for @userDetailsRoleChangeError.
+///
+/// In en, this message translates to:
+/// **'Unable to change the role.'**   ¦†¦†€§	k/// No description provided for @welcomeTo.
+///
+/// In en, this message translates to:
+/// **'Welcome To'**   §§€‡§˜g/// No description provided for @whereIf.
+///
+/// In en, this message translates to:
+/// **'Where IF'**   §¦§¦€•¨,n/// No description provided for @continueButton.
+///
+/// In en, this message translates to:
+/// **'Continue'**   ¨A¨A€‡¨Àg/// No description provided for @joinThe.
+///
+/// In en, this message translates to:
+/// **'Join the'**   ¨Î¨Î}©F`/// No description provided for @team.
+///
+/// In en, this message translates to:
+/// **'Team'**   ©Q©Q€€©Ëb/// No description provided for @email.
+///
+/// In en, this message translates to:
+/// **'Email'**   ©×©×€‰ªWh/// No description provided for @password.
+///
+/// In en, this message translates to:
+/// **'Password'**   ªfªf€’ªñs/// No description provided for @forgot.
+///
+/// In en, this message translates to:
+/// **'Forgot your password?'**   ªşªş€Œ«~h/// No description provided for @loginButton.
+///
+/// In en, this message translates to:
+/// **'Enter'**   ««€¦¬&~/// No description provided for @dontHaveAccount.
+///
+/// In en, this message translates to:
+/// **'Don\'t have an account?'**   ¬<¬<€¬¿k/// No description provided for @signupButton.
+///
+/// In en, this message translates to:
+/// **'Sign up'**   ¬Ò¬Òw­F\/// No description provided for @or.
+///
+/// In en, this message translates to:
+/// **'or'**   ­O­O€œ­Şw/// No description provided for @googleButton.
+///
+/// In en, this message translates to:
+/// **'Sign in with Google'**   ­ñ­ñ€®ul/// No description provided for @whatYour.
+///
+/// In en, this message translates to:
+/// **'What\'s your'**   ®„®„€•¯
+n/// No description provided for @createPassword.
+///
+/// In en, this message translates to:
+/// **'Create a'**   ¯¯€¬¯¹€‚/// No description provided for @registerNameTitle.
+///
+/// In en, this message translates to:
+/// **'What should we\ncall you?'**   ¯Ñ¯Ñ€°Tk/// No description provided for @firstName.
+///
+/// In en, this message translates to:
+/// **'First name'**   °d°d€Š°åi/// No description provided for @lastName.
+///
+/// In en, this message translates to:
+/// **'Last name'**   °ô°ô€¿±¢€–/// No description provided for @invalidFirstName.
+///
+/// In en, this message translates to:
+/// **'Enter a first name with at least 2 characters.'**   ±¹±¹€¼²e€”/// No description provided for @invalidLastName.
+///
+/// In en, this message translates to:
+/// **'Enter a last name with at least 2 characters.'**   ²{²{€¼³ €/// No description provided for @accountInvalidFullName.
+///
+/// In en, this message translates to:
+/// **'Enter your first and last name.'**   ³=³=€¦³Ô/// No description provided for @fieldsRequired.
+///
+/// In en, this message translates to:
+/// **'Please fill in the fields'**   ³é³é€¦´€€/// No description provided for @invalidFields.
+///
+/// In en, this message translates to:
+/// **'Incorrect email or password'**   ´•´•€ÆµE€˜/// No description provided for @authEmailAlreadyInUse.
+///
+/// In en, this message translates to:
+/// **'This email is already linked to an account.'**   µaµa€Æ¶€/// No description provided for @authWeakPassword.
+///
+/// In en, this message translates to:
+/// **'The password does not meet the security requirements.'**   ¶-¶-€Â¶Ş€™/// No description provided for @authNetworkError.
+///
+/// In en, this message translates to:
+/// **'No connection. Check your internet and try again.'**   ¶õ¶õ€Æ·§€š/// No description provided for @authTooManyRequests.
+///
+/// In en, this message translates to:
+/// **'Too many attempts. Wait a moment and try again.'**   ·Á·Á€°¸]€„/// No description provided for @authAccountDisabled.
+///
+/// In en, this message translates to:
+/// **'This account is disabled.'**   ¸w¸w€½¹ €‘/// No description provided for @authUnexpectedError.
+///
+/// In en, this message translates to:
+/// **'Authentication could not be completed.'**   ¹:¹:€Ï¹ò€ /// No description provided for @authBackendUnavailable.
+///
+/// In en, this message translates to:
+/// **'Authentication is not connected to the server yet.'**   ºº€£º¡z/// No description provided for @authUserNotFound.
+///
+/// In en, this message translates to:
+/// **'Account not found.'**   º¸º¸€±»V€†/// No description provided for @authGoogleCanceled.
+///
+/// In en, this message translates to:
+/// **'Google sign-in was canceled.'**   »o»o€Ÿ¼ y/// No description provided for @emailRequired.
+///
+/// In en, this message translates to:
+/// **'Please enter a email'**   ¼¼€˜¼Ÿs/// No description provided for @invalidEmail.
+///
+/// In en, this message translates to:
+/// **'Incorrect email'**   ¼²¼²€¨½I/// No description provided for @passwordRequired.
+///
+/// In en, this message translates to:
+/// **'Please enter a password'**   ½`½`€¾¾€”/// No description provided for @passwordMinLength.
+///
+/// In en, this message translates to:
+/// **'Password must be at least 8 characters long'**   ¾$¾$€Ø¾×€›/// No description provided for @passwordRequireLowercaseAndUppercase.
+///
+/// In en, this message translates to:
+/// **'Uppercase and lowercase letters'**   ¿¿€¶¿¢€ˆ/// No description provided for @passwordRequireNumber.
+///
+/// In en, this message translates to:
+/// **'Include at least one number'**   ¿¾¿¾€¶À @^€ˆ/// No description provided for @passwordRequireSymbol.
+///
+/// In en, this message translates to:
+/// **'Include at least one symbol'**   À @zÀ @z€«À A}/// No description provided for @passwordStrengthEmpty.
+///
+/// In en, this message translates to:
+/// **'Enter a password'**   À A+À A+€ªÀ A¼y/// No description provided for @passwordStrengthVeryWeak.
+///
+/// In en, this message translates to:
+/// **'Very weak'**   À AÛÀ AÛ€À Bcp/// No description provided for @passwordStrengthWeak.
+///
+/// In en, this message translates to:
+/// **'Weak'**   À B~À B~€À Cp/// No description provided for @passwordStrengthFair.
+///
+/// In en, this message translates to:
+/// **'Fair'**   À C!À C!€À C©p/// No description provided for @passwordStrengthGood.
+///
+/// In en, this message translates to:
+/// **'Good'**   À CÄÀ CÄ€¬À DVz/// No description provided for @passwordStrengthExcellent.
+///
+/// In en, this message translates to:
+/// **'Excellent'**   À DvÀ Dv€ŸÀ Ew/// No description provided for @checkEmailTitle.
+///
+/// In en, this message translates to:
+/// **'Check your email'**   À EÀ E€£À E­z/// No description provided for @checkEmailSentTo.
+///
+/// In en, this message translates to:
+/// **'We sent a link to:'**   À EÄÀ EÄ€¶À Fd€ˆ/// No description provided for @checkEmailDescription.
+///
+/// In en, this message translates to:
+/// **'Click the link to continue.'**   À F€À F€€œÀ Gs/// No description provided for @checkEmailResend.
+///
+/// In en, this message translates to:
+/// **'Resend link'**   À G"À G"€ºÀ GÇ€/// No description provided for @checkEmailLinkResent.
+///
+/// In en, this message translates to:
+/// **'We sent a new link to your email.'**   À GâÀ Gâ€ÖÀ HŸ€¥/// No description provided for @emailVerificationExpired.
+///
+/// In en, this message translates to:
+/// **'This link has expired. Request a new one to continue.'**   À H¾À H¾€ÙÀ Iv€ /// No description provided for @emailVerificationUnexpectedError.
+///
+/// In en, this message translates to:
+/// **'We could not verify the email right now.'**   À IÀ I€ÈÀ JG€’/// No description provided for @emailVerificationResendFailed.
+///
+/// In en, this message translates to:
+/// **'We could not resend the link.'**   À JkÀ Jk€§À Jş{/// No description provided for @emailConfirmedTitle.
+///
+/// In en, this message translates to:
+/// **'Email confirmed!'**   À KÀ K€ŞÀ Kß€¯/// No description provided for @emailConfirmedSubtitle.
+///
+/// In en, this message translates to:
+/// **'All set. Now let\'s continue so you can create your new password.'**   À KüÀ Kü€×À Lº€¦/// No description provided for @accountConfirmedSubtitle.
+///
+/// In en, this message translates to:
+/// **'Your account has been confirmed. You can now continue.'**   À LÙÀ LÙ€®À Mt€ƒ/// No description provided for @passwordResetTitle.
+///
+/// In en, this message translates to:
+/// **'Create your\nnew password'**   À MÀ M€»À N.€‰/// No description provided for @passwordResetConfirmation.
+///
+/// In en, this message translates to:
+/// **'Confirm the new password'**   À NNÀ NN€¥À Nßy/// No description provided for @passwordResetButton.
+///
+/// In en, this message translates to:
+/// **'Reset password'**   À NùÀ Nù€¶À O™€ˆ/// No description provided for @passwordResetMismatch.
+///
+/// In en, this message translates to:
+/// **'The passwords do not match.'**   À OµÀ Oµ€ŞÀ Pz€­/// No description provided for @passwordResetInvalidLink.
+///
+/// In en, this message translates to:
+/// **'This password reset link is invalid or has already been used.'**   À P™À P™€¸À Q=€Œ/// No description provided for @passwordResetFailed.
+///
+/// In en, this message translates to:
+/// **'We could not reset your password.'**   À QWÀ QW€²À Qï€€/// No description provided for @passwordResetChangedTitle.
+///
+/// In en, this message translates to:
+/// **'Password reset!'**   À RÀ R€ŞÀ RĞ€©/// No description provided for @passwordResetChangedSubtitle.
+///
+/// In en, this message translates to:
+/// **'All set. You can now sign in using your new password.'**   À RóÀ Ró€À Sti/// No description provided for @eventsTitle.
+///
+/// In en, this message translates to:
+/// **'Events'**   À S†À S†€À Th/// No description provided for @navigationMap.
+///
+/// In en, this message translates to:
+/// **'Map'**   À TÀ T€—À T n/// No description provided for @navigationEvents.
+///
+/// In en, this message translates to:
+/// **'Events'**   À T·À T·€¬À UK|/// No description provided for @navigationNotifications.
+///
+/// In en, this message translates to:
+/// **'Notifications'**   À UiÀ Ui€”À Uíl/// No description provided for @navigationHours.
+///
+/// In en, this message translates to:
+/// **'Hours'**   À VÀ V€“À V‹p/// No description provided for @mapLoading.
+///
+/// In en, this message translates to:
+/// **'Loading map...'**   À VœÀ Vœ€šÀ W(t/// No description provided for @mapComingSoon.
+///
+/// In en, this message translates to:
+/// **'Map coming soon'**   À W<À W<€•À WÂn/// No description provided for @featuredEvents.
+///
+/// In en, this message translates to:
+/// **'Featured'**   À W×À W×€˜À Xbs/// No description provided for @futureEvents.
+///
+/// In en, this message translates to:
+/// **'Upcoming events'**   À XuÀ Xu€ªÀ Y
+}/// No description provided for @addToPersonalHistory.
+///
+/// In en, this message translates to:
+/// **'Add to my history'**   À Y%À Y%€¬À Y¼/// No description provided for @personalHistoryAdded.
+///
+/// In en, this message translates to:
+/// **'Saved to my history'**   À Y×À Y×€³À Zs€„/// No description provided for @personalRecordUpdating.
+///
+/// In en, this message translates to:
+/// **'Updating my history...'**   À ZÀ Z€ßÀ [Z€²/// No description provided for @personalRecordNotice.
+///
+/// In en, this message translates to:
+/// **'Personal record. It does not prove attendance or grant official hours.'**   À [uÀ [u€À [ùl/// No description provided for @viewOnMap.
+///
+/// In en, this message translates to:
+/// **'View on map'**   À \	À \	€À \Œk/// No description provided for @accessLink.
+///
+/// In en, this message translates to:
+/// **'Open link'**   À \À \€ÃÀ ]E€/// No description provided for @eventExternalLinkOpenError.
+///
+/// In en, this message translates to:
+/// **'This link could not be opened.'**   À ]fÀ ]f€ªÀ ^ €‚/// No description provided for @eventsLoadError.
+///
+/// In en, this message translates to:
+/// **'Events could not be loaded.'**   À ^À ^€‘À ^›m/// No description provided for @eventsEmpty.
+///
+/// In en, this message translates to:
+/// **'No events.'**   À ^­À ^­€±À _F€/// No description provided for @eventDetailsUnavailable.
+///
+/// In en, this message translates to:
+/// **'Event unavailable.'**   À _dÀ _dÀ `O€Ó/// No description provided for @eventEditorImageUploadUnavailable.
+///
+/// In en, this message translates to:
+/// **'Uploading an image from your device is not yet available. Choose an image from the catalog'**   À `wÀ `w€˜À `ın/// No description provided for @notificationEvent.
+///
+/// In en, this message translates to:
+/// **'Event'**   À aÀ a€¡À a¡t/// No description provided for @notificationReminder.
+///
+/// In en, this message translates to:
+/// **'Reminder'**   À a¼À a¼€›À bDp/// No description provided for @notificationUpdate.
+///
+/// In en, this message translates to:
+/// **'Update'**   À b]À b]€¢À bìw/// No description provided for @notificationsTitle.
+///
+/// In en, this message translates to:
+/// **'Notifications'**   À cÀ c€¹À c¡€„/// No description provided for @notificationManagementCreate.
+///
+/// In en, this message translates to:
+/// **'New announcement'**   À cÄÀ cÄ€ËÀ dn€’/// No description provided for @notificationManagementCreateHint.
+///
+/// In en, this message translates to:
+/// **'Send an update to everyone'**   À d•À d•€ÄÀ e:€/// No description provided for @notificationEditorContentTitle.
+///
+/// In en, this message translates to:
+/// **'Write the\nannouncement'**   À e_À e_€ğÀ f-€¶/// No description provided for @notificationEditorContentSubtitle.
+///
+/// In en, this message translates to:
+/// **'Use a clear title and include the information everyone needs.'**   À fUÀ fU€®À fæy/// No description provided for @notificationEditorTitleLabel.
+///
+/// In en, this message translates to:
+/// **'Title'**   À g	À g	€ÀÀ g¦€…/// No description provided for @notificationEditorDescriptionLabel.
+///
+/// In en, this message translates to:
+/// **'Description'**   À gÏÀ gÏ€ºÀ hm€†/// No description provided for @notificationEditorLinkTitle.
+///
+/// In en, this message translates to:
+/// **'Add a\nhelpful link'**   À hÀ h€ñÀ ia€º/// No description provided for @notificationEditorLinkSubtitle.
+///
+/// In en, this message translates to:
+/// **'Optional. Include a page where people can learn more or take action.'**   À i†À i†€´À j€€/// No description provided for @notificationEditorLinkLabel.
+///
+/// In en, this message translates to:
+/// **'External link'**   À j@À j@€µÀ jÚ€‚/// No description provided for @notificationEditorLinkHint.
+///
+/// In en, this message translates to:
+/// **'example.edu/page'**   À jûÀ jû€´À k–€ƒ/// No description provided for @notificationEditorReview.
+///
+/// In en, this message translates to:
+/// **'Review announcement'**   À kµÀ kµ€ÄÀ l[€/// No description provided for @notificationEditorReviewTitle.
+///
+/// In en, this message translates to:
+/// **'Review before\npublishing'**   À lÀ l€ûÀ mY€Â/// No description provided for @notificationEditorReviewSubtitle.
+///
+/// In en, this message translates to:
+/// **'This update will be published immediately for everyone in this campus app.'**   À m€À m€€·À n€…/// No description provided for @notificationEditorPublish.
+///
+/// In en, this message translates to:
+/// **'Publish announcement'**   À n=À n=€­À nÏz/// No description provided for @notificationEditorAudience.
+///
+/// In en, this message translates to:
+/// **'Audience'**   À nğÀ nğ€ÉÀ o›€“/// No description provided for @notificationEditorAudienceAll.
+///
+/// In en, this message translates to:
+/// **'Everyone using this campus app'**   À o¿À o¿€·À pX€/// No description provided for @notificationEditorNotInformed.
+///
+/// In en, this message translates to:
+/// **'Not provided'**   À p|À p|€×À q4€ /// No description provided for @notificationEditorInvalidTitle.
+///
+/// In en, this message translates to:
+/// **'Enter a title between 3 and 80 characters.'**   À qYÀ qY€ìÀ r €¯/// No description provided for @notificationEditorInvalidDescription.
+///
+/// In en, this message translates to:
+/// **'Enter a description between 10 and 1000 characters.'**   À rKÀ rK€ÜÀ s€/// No description provided for @notificationEditorInvalidExternalLink.
+///
+/// In en, this message translates to:
+/// **'Enter a valid HTTP or HTTPS link.'**   À s-À s-€ÛÀ sç€¢/// No description provided for @notificationEditorRequiredFields.
+///
+/// In en, this message translates to:
+/// **'Complete the required announcement fields.'**   À tÀ t€ÕÀ tÄ€/// No description provided for @notificationEditorPublishError.
+///
+/// In en, this message translates to:
+/// **'The announcement could not be published.'**   À téÀ té€éÀ u¯€®/// No description provided for @notificationManagementUnauthorized.
+///
+/// In en, this message translates to:
+/// **'You do not have permission to publish announcements.'**   À uØÀ uØ€ÂÀ v{€‹/// No description provided for @notificationEditorDiscardTitle.
+///
+/// In en, this message translates to:
+/// **'Discard announcement?'**   À v À v €İÀ w\€¤/// No description provided for @notificationEditorDiscardMessage.
+///
+/// In en, this message translates to:
+/// **'The information entered so far will be lost.'**   À wƒÀ wƒ€·À x€/// No description provided for @notificationEditorKeepEditing.
+///
+/// In en, this message translates to:
+/// **'Keep editing'**   À x@À x@€ªÀ xĞx/// No description provided for @notificationEditorDiscard.
+///
+/// In en, this message translates to:
+/// **'Discard'**   À xğÀ xğ€»À yŒ€„/// No description provided for @notificationEditorBackToReview.
+///
+/// In en, this message translates to:
+/// **'Back to review'**   À y±À y±€¢À z>u/// No description provided for @notificationOpenLink.
+///
+/// In en, this message translates to:
+/// **'Open link'**   À zYÀ zY€ÀÀ zÿ€/// No description provided for @notificationOpenLinkError.
+///
+/// In en, this message translates to:
+/// **'The link could not be opened.'**   À {À {€ÉÀ {Ì€•/// No description provided for @notificationsLoadErrorTitle.
+///
+/// In en, this message translates to:
+/// **'Notifications could not be loaded.'**   À {îÀ {î€°À |†€€/// No description provided for @notificationsEmptyTitle.
+///
+/// In en, this message translates to:
+/// **'Nothing here yet.'**   À |¤À |¤€ÏÀ }U€™/// No description provided for @notificationsLoadErrorMessage.
+///
+/// In en, this message translates to:
+/// **'Check your connection and try again.'**   À }yÀ }y€ÆÀ ~%€”/// No description provided for @notificationsEmptyMessage.
+///
+/// In en, this message translates to:
+/// **'Important updates will appear here.'**   À ~EÀ ~E€šÀ ~Ën/// No description provided for @notificationTimeNow.
+///
+/// In en, this message translates to:
+/// **'Now'**   À €`À €`€¬À €òz/// No description provided for @notificationTimeYesterday.
+///
+/// In en, this message translates to:
+/// **'Yesterday'**   À ÎÀ Î€ À ‚Wq/// No description provided for @notificationsFilterAll.
+///
+/// In en, this message translates to:
+/// **'All'**   À ‚tÀ ‚t€©À ƒw/// No description provided for @notificationsFilterEvents.
+///
+/// In en, this message translates to:
+/// **'Events'**   À ƒ#À ƒ#€²À ƒ¸}/// No description provided for @notificationsFilterReminders.
+///
+/// In en, this message translates to:
+/// **'Reminders'**   À ƒÛÀ ƒÛ€¬À „ly/// No description provided for @notificationsFilterUpdates.
+///
+/// In en, this message translates to:
+/// **'Updates'**   À „À „€“À …m/// No description provided for @settingsTitle.
+///
+/// In en, this message translates to:
+/// **'Settings'**   À …&À …&€¤À …³u/// No description provided for @settingsAccountSection.
+///
+/// In en, this message translates to:
+/// **'Account'**   À …ĞÀ …Ğ€£À †_w/// No description provided for @settingsEditProfile.
+///
+/// In en, this message translates to:
+/// **'Edit account'**   À †yÀ †y€šÀ ‡q/// No description provided for @settingsDarkMode.
+///
+/// In en, this message translates to:
+/// **'Dark mode'**   À ‡À ‡€¨À ‡«z/// No description provided for @settingsNotifications.
+///
+/// In en, this message translates to:
+/// **'Notifications'**   À ‡ÇÀ ‡Ç€™À ˆOp/// No description provided for @settingsLanguage.
+///
+/// In en, this message translates to:
+/// **'Language'**   À ˆfÀ ˆf€—À ˆío/// No description provided for @settingsSignOut.
+///
+/// In en, this message translates to:
+/// **'Sign out'**   À ‰À ‰€®À ‰š/// No description provided for @settingsSupportSection.
+///
+/// In en, this message translates to:
+/// **'Support and about'**   À ‰·À ‰·€§À ŠJ{/// No description provided for @settingsHelpSupport.
+///
+/// In en, this message translates to:
+/// **'Help and support'**   À ŠdÀ Šd€À Šæj/// No description provided for @settingsAbout.
+///
+/// In en, this message translates to:
+/// **'About'**   À ŠúÀ Šú€¸À ‹Ÿ€/// No description provided for @settingsComingSoon.
+///
+/// In en, this message translates to:
+/// **'This option will be available soon.'**   À ‹¸À ‹¸€¢À ŒEu/// No description provided for @settingsSignOutTitle.
+///
+/// In en, this message translates to:
+/// **'Sign out?'**   À Œ`À Œ`€ÎÀ €Ÿ/// No description provided for @settingsSignOutMessage.
+///
+/// In en, this message translates to:
+/// **'You will need to sign in again to access the app.'**   À 4À 4€“À ¸l/// No description provided for @settingsCancel.
+///
+/// In en, this message translates to:
+/// **'Cancel'**   À ÍÀ Í€¥À [v/// No description provided for @settingsConfirmSignOut.
+///
+/// In en, this message translates to:
+/// **'Sign out'**   À xÀ x€¬À /// No description provided for @settingsSignOutError.
+///
+/// In en, this message translates to:
+/// **'Unable to sign out.'**   À *À *€ÏÀ è€¦/// No description provided for @aboutDescription.
+///
+/// In en, this message translates to:
+/// **'Events, navigation, and a personal history of your activities.'**   À ÿÀ ÿ€À ‚k/// No description provided for @aboutVersion.
+///
+/// In en, this message translates to:
+/// **'Version'**   À •À •€ÍÀ ‘M€ /// No description provided for @aboutAcademicProject.
+///
+/// In en, this message translates to:
+/// **'Project developed as an undergraduate final project.'**   À ‘hÀ ‘h€À ‘ím/// No description provided for @aboutTeam.
+///
+/// In en, this message translates to:
+/// **'Developed by'**   À ‘ıÀ ‘ı€À ’ˆs/// No description provided for @aboutDeveloperRole.
+///
+/// In en, this message translates to:
+/// **'Developer'**   À ’¡À ’¡€¬À “7~/// No description provided for @aboutLegalInformation.
+///
+/// In en, this message translates to:
+/// **'Legal information'**   À “SÀ “S€£À “ãx/// No description provided for @aboutPrivacyPolicy.
+///
+/// In en, this message translates to:
+/// **'Privacy policy'**   À “üÀ “ü€›À ”‡s/// No description provided for @aboutTermsOfUse.
+///
+/// In en, this message translates to:
+/// **'Terms of use'**   À ”À ”€À •+v/// No description provided for @helpIntroTitle.
+///
+/// In en, this message translates to:
+/// **'How can we help?'**   À – À – €šÀ –ªr/// No description provided for @helpTopicsTitle.
+///
+/// In en, this message translates to:
+/// **'Help topics'**   À –ÀÀ –À€ËÀ —r€š/// No description provided for @helpPersonalHistoryTitle.
+///
+/// In en, this message translates to:
+/// **'How do I record an activity in my history?'**   À ˜îÀ ˜î€´À ™“€/// No description provided for @helpHoursTitle.
+///
+/// In en, this message translates to:
+/// **'How are complementary hours calculated?'**   À › À › €ªÀ ›™€/// No description provided for @helpRecordsTitle.
+///
+/// In en, this message translates to:
+/// **'How do I delete a record?'**   À ›°À ›°À œ«€ã/// No description provided for @helpRecordsDescription.
+///
+/// In en, this message translates to:
+/// **'On the hours screen, open the records drawer and swipe a card sideways. Confirm the deletion when the prompt appears.'**   À œÈÀ œÈ€·À h€ˆ/// No description provided for @helpNotificationsTitle.
+///
+/// In en, this message translates to:
+/// **'How do notifications work?'**   À …À …À ~€á/// No description provided for @helpNotificationsDescription.
+///
+/// In en, this message translates to:
+/// **'Use the filters to find updates, events, and reminders. Tap a notification to expand or collapse its content.'**   À ¡À ¡€¶À ŸF€/// No description provided for @helpAccountTitle.
+///
+/// In en, this message translates to:
+/// **'How do I change my email or password?'**   À Ÿ]À Ÿ]À  c€î/// No description provided for @helpAccountDescription.
+///
+/// In en, this message translates to:
+/// **'Open Settings, select Edit account, and choose the information you want to change. Some changes require a security confirmation.'**   À  €À  €€¡À ¡x/// No description provided for @helpContactTitle.
+///
+/// In en, this message translates to:
+/// **'Still need help?'**   À ¡'À ¡'€ĞÀ ¡à€¡/// No description provided for @helpContactDescription.
+///
+/// In en, this message translates to:
+/// **'Contact the team. Tap the address below to copy it.'**   À ¡ıÀ ¡ı€•À ¢„o/// No description provided for @helpCopyEmail.
+///
+/// In en, this message translates to:
+/// **'Copy email'**   À ¢˜À ¢˜€¤À £,|/// No description provided for @helpEmailCopied.
+///
+/// In en, this message translates to:
+/// **'Support email copied.'**   À £BÀ £B€À £Åk/// No description provided for @accountTitle.
+///
+/// In en, this message translates to:
+/// **'Account'**   À £ØÀ £Ø€¢À ¤dt/// No description provided for @accountProfileSection.
+///
+/// In en, this message translates to:
+/// **'Profile'**   À ¤€À ¤€€¥À ¥v/// No description provided for @accountSecuritySection.
+///
+/// In en, this message translates to:
+/// **'Security'**   À ¥+À ¥+€À ¥·t/// No description provided for @accountChangeName.
+///
+/// In en, this message translates to:
+/// **'Change name'**   À ¥ÏÀ ¥Ï€¡À ¦]v/// No description provided for @accountChangeEmail.
+///
+/// In en, this message translates to:
+/// **'Change email'**   À ¦vÀ ¦v€ªÀ §
+|/// No description provided for @accountChangePassword.
+///
+/// In en, this message translates to:
+/// **'Change password'**   À §&À §&€™À §±s/// No description provided for @accountDelete.
+///
+/// In en, this message translates to:
+/// **'Delete account'**   À §ÅÀ §Å€ÅÀ ¨n€‘/// No description provided for @accountCurrentPasswordTitle.
+///
+/// In en, this message translates to:
+/// **'Confirm your\ncurrent password'**   À ¨À ¨€­À ©&~/// No description provided for @accountCurrentPassword.
+///
+/// In en, this message translates to:
+/// **'Current password'**   À ©CÀ ©C€ÈÀ ©ì€‘/// No description provided for @accountCurrentPasswordRequired.
+///
+/// In en, this message translates to:
+/// **'Enter your current password'**   À ªÀ ª€µÀ ª®€…/// No description provided for @accountNewPasswordTitle.
+///
+/// In en, this message translates to:
+/// **'Create a\nnew password'**   À ªÌÀ ªÌ€¡À «Zv/// No description provided for @accountNewPassword.
+///
+/// In en, this message translates to:
+/// **'New password'**   À «sÀ «s€ÚÀ ¬3€¨/// No description provided for @accountPasswordMustDiffer.
+///
+/// In en, this message translates to:
+/// **'The new password must be different from the current one'**   À ¬SÀ ¬S€¶À ¬í€‚/// No description provided for @accountChangePasswordButton.
+///
+/// In en, this message translates to:
+/// **'Change password'**   À ­À ­€»À ­³€Œ/// No description provided for @accountPasswordChanged.
+///
+/// In en, this message translates to:
+/// **'Password changed successfully.'**   À ­ĞÀ ­Ğ€®À ®i€/// No description provided for @accountNewEmailTitle.
+///
+/// In en, this message translates to:
+/// **'Enter your\nnew email'**   À ®„À ®„€˜À ¯p/// No description provided for @accountNewEmail.
+///
+/// In en, this message translates to:
+/// **'New email'**   À ¯"À ¯"€±À ¯º€€/// No description provided for @accountEmailChangedTitle.
+///
+/// In en, this message translates to:
+/// **'Email confirmed!'**   À ¯ÙÀ ¯Ù€İÀ °š€©/// No description provided for @accountEmailChangedSubtitle.
+///
+/// In en, this message translates to:
+/// **'All set. Your new email is now linked to your account.'**   À °¼À °¼€²À ±Z€†/// No description provided for @accountEmailChanged.
+///
+/// In en, this message translates to:
+/// **'Email changed successfully.'**   À ±tÀ ±t€°À ²€„/// No description provided for @accountNewNameTitle.
+///
+/// In en, this message translates to:
+/// **'What should we\ncall you?'**   À ²*À ²*€¯À ²Æ€„/// No description provided for @accountNameChanged.
+///
+/// In en, this message translates to:
+/// **'Name changed successfully.'**   À ²ßÀ ²ß€À ³cl/// No description provided for @commonRetry.
+///
+/// In en, this message translates to:
+/// **'Try again'**   À ³uÀ ³u€À ³÷j/// No description provided for @commonCancel.
+///
+/// In en, this message translates to:
+/// **'Cancel'**   À ´
+À ´
+€À ´Œj/// No description provided for @commonDelete.
+///
+/// In en, this message translates to:
+/// **'Delete'**   À ´ŸÀ ´Ÿ€«À µ2{/// No description provided for @complementaryHoursTitle.
+///
+/// In en, this message translates to:
+/// **'My\nprogress'**   À ¶vÀ ¶v€ÈÀ ·"€”/// No description provided for @complementaryHoursLoadError.
+///
+/// In en, this message translates to:
+/// **'Unable to load the hours counter.'**   À ¸5À ¸5€­À ¸È{/// No description provided for @complementaryHoursRecords.
+///
+/// In en, this message translates to:
+/// **'My records'**   À ¸èÀ ¸è€ĞÀ ¹•€•/// No description provided for @complementaryHoursRecordsLoadError.
+///
+/// In en, this message translates to:
+/// **'Unable to load the records.'**   À ¹¾À ¹¾€¼À º[€…/// No description provided for @complementaryHoursRecordsEmpty.
+///
+/// In en, this message translates to:
+/// **'No records yet.'**   À º€À º€€ºÀ »€…/// No description provided for @complementaryHoursNoWorkload.
+///
+/// In en, this message translates to:
+/// **'No credited hours'**   À »@À »@€¹À »Û€ƒ/// No description provided for @complementaryHoursDeleteTitle.
+///
+/// In en, this message translates to:
+/// **'Delete record?'**   À ¼ûÀ ¼û€ÇÀ ½¤€‘/// No description provided for @complementaryHoursDeleteError.
+///
+/// In en, this message translates to:
+/// **'Unable to delete the record.'**   À ½ÈÀ ½È€²À ¾`€€/// No description provided for @complementaryHoursDeleted.
+///
+/// In en, this message translates to:
+/// **'Record deleted.'**   À ¾€À ¾€€£À ¿t/// No description provided for @navigationManageEvents.
+///
+/// In en, this message translates to:
+/// **'Manage'**   À ¿)À ¿)€¦À ¿ºy/// No description provided for @eventManagementTitle.
+///
+/// In en, this message translates to:
+/// **'Manage events'**   À ÀëÀ Àë€¤À Áyv/// No description provided for @eventManagementCreate.
+///
+/// In en, this message translates to:
+/// **'New event'**   À Á•À Á•€±À Â,/// No description provided for @eventManagementCreateHint.
+///
+/// In en, this message translates to:
+/// **'Add to catalog'**   À ÂLÀ ÂL€ªÀ Âİy/// No description provided for @eventManagementScheduled.
+///
+/// In en, this message translates to:
+/// **'Scheduled'**   À ÂüÀ Âü€ªÀ Ãy/// No description provided for @eventManagementPublished.
+///
+/// In en, this message translates to:
+/// **'Published'**   À Ã¬À Ã¬€¤À Ä9u/// No description provided for @eventManagementOngoing.
+///
+/// In en, this message translates to:
+/// **'Ongoing'**   À ÄVÀ ÄV€À Äßq/// No description provided for @eventManagementEnded.
+///
+/// In en, this message translates to:
+/// **'Ended'**   À ÄúÀ Äú€›À Åo/// No description provided for @eventManagementView.
+///
+/// In en, this message translates to:
+/// **'View'**   À Å›À Å›€›À Æ"o/// No description provided for @eventManagementEdit.
+///
+/// In en, this message translates to:
+/// **'Edit'**   À Æ<À Æ<€¡À ÆÇs/// No description provided for @eventManagementDelete.
+///
+/// In en, this message translates to:
+/// **'Delete'**   À ÆãÀ Æã€²À Çz/// No description provided for @eventManagementDeleteTitle.
+///
+/// In en, this message translates to:
+/// **'Delete event?'**   À È‡À È‡€«À É|/// No description provided for @eventManagementDeleted.
+///
+/// In en, this message translates to:
+/// **'Event deleted.'**   À É8À É8€ÀÀ Éİ€/// No description provided for @eventManagementDeleteError.
+///
+/// In en, this message translates to:
+/// **'Unable to delete the event.'**   À ÉşÀ Éş€²À Ê•/// No description provided for @eventManagementCancelTitle.
+///
+/// In en, this message translates to:
+/// **'Cancel event?'**   À ËâÀ Ëâ€ÄÀ Ì…€‹/// No description provided for @eventManagementCancelReasonLabel.
+///
+/// In en, this message translates to:
+/// **'Cancellation reason'**   À Ì¬À Ì¬€áÀ Ím€©/// No description provided for @eventManagementCancelReasonHint.
+///
+/// In en, this message translates to:
+/// **'Clearly explain why the event will not take place.'**   À Í“À Í“€àÀ ÎP€¥/// No description provided for @eventManagementInvalidCancelReason.
+///
+/// In en, this message translates to:
+/// **'Enter a reason with at least 10 characters.'**   À ÎyÀ Îy€ÁÀ Ï€†/// No description provided for @eventManagementConfirmCancellation.
+///
+/// In en, this message translates to:
+/// **'Cancel event'**   À Ï@À Ï@€ÕÀ Ïó€›/// No description provided for @eventManagementCampusNotification.
+///
+/// In en, this message translates to:
+/// **'NOTIFICATION FOR THE ENTIRE CAMPUS'**   À ÑÀ Ñ€ÇÀ ÑÂ€–/// No description provided for @eventManagementCancelled.
+///
+/// In en, this message translates to:
+/// **'Event cancelled and notification sent.'**   À ÑáÀ Ñá€ÀÀ Ò†€/// No description provided for @eventManagementCancelError.
+///
+/// In en, this message translates to:
+/// **'Unable to cancel the event.'**   À Ò§À Ò§€˜À Ó,m/// No description provided for @eventManagementEnd.
+///
+/// In en, this message translates to:
+/// **'End'**   À ÓEÀ ÓE€©À ÓÖy/// No description provided for @eventManagementEndTitle.
+///
+/// In en, this message translates to:
+/// **'End event?'**   À ÔÚÀ ÔÚ€³À Õq/// No description provided for @eventManagementEndedMessage.
+///
+/// In en, this message translates to:
+/// **'Event ended.'**   À Õ“À Õ“€·À Ö2€‡/// No description provided for @eventManagementEndError.
+///
+/// In en, this message translates to:
+/// **'Unable to end the event.'**   À ÖPÀ ÖP€·À Öî€†/// No description provided for @eventManagementLoadError.
+///
+/// In en, this message translates to:
+/// **'Unable to load events.'**   À ×À ×€°À ×£~/// No description provided for @eventManagementEmptyTitle.
+///
+/// In en, this message translates to:
+/// **'Empty catalog'**   À ×ÃÀ ×Ã€ÍÀ Øt€™/// No description provided for @eventManagementEmptyMessage.
+///
+/// In en, this message translates to:
+/// **'Create the first event to get started.'**   À Ø–À Ø–€İÀ ÙS€¥/// No description provided for @eventManagementCreateComingSoon.
+///
+/// In en, this message translates to:
+/// **'Event creation will be added in the next step.'**   À ÙyÀ Ùy€ÉÀ Ú&€•/// No description provided for @eventManagementUnauthorized.
+///
+/// In en, this message translates to:
+/// **'Your account cannot manage events.'**   À ÛÂÀ ÛÂ€³À Ü\€‚/// No description provided for @eventEditorIdentityTitle.
+///
+/// In en, this message translates to:
+/// **'What is the event?'**   À Ü{À Ü{€èÀ İG€´/// No description provided for @eventEditorIdentitySubtitle.
+///
+/// In en, this message translates to:
+/// **'Start with the name and category that best identify the activity.'**   À İiÀ İi€œÀ İôs/// No description provided for @eventEditorTitle.
+///
+/// In en, this message translates to:
+/// **'Event title'**   À ŞÀ Ş€ŸÀ Ş–s/// No description provided for @eventEditorCategory.
+///
+/// In en, this message translates to:
+/// **'Category'**   À Ş°À Ş°€­À ßH€€/// No description provided for @eventEditorDateTitle.
+///
+/// In en, this message translates to:
+/// **'When will it happen?'**   À ßcÀ ßc€ÁÀ à€‘/// No description provided for @eventEditorDateSubtitle.
+///
+/// In en, this message translates to:
+/// **'Set the event start date and time.'**   À à*À à*€“À à­k/// No description provided for @eventEditorDate.
+///
+/// In en, this message translates to:
+/// **'Date'**   À àÃÀ àÃ€“À áFk/// No description provided for @eventEditorTime.
+///
+/// In en, this message translates to:
+/// **'Time'**   À á\À á\€¦À áìx/// No description provided for @eventEditorChooseDate.
+///
+/// In en, this message translates to:
+/// **'Choose date'**   À âÀ â€¦À â˜x/// No description provided for @eventEditorChooseTime.
+///
+/// In en, this message translates to:
+/// **'Choose time'**   À â´À â´€®À ãN€‚/// No description provided for @eventEditorEndTitle.
+///
+/// In en, this message translates to:
+/// **'How does the event end?'**   À ãhÀ ãh€ÚÀ ä+€«/// No description provided for @eventEditorEndSubtitle.
+///
+/// In en, this message translates to:
+/// **'Choose an end time or end the event manually when it is over.'**   À äHÀ äH€¯À äß/// No description provided for @eventEditorAutomaticEnd.
+///
+/// In en, this message translates to:
+/// **'Defined end time'**   À äıÀ äı€ğÀ åÊ€µ/// No description provided for @eventEditorAutomaticEndDescription.
+///
+/// In en, this message translates to:
+/// **'The event ends automatically at the selected date and time.'**   À åóÀ åó€¦À æ„y/// No description provided for @eventEditorManualEnd.
+///
+/// In en, this message translates to:
+/// **'Manual ending'**   À æŸÀ æŸ€üÀ ç{€Ä/// No description provided for @eventEditorManualEndDescription.
+///
+/// In en, this message translates to:
+/// **'Use this when the duration is uncertain. An administrator must end the event.'**   À ç¡À ç¡€À è+r/// No description provided for @eventEditorEndDate.
+///
+/// In en, this message translates to:
+/// **'End date'**   À èDÀ èD€À èÎr/// No description provided for @eventEditorEndTime.
+///
+/// In en, this message translates to:
+/// **'End time'**   À èçÀ èç€²À é€€/// No description provided for @eventEditorLocationTitle.
+///
+/// In en, this message translates to:
+/// **'Where will it be?'**   À éŸÀ éŸ€âÀ êe€®/// No description provided for @eventEditorLocationSubtitle.
+///
+/// In en, this message translates to:
+/// **'The location is optional and can be added or changed later.'**   À ê‡À ê‡€ªÀ ë~/// No description provided for @eventEditorLocation.
+///
+/// In en, this message translates to:
+/// **'Location (optional)'**   À ë7À ë7€¹À ëÔ€…/// No description provided for @eventEditorDescriptionTitle.
+///
+/// In en, this message translates to:
+/// **'Describe the event'**   À ëöÀ ëö À ì×€É/// No description provided for @eventEditorDescriptionSubtitle.
+///
+/// In en, this message translates to:
+/// **'Present the event and, if available, include an official page or registration form.'**   À ìüÀ ìü€¨À íy/// No description provided for @eventEditorDescription.
+///
+/// In en, this message translates to:
+/// **'Description'**   À íªÀ íª€·À îI€‡/// No description provided for @eventEditorExternalLink.
+///
+/// In en, this message translates to:
+/// **'External link (optional)'**   À îgÀ îg€»À ï€‡/// No description provided for @eventEditorExternalLinkHint.
+///
+/// In en, this message translates to:
+/// **'example.com/register'**   À ï(À ï(€£À ïµu/// No description provided for @eventEditorHoursTitle.
+///
+/// In en, this message translates to:
+/// **'Workload'**   À ïÑÀ ïÑ€ÜÀ ğ”€«/// No description provided for @eventEditorHoursSubtitle.
+///
+/// In en, this message translates to:
+/// **'Only add this when the activity offers complementary hours.'**   À ğ³À ğ³€±À ñP€…/// No description provided for @eventEditorHasHours.
+///
+/// In en, this message translates to:
+/// **'Offers complementary hours'**   À ñjÀ ñj€–À ñïm/// No description provided for @eventEditorHours.
+///
+/// In en, this message translates to:
+/// **'Hours'**   À òÀ ò€œÀ òq/// No description provided for @eventEditorMinutes.
+///
+/// In en, this message translates to:
+/// **'Minutes'**   À ò¨À ò¨€«À ó=}/// No description provided for @eventEditorImageTitle.
+///
+/// In en, this message translates to:
+/// **'Choose the image'**   À óYÀ óY€ÏÀ ô€/// No description provided for @eventEditorImageSubtitle.
+///
+/// In en, this message translates to:
+/// **'Preview the real crop in both catalog formats.'**   À ô.À ô.€©À ôÀz/// No description provided for @eventEditorChooseImage.
+///
+/// In en, this message translates to:
+/// **'Select image'**   À ôİÀ ôİ€©À õoz/// No description provided for @eventEditorChangeImage.
+///
+/// In en, this message translates to:
+/// **'Change image'**   À õŒÀ õŒ€²À ö&€‚/// No description provided for @eventEditorImageGallery.
+///
+/// In en, this message translates to:
+/// **'Institution gallery'**   À öDÀ öD€¸À öâ€†/// No description provided for @eventEditorUseDeviceImage.
+///
+/// In en, this message translates to:
+/// **'Use image from device'**   À ÷À ÷€©À ÷”z/// No description provided for @eventEditorExpandImage.
+///
+/// In en, this message translates to:
+/// **'Expand image'**   À ÷±À ÷±€°À øH/// No description provided for @eventEditorExpandGallery.
+///
+/// In en, this message translates to:
+/// **'Show all images'**   À øgÀ øg€µÀ ù€‚/// No description provided for @eventEditorCollapseGallery.
+///
+/// In en, this message translates to:
+/// **'Collapse gallery'**   À ù"À ù"€¯À ù¸~/// No description provided for @eventEditorImageSelected.
+///
+/// In en, this message translates to:
+/// **'Image selected'**   À ú’À ú’€ŸÀ ûu/// No description provided for @eventEditorReview.
+///
+/// In en, this message translates to:
+/// **'Review event'**   À û7À û7€¯À ûÏ€€/// No description provided for @eventEditorReviewTitle.
+///
+/// In en, this message translates to:
+/// **'Review and publish'**   À ûìÀ ûì€èÀ üº€¶/// No description provided for @eventEditorReviewSubtitle.
+///
+/// In en, this message translates to:
+/// **'Check the details and choose when the event should appear in the app.'**   À üÚÀ üÚ€¦À ıjx/// No description provided for @eventEditorPublishNow.
+///
+/// In en, this message translates to:
+/// **'Publish now'**   À ı†À ı†€ŸÀ şs/// No description provided for @eventEditorSchedule.
+///
+/// In en, this message translates to:
+/// **'Schedule'**   À ş+À ş+€µÀ şÅ€‚/// No description provided for @eventEditorPublicationDate.
+///
+/// In en, this message translates to:
+/// **'Publication date'**   À şæÀ şæ€µÀ ÿ€€‚/// No description provided for @eventEditorPublicationTime.
+///
+/// In en, this message translates to:
+/// **'Publication time'**   À ÿ¡À ÿ¡€¢À 0w/// No description provided for @eventEditorPublish.
+///
+/// In en, this message translates to:
+/// **'Publish event'**   À IÀ I€¯À ß~/// No description provided for @eventEditorScheduleEvent.
+///
+/// In en, this message translates to:
+/// **'Schedule event'**   À şÀ ş€ªÀ‘{/// No description provided for @eventEditorDateAndTime.
+///
+/// In en, this message translates to:
+/// **'Date and time'**   À®À®€À/i/// No description provided for @eventEditorEnd.
+///
+/// In en, this message translates to:
+/// **'End'**   ÀDÀD€ÇÀğ€”/// No description provided for @eventEditorManualEndReview.
+///
+/// In en, this message translates to:
+/// **'Ended manually by an administrator'**   ÀÀ€³À¦}/// No description provided for @eventEditorComplementaryHours.
+///
+/// In en, this message translates to:
+/// **'Workload'**   ÀÊÀÊ€¦ÀZx/// No description provided for @eventEditorNotOffered.
+///
+/// In en, this message translates to:
+/// **'Not offered'**   ÀJÀJ€ÈÀú€˜/// No description provided for @eventEditorInvalidTitle.
+///
+/// In en, this message translates to:
+/// **'Enter a title with at least 3 characters.'**   ÀÀ€¾À»€‹/// No description provided for @eventEditorInvalidCategory.
+///
+/// In en, this message translates to:
+/// **'Enter the event category.'**   ÀÜÀÜ€¼À€/// No description provided for @eventEditorMissingDate.
+///
+/// In en, this message translates to:
+/// **'Choose the event date and time.'**   ÀÀ€ÁÀI€“/// No description provided for @eventEditorFutureDate.
+///
+/// In en, this message translates to:
+/// **'The event must start at a future date.'**   ÀeÀe€ÁÀ	€/// No description provided for @eventEditorMissingEndMode.
+///
+/// In en, this message translates to:
+/// **'Choose how the event will end.'**   À	,À	,€ÄÀ	×€“/// No description provided for @eventEditorEndAfterStart.
+///
+/// In en, this message translates to:
+/// **'The event must end after it starts.'**   À	öÀ	ö€ĞÀ
+«€/// No description provided for @eventEditorInvalidLocation.
+///
+/// In en, this message translates to:
+/// **'Enter a location with up to 160 characters.'**   À
+ÌÀ
+Ì€ÛÀ‰€¥/// No description provided for @eventEditorInvalidDescription.
+///
+/// In en, this message translates to:
+/// **'Write a description with at least 10 characters.'**   À­À­€ŞÀl€§/// No description provided for @eventEditorInvalidExternalLink.
+///
+/// In en, this message translates to:
+/// **'Enter a valid link, such as example.com/register.'**   À‘À‘€ÂÀ;€’/// No description provided for @eventEditorInvalidHours.
+///
+/// In en, this message translates to:
+/// **'Enter a workload greater than zero.'**   ÀYÀY€½Àş€/// No description provided for @eventEditorMissingImage.
+///
+/// In en, this message translates to:
+/// **'Select an image for the event.'**   ÀÀ€½ÀÃ€/// No description provided for @eventEditorImageError.
+///
+/// In en, this message translates to:
+/// **'Unable to open the selected image.'**   ÀßÀß€ÙÀ›€¤/// No description provided for @eventEditorFuturePublication.
+///
+/// In en, this message translates to:
+/// **'The scheduled publication must be in the future.'**   À¾À¾€ÛÀ{€¥/// No description provided for @eventEditorPublishBeforeEvent.
+///
+/// In en, this message translates to:
+/// **'Publication must happen before the event starts.'**   ÀŸÀŸ€ÄÀI€’/// No description provided for @eventEditorRequiredFields.
+///
+/// In en, this message translates to:
+/// **'Review the required event fields.'**   ÀiÀi€¸À
+€‰/// No description provided for @eventEditorCreateError.
+///
+/// In en, this message translates to:
+/// **'Unable to create the event.'**   À'À'€°ÀÄ€…/// No description provided for @eventEditorCreated.
+///
+/// In en, this message translates to:
+/// **'Event created successfully.'**   ÀİÀİ€­Àr}/// No description provided for @eventEditorDiscardTitle.
+///
+/// In en, this message translates to:
+/// **'Discard event?'**   ÀÀ€ÌÀB€š/// No description provided for @eventEditorDiscardMessage.
+///
+/// In en, this message translates to:
+/// **'The information you entered will be lost.'**   ÀbÀb€©Àôz/// No description provided for @eventEditorKeepEditing.
+///
+/// In en, this message translates to:
+/// **'Keep editing'**   ÀÀ€œÀšq/// No description provided for @eventEditorDiscard.
+///
+/// In en, this message translates to:
+/// **'Discard'**   À³À³€©ÀEz/// No description provided for @eventEditorNotInformed.
+///
+/// In en, this message translates to:
+/// **'Not provided'**   ÀbÀb€­À÷}/// No description provided for @eventEditorBackToReview.
+///
+/// In en, this message translates to:
+/// **'Back to review'**   ÀÀ€¯À©|/// No description provided for @eventEditorEditReviewTitle.
+///
+/// In en, this message translates to:
+/// **'Edit event'**   ÀÊÀÊ€ÛÀ‡€¥/// No description provided for @eventEditorEditReviewSubtitle.
+///
+/// In en, this message translates to:
+/// **'Review the event and change only what is needed.'**   À«À«€©À=z/// No description provided for @eventEditorSaveChanges.
+///
+/// In en, this message translates to:
+/// **'Save changes'**   ÀZÀZ€°À÷€…/// No description provided for @eventEditorUpdated.
+///
+/// In en, this message translates to:
+/// **'Event updated successfully.'**   ÀÀ€¸À±€‰/// No description provided for @eventEditorUpdateError.
+///
+/// In en, this message translates to:
+/// **'Unable to update the event.'**   ÀÎÀÎ€ºÀs€/// No description provided for @eventEditorLoadError.
+///
+/// In en, this message translates to:
+/// **'Unable to load the event details.'**   ÀÀ€ Àt/// No description provided for @eventEditorTryAgain.
+///
+/// In en, this message translates to:
+/// **'Try again'**   À4À4€½ÀÒ€†/// No description provided for @eventEditorDiscardChangesTitle.
+///
+/// In en, this message translates to:
+/// **'Discard changes?'**   À÷À÷€İÀ³€¤/// No description provided for @eventEditorDiscardChangesMessage.
+///
+/// In en, this message translates to:
+/// **'The changes made to this event will be lost.'**   ÀÚÀÚ€·À~€Œ/// No description provided for @mapInteractionHint.
+///
+/// In en, this message translates to:
+/// **'Drag to explore and tap a building'**   À—À—€šÀ$v/// No description provided for @mapResetView.
+///
+/// In en, this message translates to:
+/// **'Reset map rotation'**   À7À7€¯ÀĞ€/// No description provided for @mapInteriorComingSoon.
+///
+/// In en, this message translates to:
+/// **'Interior coming soon'**   ÀìÀì€‘À so/// No description provided for @mapSearch.
+///
+/// In en, this message translates to:
+/// **'Search the map'**   À ƒÀ ƒ€ÇÀ!6€›/// No description provided for @mapSearchComingSoon.
+///
+/// In en, this message translates to:
+/// **'Room and building search will be available soon.'**   À!PÀ!P€™À!ßw/// No description provided for @mapRotate.
+///
+/// In en, this message translates to:
+/// **'Drag to rotate the map'**   À!ïÀ!ï€£À"~w/// No description provided for @settingsMapGraphics.
+///
+/// In en, this message translates to:
+/// **'Map graphics'**   À"˜À"˜€¦À#%u/// No description provided for @settingsMapGraphicsLight.
+///
+/// In en, this message translates to:
+/// **'Light'**   À#DÀ#D€¯À#×{/// No description provided for @settingsMapGraphicsComplete.
+///
+/// In en, this message translates to:
+/// **'Complete'**    ‰Ã‰Ã‰Ğ  ‰§‰§€ƒ‰À    Ÿ¬Ÿ¬Ÿ³  ÄÄ€õŸ’€º/// No description provided for @userDetailsPromoteMessage.
+///
+/// In en, this message translates to:
+/// **'{name} will be able to create and manage events. Do you want to continue?'**   ¡R¡R¡Y   n n€ñ¡9€·/// No description provided for @userDetailsDemoteMessage.
+///
+/// In en, this message translates to:
+/// **'{name} will lose event management permissions. Do you want to continue?'**   À •À •	À ™  À ~åÀ ~å€»À z€/// No description provided for @notificationTimeMinutesAgo.
+///
+/// In en, this message translates to:
+/// **'{count} min ago'**   À €OÀ €O	À €S  À ¦À ¦€´À €6|/// No description provided for @notificationTimeHoursAgo.
+///
+/// In en, this message translates to:
+/// **'{count}h ago'**   À ½À ½	À Á  À À €¶À ¥/// No description provided for @notificationTimeDaysAgo.
+///
+/// In en, this message translates to:
+/// **'{count} days ago'**   À –
+À –
+À –  À •@À •@€ÚÀ •õ€¡/// No description provided for @helpIntroDescription.
+///
+/// In en, this message translates to:
+/// **'Find quick answers about the main {appName} features.'**   À ˜ÍÀ ˜ÍÀ ˜Ô  À —‘À —‘WÀ ˜®	/// No description provided for @helpPersonalHistoryDescription.
+///
+/// In en, this message translates to:
+/// **'Open the event details and tap Add to my history. This is a personal note and does not prove attendance or replace {institutionAcronym} validation.'**   À šßÀ šßÀ šæ  À ™¨À ™¨RÀ šÊ/// No description provided for @helpHoursDescription.
+///
+/// In en, this message translates to:
+/// **'The counter estimates the hours listed for events added to your history. It is a personal reference and does not replace {institutionAcronym}\'s official records.'**   À ¶UÀ ¶UÀ ¶\  À µPÀ µP À ¶4€Ğ/// No description provided for @complementaryHoursInformalNotice.
+///
+/// In en, this message translates to:
+/// **'Personal estimate. It does not prove attendance or replace {institutionAcronym} records.'**   À ¸À ¸À ¸   À ¸ À ¸ À ¸'  À ·DÀ ·D€ëÀ ·ê€’/// No description provided for @complementaryHoursProgressSemantics.
+///
+/// In en, this message translates to:
+/// **'{completed} of {target}'**   À ¼ãÀ ¼ãÀ ¼ê  À »ÿÀ »ÿ€öÀ ¼Ã€´/// No description provided for @complementaryHoursDeleteMessage.
+///
+/// In en, this message translates to:
+/// **'â€œ{eventName}â€ will be removed from your informal counter.'**   À ÀÚÀ ÀÚ	À ÀŞ  À ¿ÕÀ ¿ÕÀ ÀÅ€Ü/// No description provided for @eventManagementCount.
+///
+/// In en, this message translates to:
+/// **'{count, plural, =0 {No events in the catalog} =1 {1 event in the catalog} other {{count} events in the catalog}}'**   À ÈoÀ ÈoÀ Èv  À Ç›À Ç›€æÀ ÈR€§/// No description provided for @eventManagementDeleteMessage.
+///
+/// In en, this message translates to:
+/// **'â€œ{eventName}â€ will be removed from the catalog.'**   À ËÊÀ ËÊÀ ËÑ  À Ê¶À Ê¶&À Ë­€ç/// No description provided for @eventManagementCancelMessage.
+///
+/// In en, this message translates to:
+/// **'â€œ{eventName}â€ is already visible in the app. Cancelling it will remove it from the catalog and notify everyone.'**   À ĞüÀ ĞüÀ Ñ  À ĞÀ Ğ€óÀ ĞÏ€ /// No description provided for @eventManagementCancellationNotificationTitle.
+///
+/// In en, this message translates to:
+/// **'Event cancelled: {eventName}'**   À ÔÂÀ ÔÂÀ ÔÉ  À ÓôÀ Óô€àÀ Ô¨€¤/// No description provided for @eventManagementEndMessage.
+///
+/// In en, this message translates to:
+/// **'â€œ{eventName}â€ will be removed from the catalog.'**   À ÚìÀ ÚìÀ Úğ   À ÚùÀ Úù	À Úı  À ÚHÀ ÚH€¼À ÚÜ€€/// No description provided for @eventEditorStep.
+///
+/// In en, this message translates to:
+/// **'Step {current} of {total}'**   À Û¤À Û¤À Û¨   À Û±À Û±	À Ûµ  À Û
+À Û
+€²À Û™{/// No description provided for @editorStep.
+///
+/// In en, this message translates to:
+/// **'Step {current} of {total}'**   À ú€À ú€
+À ú„  À ù×À ù×€µÀ úh}/// No description provided for @eventEditorGalleryImage.
+///
+/// In en, this message translates to:
+/// **'Image {number}'**   À,À,	À0   À7À7À;  ÀvÀv€ÎÀ€‡/// No description provided for @eventEditorHoursAndMinutes.
+///
+/// In en, this message translates to:
+/// **'{hours}h {minutes}min'** mmÀ"‰‰‡\/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, youâ€™ll need to edit this
+/// file.
+///
+/// First, open your projectâ€™s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// projectâ€™s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.  À$Z À$s    À$TÀ$T"         À$§À$§À$® À$|À$}À$|À$|€‘À$¢    À%1À%1À%8 À%À%À%À%pÀ%%    À%¨À%¨À%Â À%‰À%ŠÀ%‰À%‰GÀ%›  À#úÀ#úÙÀ$          À%ÿÀ%ÿÀ&  À%×À%×‚lÀ%è       ‰f Ck€¯€Ù€Û %JLkm¼íò‚A‚‚¹‚¾‚Ë‚ö‚ûƒƒ\ƒ˜ƒºƒÂƒËƒĞƒìƒñ„<„K„P„]„p„—„µ„Ë………3…<…A…Z…_…ª…ù†G†R†W†¤†ó‡‡‡e‡§‡¬‡÷ˆCˆ’ˆèˆ÷‰‰=‰…‰‡‰£‰¥‰ÜŠ'Š,Š.ŠqŠ•Š—ŠéŠû‹‹W‹«‹Û‹âŒ(ŒwŒ¥Œó+V‚¬²´ö0CVhnp©°ÚíKR|œ¿Áÿ0U}ÄËõ‘‘B‘D‘Š‘‘‘»‘Ù’	’’R’Y’ƒ’¡’Ò’Ô““!“K“k“›““Ú“á”””C”E”‡””¸”Ë”÷”ù•;•B•l•ˆ•´•¶•õ•ü–&–8–a–c–§–®–Ø–ó—!—#—a—h—’—«—Ó—Õ˜˜˜C˜_˜†˜ˆ˜Å˜Ì˜ö™™?™A™™ˆ™²™êšššLšSš}š—š·š¹š÷šş›(›D›l›n›«›²›Ü›ñœœœWœ^œˆœ¦œÍœÏ8Moq¨¯ÙíMT~™ÀÂŸŸŸ2Ÿ‰Ÿ»Ÿ½Ÿù   * D j l ª ± Û¡0¡a¡c¡Ÿ¡¦¡Ğ¡ø¢¢ ¢Z¢a¢‹¢µ¢Ù¢Û£££E£b£…£‡£Ã£Ê£ô¤¤5¤7¤s¤z¤¤¤¿¤å¤ç¥(¥/¥Y¥’¥½¥¿¥ÿ¦¦0¦X¦‚¦„¦³¦º¦ä¦ü§§§D§K§u§‹§¢§¤§Ø§ß¨	¨¨=¨?¨l¨s¨¨³¨Ê¨Ì¨ö¨ı©'©9©M©O©z©©«©¾©Ó©Õªª
+ª4ªJªbªdªª—ªÁªäªúªü«-«4«^«q«Œ««Ã«Ê«ô¬¬8¬:¬l¬s¬¬²¬Î¬Ğ¬ø¬ÿ­)­9­K­M­­†­°­Ñ­í­ï®®$®N®h®€®‚®¶®½®ç®ı¯¯¯T¯[¯…¯¬¯Í¯Ï¯ş°°/°G°`°b°°—°Á°Ø°ğ°ò±(±/±Y±•±µ±·±ì±ó²²X²w²y²µ²¼²æ³³9³;³o³v³ ³Ç³å³ç´´!´K´t´‘´“´Î´Õ´ÿµ8µ]µ_µ•µœµÆ¶	¶)¶+¶a¶h¶’¶Ñ¶ñ¶ó·,·3·]·š·½·¿·ø·ÿ¸)¸P¸s¸u¸®¸µ¸ß¹¹6¹8¹t¹{¹¥¹åºººCºJºtº”º´º¶ºîºõ»»I»k»m» »§»Ñ»ó¼¼¼D¼K¼u¼’¼®¼°¼æ¼í½½<½\½^½•½œ½Æ½ÿ¾ ¾"¾l¾s¾¾Ê¾ş¿ ¿;¿B¿l¿•¿º¿¼¿÷¿şÀ @(À @QÀ @vÀ @xÀ @³À @ºÀ @äÀ AÀ A'À A)À AgÀ AnÀ A˜À A¯À A×À AÙÀ BÀ BÀ BDÀ BVÀ BzÀ B|À B¶À B½À BçÀ BùÀ CÀ CÀ CYÀ C`À CŠÀ CœÀ CÀÀ CÂÀ DÀ DÀ D2À DIÀ DrÀ DtÀ D©À D°À DÚÀ DøÀ EÀ EÀ EOÀ EVÀ E€À E À EÀÀ EÂÀ EıÀ FÀ F.À FWÀ F|À F~À F´À F»À FåÀ FşÀ GÀ G À GZÀ GaÀ G‹À GºÀ GŞÀ GàÀ HÀ H%À HOÀ H’À HºÀ H¼À IÀ I	À I3À IiÀ I™À I›À IŞÀ IåÀ JÀ J:À JgÀ JiÀ J¢À J©À JÓÀ JñÀ KÀ KÀ KRÀ KYÀ KƒÀ KÒÀ KøÀ KúÀ L8À L?À LiÀ L­À LÕÀ L×À MÀ MÀ M@À MgÀ M‰À M‹À MÊÀ MÑÀ MûÀ N!À NJÀ NLÀ N…À NŒÀ N¶À NÒÀ NõÀ N÷À O2À O9À OcÀ OŒÀ O±À O³À OñÀ OøÀ P"À PmÀ P•À P—À PĞÀ P×À QÀ Q0À QSÀ QUÀ Q”À Q›À QÅÀ QâÀ RÀ RÀ ROÀ RVÀ R€À RÃÀ RïÀ RñÀ S"À S)À SSÀ SgÀ S‚À S„À S·À S¾À SèÀ SùÀ TÀ TÀ TNÀ TUÀ TÀ T“À T³À TµÀ TòÀ TùÀ U#À U>À UeÀ UgÀ UœÀ U£À UÍÀ UàÀ UÿÀ VÀ V1À V8À VbÀ V~À V˜À VšÀ VÍÀ VÔÀ VşÀ WÀ W8À W:À WnÀ WuÀ WŸÀ WµÀ WÓÀ WÕÀ XÀ XÀ X8À XUÀ XqÀ XsÀ X­À X´À XŞÀ XıÀ Y!À Y#À Y]À YdÀ YÀ Y¯À YÓÀ YÕÀ ZÀ ZÀ ZBÀ ZfÀ ZŒÀ ZÀ ZÈÀ ZÏÀ ZùÀ [MÀ [qÀ [sÀ [¢À [©À [ÓÀ [ìÀ \À \À \7À \>À \hÀ \À \™À \›À \ÛÀ \âÀ ]À ]8À ]bÀ ]dÀ ]™À ] À ]ÊÀ ]óÀ ^À ^À ^EÀ ^LÀ ^vÀ ^À ^©À ^«À ^èÀ ^ïÀ _À _9À _`À _bÀ _©À _°À _ÚÀ `BÀ `sÀ `uÀ `¬À `³À `İÀ `ğÀ aÀ aÀ aMÀ aTÀ a~À a”À a¸À aºÀ aòÀ aùÀ b#À b7À bYÀ b[À b“À bšÀ bÄÀ bßÀ cÀ cÀ cEÀ cLÀ cvÀ c”À cÀÀ cÂÀ dÀ dÀ d9À daÀ d‘À d“À d×À dŞÀ eÀ e-À e[À e]À e¤À e«À eÕÀ f À fQÀ fSÀ f•À fœÀ fÆÀ fÙÀ gÀ gÀ gOÀ gVÀ g€À g™À gËÀ gÍÀ hÀ hÀ h?À h`À h‹À hÀ hÑÀ hØÀ iÀ iTÀ i‚À i„À iÅÀ iÌÀ iöÀ jÀ j<À j>À j~À j…À j¯À jÍÀ j÷À jùÀ k7À k>À khÀ k‰À k±À k³À köÀ kıÀ l'À lNÀ l{À l}À lÃÀ lÊÀ lôÀ mLÀ m|À m~À m½À mÄÀ mîÀ nÀ n9À n;À n{À n‚À n¬À nÂÀ nìÀ nîÀ o1À o8À obÀ oÀ o»À o½À p À pÀ p1À pKÀ pxÀ pzÀ p¾À pÅÀ pïÀ q'À qUÀ qWÀ q¡À q¨À qÒÀ rÀ rGÀ rIÀ r”À r›À rÅÀ rôÀ s)À s+À sqÀ sxÀ s¢À sÚÀ t
+À tÀ tPÀ tWÀ tÀ t·À tåÀ tçÀ u/À u6À u`À u¢À uÔÀ uÖÀ vÀ v!À vKÀ vnÀ vœÀ vÀ väÀ vëÀ wÀ wOÀ wÀ wÀ wÄÀ wËÀ wõÀ xÀ x<À x>À x}À x„À x®À xÃÀ xìÀ xîÀ y2À y9À ycÀ yÀ y­À y¯À yéÀ yğÀ zÀ z1À zUÀ zWÀ z–À zÀ zÇÀ zòÀ {À {À {^À {eÀ {À {¿À {êÀ {ìÀ |)À |0À |ZÀ |yÀ | À |¢À |åÀ |ìÀ }À }HÀ }uÀ }wÀ }¶À }½À }çÀ ~À ~AÀ ~CÀ ~|À ~ƒÀ ~­À ~¾À ~áÀ ~ãÀ #À *À TÀ qÀ ¢À ¤À âÀ éÀ €À €-À €\À €^À €À €¤À €ÎÀ €åÀ À À MÀ TÀ ~À œÀ ÊÀ ÌÀ ‚À ‚À ‚9À ‚JÀ ‚pÀ ‚rÀ ‚±À ‚¸À ‚âÀ ‚öÀ ƒÀ ƒ!À ƒcÀ ƒjÀ ƒ”À ƒ«À ƒ×À ƒÙÀ „À „ À „JÀ „_À „‰À „‹À „¾À „ÅÀ „ïÀ …À …"À …$À …`À …gÀ …‘À …¦À …ÌÀ …ÎÀ †À †À †8À †RÀ †uÀ †wÀ †­À †´À †ŞÀ †õÀ ‡À ‡À ‡RÀ ‡YÀ ‡ƒÀ ‡À ‡ÃÀ ‡ÅÀ ‡ûÀ ˆÀ ˆ,À ˆBÀ ˆbÀ ˆdÀ ˆ™À ˆ À ˆÊÀ ˆàÀ ˆÿÀ ‰À ‰=À ‰DÀ ‰nÀ ‰À ‰³À ‰µÀ ‰îÀ ‰õÀ ŠÀ Š=À Š`À ŠbÀ Š•À ŠœÀ ŠÆÀ ŠÙÀ ŠöÀ ŠøÀ ‹0À ‹7À ‹aÀ ‹’À ‹´À ‹¶À ‹ğÀ ‹÷À Œ!À Œ8À Œ\À Œ^À ŒšÀ Œ¡À ŒËÀ 
+À 0À 2À fÀ mÀ —À «À ÉÀ ËÀ À À 8À NÀ tÀ vÀ °À ·À áÀ À &À (À ^À eÀ À ÛÀ ûÀ ıÀ /À 6À `À uÀ ‘À “À ÍÀ ÔÀ şÀ ‘@À ‘dÀ ‘fÀ ‘•À ‘œÀ ‘ÆÀ ‘àÀ ‘ùÀ ‘ûÀ ’3À ’:À ’dÀ ’{À ’À ’ŸÀ ’ÚÀ ’áÀ “À “*À “OÀ “QÀ “‰À “À “ºÀ “ÖÀ “øÀ “úÀ ”/À ”6À ”`À ”zÀ ”™À ”›À ”ÏÀ ”ÖÀ • À •À •<À •>À •xÀ •À •©À •ìÀ –À –À –SÀ –ZÀ –„À –À –¼À –¾À –üÀ —À —-À —eÀ —À —À —ÓÀ —ÚÀ ˜À ˜¥À ˜êÀ ˜ìÀ ™ À ™'À ™QÀ ™†À ™¤À ™¦À ™àÀ ™çÀ šÀ šÁÀ šüÀ šşÀ ›4À ›;À ›eÀ ›ŒÀ ›¬À ›®À ›êÀ ›ñÀ œÀ œÀ œÄÀ œÆÀ À 	À 3À [À À ƒÀ ÅÀ ÌÀ öÀ qÀ À ŸÀ ÕÀ ÜÀ ŸÀ Ÿ9À ŸYÀ Ÿ[À Ÿ—À ŸÀ ŸÈÀ  VÀ  |À  ~À  ´À  »À  åÀ ¡À ¡#À ¡%À ¡aÀ ¡hÀ ¡’À ¡ÓÀ ¡ùÀ ¡ûÀ ¢.À ¢5À ¢_À ¢wÀ ¢”À ¢–À ¢ËÀ ¢ÒÀ ¢üÀ £À £>À £@À £rÀ £yÀ ££À £¸À £ÔÀ £ÖÀ ¤À ¤À ¤BÀ ¤WÀ ¤|À ¤~À ¤ºÀ ¤ÁÀ ¤ëÀ ¥À ¥'À ¥)À ¥`À ¥gÀ ¥‘À ¥ªÀ ¥ËÀ ¥ÍÀ ¦À ¦À ¦6À ¦PÀ ¦rÀ ¦tÀ ¦¯À ¦¶À ¦àÀ ¦ıÀ §"À §$À §WÀ §^À §ˆÀ §¤À §ÁÀ §ÃÀ ¨À ¨À ¨5À ¨aÀ ¨ŒÀ ¨À ¨ÊÀ ¨ÑÀ ¨ûÀ ©À ©?À ©AÀ ©…À ©ŒÀ ©¶À ©ßÀ ªÀ ªÀ ªLÀ ªSÀ ª}À ª¡À ªÈÀ ªÊÀ «À «	À «3À «MÀ «oÀ «qÀ «°À «·À «áÀ ¬&À ¬OÀ ¬QÀ ¬’À ¬™À ¬ÃÀ ¬àÀ ­À ­À ­IÀ ­PÀ ­zÀ ­¦À ­ÌÀ ­ÎÀ ®À ®À ®9À ®\À ®€À ®‚À ®·À ®¾À ®èÀ ®ÿÀ ¯À ¯ À ¯^À ¯eÀ ¯À ¯­À ¯ÕÀ ¯×À °À °À °IÀ °À °¸À °ºÀ °óÀ °úÀ ±$À ±MÀ ±pÀ ±rÀ ±«À ±²À ±ÜÀ ²À ²&À ²(À ²`À ²gÀ ²‘À ²¹À ²ÛÀ ²İÀ ³À ³À ³?À ³VÀ ³qÀ ³sÀ ³¥À ³¬À ³ÖÀ ³êÀ ´À ´À ´:À ´AÀ ´kÀ ´À ´›À ´À ´ÚÀ ´áÀ µÀ µ%À µLÀ µNÀ µ”À µ›À µÅÀ ¶+À ¶rÀ ¶tÀ ¶µÀ ¶¼À ¶æÀ ·À ·@À ·BÀ ·‹À ·’À ·¼À ·áÀ ¸1À ¸3À ¸rÀ ¸yÀ ¸£À ¸»À ¸äÀ ¸æÀ ¹.À ¹5À ¹_À ¹ˆÀ ¹ºÀ ¹¼À º À ºÀ º1À ºNÀ º|À º~À ºÀÀ ºÇÀ ºñÀ »À »<À »>À »À »ˆÀ »²À »ÎÀ »ûÀ »ıÀ ¼BÀ ¼IÀ ¼sÀ ¼ºÀ ¼÷À ¼ùÀ ½<À ½CÀ ½mÀ ½—À ½ÄÀ ½ÆÀ ¾À ¾À ¾6À ¾SÀ ¾|À ¾~À ¾ºÀ ¾ÁÀ ¾ëÀ ¾ÿÀ ¿%À ¿'À ¿aÀ ¿hÀ ¿’À ¿­À ¿ÑÀ ¿ÓÀ ÀÀ ÀÀ À>À À¼À ÀçÀ ÀéÀ Á$À Á+À ÁUÀ ÁlÀ Á‘À Á“À ÁÒÀ ÁÙÀ ÂÀ ÂÀ ÂHÀ ÂJÀ ÂˆÀ ÂÀ Â¹À ÂĞÀ ÂøÀ ÂúÀ Ã8À Ã?À ÃiÀ Ã€À Ã¨À ÃªÀ ÃæÀ ÃíÀ ÄÀ Ä,À ÄRÀ ÄTÀ ÄÀ Ä•À Ä¿À ÄÒÀ ÄöÀ ÄøÀ Å1À Å8À ÅbÀ ÅtÀ Å—À Å™À ÅÒÀ ÅÙÀ ÆÀ ÆÀ Æ8À Æ:À ÆuÀ Æ|À Æ¦À ÆºÀ ÆßÀ ÆáÀ Ç!À Ç(À ÇRÀ ÇmÀ Ç—À Ç™À ÇÛÀ ÇâÀ ÈÀ ÈIÀ ÈƒÀ È…À ÈÁÀ ÈÈÀ ÈòÀ ÉÀ É4À É6À ÉvÀ É}À É§À ÉĞÀ ÉúÀ ÉüÀ Ê<À ÊCÀ ÊmÀ ÊˆÀ Ê²À Ê´À ÊöÀ ÊıÀ Ë'À Ë¤À ËŞÀ ËàÀ Ì&À Ì-À ÌWÀ ÌxÀ Ì¨À ÌªÀ ÌïÀ ÌöÀ Í À Í`À ÍÀ Í‘À ÍÙÀ ÍàÀ Î
+À ÎCÀ ÎuÀ ÎwÀ Î¿À ÎÆÀ ÎğÀ Ï
+À Ï<À Ï>À Ï…À ÏŒÀ Ï¶À ÏæÀ ĞÀ ĞÀ ĞkÀ ĞrÀ ĞœÀ ĞÆÀ ÑÀ ÑÀ ÑPÀ ÑWÀ ÑÀ ÑµÀ ÑİÀ ÑßÀ ÒÀ Ò&À ÒPÀ ÒyÀ Ò£À Ò¥À ÒİÀ ÒäÀ ÓÀ ÓÀ ÓAÀ ÓCÀ Ó€À Ó‡À Ó±À ÓÉÀ ÓğÀ ÓòÀ Ô1À Ô8À ÔbÀ ÔŸÀ ÔÖÀ ÔØÀ ÕÀ Õ À ÕJÀ ÕdÀ ÕÀ Õ‘À ÕÎÀ ÕÕÀ ÕÿÀ Ö%À ÖLÀ ÖNÀ ÖŒÀ Ö“À Ö½À ÖáÀ ×	À ×À ×JÀ ×QÀ ×{À ×–À ×¿À ×ÁÀ ØÀ Ø	À Ø3À ØgÀ Ø’À Ø”À ØÙÀ ØàÀ Ù
+À ÙFÀ ÙuÀ ÙwÀ Ù¸À Ù¿À ÙéÀ ÚÀ ÚDÀ ÚFÀ Ú{À Ú‚À Ú¬À ÚÓÀ ÛÀ ÛÀ Û8À Û?À ÛiÀ ÛÀ Û¾À ÛÀÀ ÛşÀ ÜÀ Ü/À ÜOÀ ÜwÀ ÜyÀ ÜºÀ ÜÁÀ ÜëÀ İ:À İeÀ İgÀ İÀ İ¤À İÎÀ İçÀ ŞÀ Ş	À ŞBÀ ŞIÀ ŞsÀ Ş‰À Ş¬À Ş®À ŞèÀ ŞïÀ ßÀ ß;À ß_À ßaÀ ßÀ ß¥À ßÏÀ ßÿÀ à&À à(À à]À àdÀ àÀ à À à¿À àÁÀ àöÀ àıÀ á'À á9À áXÀ áZÀ á•À áœÀ áÆÀ áßÀ âÀ âÀ âAÀ âHÀ ârÀ â‹À â°À â²À âëÀ âòÀ ãÀ ãAÀ ãdÀ ãfÀ ã¢À ã©À ãÓÀ äÀ äDÀ äFÀ äƒÀ äŠÀ ä´À äÒÀ äùÀ äûÀ åCÀ åJÀ åtÀ å½À åïÀ åñÀ æ+À æ2À æ\À æwÀ æ›À æÀ æâÀ æéÀ çÀ çnÀ çÀ çŸÀ ç×À çŞÀ èÀ èÀ è@À èBÀ èzÀ èÀ è«À èÁÀ èãÀ èåÀ é#À é*À éTÀ ésÀ é›À éÀ éŞÀ éåÀ êÀ êXÀ êƒÀ ê…À ê¾À êÅÀ êïÀ ëÀ ë3À ë5À ëvÀ ë}À ë§À ëÇÀ ëòÀ ëôÀ ì8À ì?À ìiÀ ìÊÀ ìøÀ ìúÀ í6À í=À ígÀ í€À í¦À í¨À íåÀ íìÀ îÀ î<À îcÀ îeÀ î¦À î­À î×À îùÀ ï$À ï&À ïaÀ ïhÀ ï’À ï¨À ïÍÀ ïÏÀ ğÀ ğÀ ğ>À ğ‡À ğ¯À ğ±À ğêÀ ğñÀ ñÀ ñCÀ ñfÀ ñhÀ ñÀ ñ¥À ñÏÀ ñâÀ òÀ òÀ ò<À òCÀ òmÀ ò‚À ò¤À ò¦À òáÀ òèÀ óÀ ó0À óUÀ óWÀ ó•À óœÀ óÆÀ ôÀ ô*À ô,À ôhÀ ôoÀ ô™À ô³À ôÙÀ ôÛÀ õÀ õÀ õHÀ õbÀ õˆÀ õŠÀ õÇÀ õÎÀ õøÀ öÀ ö@À öBÀ öÀ öˆÀ ö²À öÕÀ öşÀ ÷ À ÷<À ÷CÀ ÷mÀ ÷‡À ÷­À ÷¯À ÷íÀ ÷ôÀ øÀ ø;À øcÀ øeÀ ø¥À ø¬À øÖÀ øôÀ ùÀ ù À ù^À ùeÀ ùÀ ù«À ùÓÀ ùÕÀ úÀ úÀ úCÀ ú_À úÀ úÀ úÇÀ úÎÀ úøÀ ûÀ û3À û5À ûqÀ ûxÀ û¢À ûÂÀ ûèÀ ûêÀ ü)À ü0À üZÀ ü­À üÖÀ üØÀ ıÀ ıÀ ıDÀ ı]À ı‚À ı„À ı½À ıÄÀ ıîÀ şÀ ş'À ş)À şiÀ şpÀ şšÀ ş¸À şâÀ şäÀ ÿ$À ÿ+À ÿUÀ ÿsÀ ÿÀ ÿŸÀ ÿ×À ÿŞÀ À #À EÀ GÀ …À ŒÀ ¶À ÒÀ úÀ üÀ8À?ÀiÀ„ÀªÀ¬ÀàÀçÀÀ"À@ÀBÀ‚À‰À³ÀãÀÀÀRÀYÀƒÀ™ÀÆÀÈÀÀ
+À4ÀMÀrÀtÀ´À»ÀåÀÀFÀHÀ…ÀŒÀ¶ÀíÀÀÀVÀ]À‡À®ÀØÀÚÀÀÀGÀtÀšÀœÀ×ÀŞÀÀ<ÀaÀcÀ¢À©ÀÓÀÿÀ	(À	*À	hÀ	oÀ	™À	ÊÀ	òÀ	ôÀ
+4À
+;À
+eÀ
+À
+ÈÀ
+ÊÀÀÀ>À|À©À«ÀïÀöÀ À_ÀÀÀÌÀÓÀıÀ.ÀUÀWÀ”À›ÀÅÀñÀÀÀUÀ\À†À¶ÀÛÀİÀÀ&ÀPÀÀºÀ¼ÀÿÀÀ0ÀnÀ›ÀÀÜÀãÀÀ<ÀeÀgÀ£ÀªÀÔÀıÀ#À%À]ÀdÀÀ·ÀÙÀÛÀÀÀIÀeÀŒÀÀÍÀÔÀşÀ5À^À`ÀœÀ£ÀÍÀçÀÀÀGÀNÀxÀÀ¯À±ÀíÀôÀÀ8À^À`ÀÀ¤ÀÎÀêÀÀÀSÀZÀ„ÀœÀÆÀÈÀÀÀ<ÀzÀ§À©ÀåÀìÀÀ0ÀVÀXÀÀ—ÀÁÀêÀÀÀJÀQÀ{À¤ÀÊÀÌÀÀÀ7ÀfÀŠÀŒÀÅÀÌÀöÀÀ0À2ÀvÀ}À§ÀÅÀóÀõÀ;ÀBÀlÀ¦ÀÖÀØÀÀÀAÀqÀ“À•ÀÇÀÎÀøÀÀ3À5ÀpÀwÀ¡ÀÃÀèÀêÀ À  À JÀ fÀ À À ºÀ ÁÀ ëÀ!)À!LÀ!NÀ!}À!„À!®À!ÒÀ!ëÀ!íÀ"&À"-À"WÀ"qÀ"”À"–À"ÔÀ"ÛÀ#À#À#@À#BÀ#ƒÀ#ŠÀ#´À#ÊÀ#õÀ#øÀ#úÀ$À$RÀ$xÀ$zÀ$‡À$¹À%
+À%À%À%À%DÀ%…À%‡À%”À%ÒÀ%ÕÀ%×À&À&JÀ&lÀ&|À& À&°À&ÔÀ&äÀ'À'À'À'&À'†À'ÖÀ((À(BÀ(E   AppLocalizations_AppLocalizationsDelegatelookupAppLocalizations  n!

@@ -468,7 +468,16 @@
   "eventEditorLoadError": "No se pudieron cargar los datos del evento.",
   "eventEditorTryAgain": "Intentar de nuevo",
   "eventEditorDiscardChangesTitle": "¿Descartar cambios?",
-  "eventEditorDiscardChangesMessage": "Los cambios realizados en este evento se perderán."
+  "eventEditorDiscardChangesMessage": "Los cambios realizados en este evento se perderán.",
+  "mapInteractionHint": "Arrastra para explorar y toca un bloque",
+  "mapResetView": "Volver al ángulo cero",
+  "mapInteriorComingSoon": "Interior próximamente",
+  "mapSearch": "Buscar en el mapa",
+  "mapSearchComingSoon": "La búsqueda de aulas y bloques estará disponible próximamente.",
+  "mapRotate": "Arrastra para girar el mapa",
+  "settingsMapGraphics": "Gráficos del mapa",
+  "settingsMapGraphicsLight": "Ligero",
+  "settingsMapGraphicsComplete": "Completo"
 
 
 }

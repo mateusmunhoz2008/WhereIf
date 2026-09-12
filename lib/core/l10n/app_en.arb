@@ -476,6 +476,15 @@
   "eventEditorLoadError": "Unable to load the event details.",
   "eventEditorTryAgain": "Try again",
   "eventEditorDiscardChangesTitle": "Discard changes?",
-  "eventEditorDiscardChangesMessage": "The changes made to this event will be lost."
+  "eventEditorDiscardChangesMessage": "The changes made to this event will be lost.",
+  "mapInteractionHint": "Drag to explore and tap a building",
+  "mapResetView": "Reset map rotation",
+  "mapInteriorComingSoon": "Interior coming soon",
+  "mapSearch": "Search the map",
+  "mapSearchComingSoon": "Room and building search will be available soon.",
+  "mapRotate": "Drag to rotate the map",
+  "settingsMapGraphics": "Map graphics",
+  "settingsMapGraphicsLight": "Light",
+  "settingsMapGraphicsComplete": "Complete"
 
 }

@@ -36,6 +36,7 @@ migrate_working_dir/
 # Local tooling and device captures
 /.tool_state/
 /flutter_*.png
+/artifacts/
 
 # Symbolication related
 app.*.symbols

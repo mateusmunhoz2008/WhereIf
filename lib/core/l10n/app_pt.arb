@@ -469,6 +469,15 @@
   "eventEditorLoadError": "Não foi possível carregar os dados do evento.",
   "eventEditorTryAgain": "Tentar novamente",
   "eventEditorDiscardChangesTitle": "Descartar alterações?",
-  "eventEditorDiscardChangesMessage": "As alterações feitas neste evento serão perdidas."
+  "eventEditorDiscardChangesMessage": "As alterações feitas neste evento serão perdidas.",
+  "mapInteractionHint": "Arraste para explorar e toque em um bloco",
+  "mapResetView": "Voltar ao ângulo zero",
+  "mapInteriorComingSoon": "Interior em breve",
+  "mapSearch": "Pesquisar no mapa",
+  "mapSearchComingSoon": "A pesquisa de salas e blocos estará disponível em breve.",
+  "mapRotate": "Arraste para girar o mapa",
+  "settingsMapGraphics": "Gráficos do mapa",
+  "settingsMapGraphicsLight": "Leve",
+  "settingsMapGraphicsComplete": "Completo"
 
 }

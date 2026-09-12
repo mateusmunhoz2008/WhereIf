@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <style>
+      html,
+      body,
+      canvas {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        touch-action: none;
+      }
+
+      body {
+        background: #090a0d;
+      }
+
+      canvas {
+        display: block;
+        opacity: 0;
+        transition: opacity 520ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      canvas.is-ready {
+        opacity: 1;
+      }
+    </style>
+    <script>
+      window.__whereIfPendingConfig = null;
+      window.whereIfMap = {
+        configure(config) {
+          window.__whereIfPendingConfig = config;
+        },
+      resetCamera() {},
+      setLocalTimeMinutes() {},
+      rotateCameraBy() {},
+      };
+    </script>
+  </head>
+  <body>
+    <script src="./viewer_config.js?v=night-sky-1"></script>
+    <script src="./viewer.bundle.js?v=night-sky-1"></script>
+  </body>
+</html>
