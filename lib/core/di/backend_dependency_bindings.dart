@@ -15,7 +15,7 @@ import 'package:autth_injustice_app/dev/demo_backend/demo_backend_store.dart';
 import 'package:autth_injustice_app/events/data/services/events_firestore_service.dart';
 import 'package:autth_injustice_app/complementary_hours/data/services/complementary_hours_firestore_service.dart';
 import 'package:autth_injustice_app/dev/demo_backend/services/demo_current_account_provider.dart';
-import 'package:autth_injustice_app/dev/demo_backend/services/demo_notifications_service.dart';
+import 'package:autth_injustice_app/notifications/data/services/notifications_firestore_service.dart';
 import 'package:autth_injustice_app/dev/demo_backend/services/demo_user_management_service.dart';
 import 'package:autth_injustice_app/events/data/services/i_events_service.dart';
 import 'package:autth_injustice_app/institution/domain/institution_package.dart';
@@ -59,7 +59,7 @@ abstract final class BackendDependencyBindings {
       )
       ..addSingleton<DemoBackendStore>(DemoBackendStore.new)
       ..addSingleton<IEventsService>(EventsFirestoreService.new)
-      ..addSingleton<INotificationsService>(DemoNotificationsService.new)
+      ..addSingleton<INotificationsService>(NotificationsFirestoreService.new)
       ..addSingleton<IComplementaryHoursService>(
         ComplementaryHoursFirestoreService.new,
       )

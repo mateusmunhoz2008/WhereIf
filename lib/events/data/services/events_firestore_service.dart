@@ -7,23 +7,16 @@ import 'package:autth_injustice_app/events/data/mappers/event_firestore_mapper.d
 import 'package:autth_injustice_app/events/data/services/i_events_service.dart';
 import 'package:autth_injustice_app/events/domain/events_types.dart';
 import 'package:autth_injustice_app/events/domain/models/event_creation_input.dart';
-import 'package:autth_injustice_app/events/domain/models/event_details.dart';   
+import 'package:autth_injustice_app/events/domain/models/event_details.dart';
 import 'package:autth_injustice_app/events/domain/models/event_preview.dart';
 import 'package:autth_injustice_app/events/domain/models/event_update_input.dart';
 import 'package:autth_injustice_app/events/domain/models/events_catalog.dart';
 import 'package:autth_injustice_app/institution/domain/institution_package.dart';
+import 'package:autth_injustice_app/notifications/data/mappers/notification_firestore_mapper.dart';
+import 'package:autth_injustice_app/notifications/domain/models/app_notification.dart';
+import 'package:autth_injustice_app/notifications/data/mappers/notification_firestore_mapper.dart';
+import 'package:autth_injustice_app/notifications/domain/models/app_notification.dart';
 
-/// Implementação de [IEventsService] com Cloud Firestore.
-///
-/// Estrutura:
-/// ```
-/// /events/{eventId}
-/// /accounts/{uid}/personalActivityRecords/{eventId}
-/// ```
-///
-/// A permissão de gerenciamento (`canManageEvents`) já é checada na camada
-/// de usecase antes de chegar aqui; as Firestore rules replicam a mesma
-/// checagem do lado do servidor como defesa em profundidade.
 class EventsFirestoreService implements IEventsService {
   final FirebaseFirestore _firestore;
   final InstitutionPackage _institutionPackage;
@@ -46,6 +39,30 @@ class EventsFirestoreService implements IEventsService {
         .doc(uid)
         .collection('personalActivityRecords')
         .doc(eventId);
+  }
+
+  void _writeEventNotification(
+    WriteBatch batch, {
+    required String eventId,
+    required String titleL10nKey,
+    required List<String> titleL10nArgs,
+    required String fallbackTitle,
+    String message = '',
+    String? messageL10nKey,
+  }) {
+    batch.set(
+      _firestore.collection('notifications').doc(),
+      NotificationFirestoreMapper.toMap(
+        type: AppNotificationType.event,
+        title: fallbackTitle,
+        message: message,
+        createdAt: DateTime.now(),
+        eventId: eventId,
+        titleL10nKey: titleL10nKey,
+        titleL10nArgs: titleL10nArgs,
+        messageL10nKey: messageL10nKey,
+      ),
+    );
   }
 
   @override
@@ -106,8 +123,8 @@ class EventsFirestoreService implements IEventsService {
       final snapshot = await _events.doc(eventId).get();
       if (!snapshot.exists) return Error(NotFoundFailure('eventNotFound'));
 
-      final preview =
-          EventFirestoreMapper.previewFromSnapshot(snapshot, _institutionPackage);
+      final preview = EventFirestoreMapper.previewFromSnapshot(
+          snapshot, _institutionPackage);
       final complementaryMinutes =
           EventFirestoreMapper.complementaryMinutesFromSnapshot(snapshot);
 
@@ -128,7 +145,6 @@ class EventsFirestoreService implements IEventsService {
       return Error(RemoteFailure('eventDetailsUnavailable'));
     }
   }
-
 
   @override
   Future<EventPersonalRecordResult> setPersonalRecord({
@@ -188,13 +204,31 @@ class EventsFirestoreService implements IEventsService {
     try {
       final docRef = _events.doc();
       final preview = input.toPreview(id: docRef.id);
+      final now = DateTime.now();
+      final isPublishedImmediately =
+          preview.publishAt == null || !preview.publishAt!.isAfter(now);
 
-      await docRef.set(
-        EventFirestoreMapper.toMap(
-          preview,
-          complementaryMinutes: input.complementaryMinutes,
-        ),
-      );
+      final batch = _firestore.batch();
+      batch.set(
+          docRef,
+          EventFirestoreMapper.toMap(
+            preview,
+            complementaryMinutes: input.complementaryMinutes,
+          ));
+
+      if (isPublishedImmediately) {
+        _writeEventNotification(
+          batch,
+          eventId: docRef.id,
+          titleL10nKey: 'notificationEventCreatedTitle',
+          titleL10nArgs: [preview.title],
+          fallbackTitle: 'Novo evento: ${preview.title}',
+          message: preview.description,
+        );
+      }
+      // TODO(cloud-functions): quando o evento é publicado no futuro, ninguem esstá no codigo para lancaçar a notificção, vai precisar de uma cloud function
+
+      await batch.commit();
 
       return Success(EventDetails(
         event: preview,
@@ -279,7 +313,8 @@ class EventsFirestoreService implements IEventsService {
       await docRef.delete();
       return const Success(true);
     } on FirebaseException catch (error) {
-      return Error(_mapFailure(error, fallbackKey: 'eventManagementDeleteError'));
+      return Error(
+          _mapFailure(error, fallbackKey: 'eventManagementDeleteError'));
     } catch (_) {
       return Error(RemoteFailure('eventManagementDeleteError'));
     }
@@ -310,21 +345,26 @@ class EventsFirestoreService implements IEventsService {
         return Error(InvalidInputFailure('eventManagementCancelError'));
       }
 
-      await docRef.update({
+      final batch = _firestore.batch();
+      batch.update(docRef, {
         'cancelledAt': Timestamp.fromDate(now),
         'cancellationReason': reason,
         'cancelledByUid': actorUid,
       });
-
-      // TODO(notifications-backend): as notificações ainda usam o backend
-      // demo (em memória, por dispositivo). Quando `notifications` migrar
-      // para Firestore, publicar aqui o aviso campus-wide num único
-      // WriteBatch junto com o update acima, para que cancelamento e aviso
-      // nunca fiquem inconsistentes entre si.
+      _writeEventNotification(
+        batch,
+        eventId: eventId,
+        titleL10nKey: 'notificationEventCancelledTitle',
+        titleL10nArgs: [preview.title],
+        fallbackTitle: 'Evento cancelado: ${preview.title}',
+        message: reason,
+      );
+      await batch.commit();
 
       return const Success(true);
     } on FirebaseException catch (error) {
-      return Error(_mapFailure(error, fallbackKey: 'eventManagementCancelError'));
+      return Error(
+          _mapFailure(error, fallbackKey: 'eventManagementCancelError'));
     } catch (_) {
       return Error(RemoteFailure('eventManagementCancelError'));
     }
@@ -350,6 +390,17 @@ class EventsFirestoreService implements IEventsService {
       if (!preview.isOngoingAt(now)) {
         return Error(InvalidInputFailure('eventManagementEndError'));
       }
+      
+      final batch = _firestore.batch();
+      batch.update(docRef, {'endedAt': Timestamp.fromDate(now)});
+      _writeEventNotification(
+        batch,
+        eventId: eventId,
+        titleL10nKey: 'notificationEventEndedTitle',
+        titleL10nArgs: [preview.title],
+        fallbackTitle: 'Evento encerrado: ${preview.title}',
+        messageL10nKey: 'notificationEventEndedMessage',
+      );
 
       await docRef.update({'endedAt': Timestamp.fromDate(now)});
       return const Success(true);

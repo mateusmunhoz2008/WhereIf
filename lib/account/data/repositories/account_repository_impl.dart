@@ -6,10 +6,6 @@ import 'package:autth_injustice_app/core/failure/failure.dart';
 import 'package:autth_injustice_app/core/patterns/result.dart';
 import 'package:autth_injustice_app/core/typedefs/types_defs.dart';
 
-/// Implementação do repositório de Account.
-///
-/// O [uid] é sempre resolvido a partir da sessão de autenticação ativa,
-/// mantendo a interface limpa sem expor uid para os use cases.
 final class AccountRepositoryImpl implements IAccountRepository {
   final IAccountRemoteStorage _remoteStorage;
   final IAuthRepository _authRepository;

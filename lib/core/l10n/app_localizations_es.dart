@@ -543,6 +543,24 @@ class AppLocalizationsEs extends AppLocalizations {
   String get notificationsFilterUpdates => 'Actualizaciones';
 
   @override
+  String notificationEventCreatedTitle(String eventTitle) {
+    return 'Nuevo evento: $eventTitle';
+  }
+
+  @override
+  String notificationEventCancelledTitle(String eventTitle) {
+    return 'Evento cancelado: $eventTitle';
+  }
+
+  @override
+  String notificationEventEndedTitle(String eventTitle) {
+    return 'Evento finalizado: $eventTitle';
+  }
+
+  @override
+  String get notificationEventEndedMessage => 'El evento ha finalizado.';
+
+  @override
   String get settingsTitle => 'Configuración';
 
   @override

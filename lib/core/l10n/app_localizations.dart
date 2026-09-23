@@ -1084,6 +1084,30 @@ abstract class AppLocalizations {
   /// **'Updates'**
   String get notificationsFilterUpdates;
 
+  /// No description provided for @notificationEventCreatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New event: {eventTitle}'**
+  String notificationEventCreatedTitle(String eventTitle);
+
+  /// No description provided for @notificationEventCancelledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Event cancelled: {eventTitle}'**
+  String notificationEventCancelledTitle(String eventTitle);
+
+  /// No description provided for @notificationEventEndedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Event ended: {eventTitle}'**
+  String notificationEventEndedTitle(String eventTitle);
+
+  /// No description provided for @notificationEventEndedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The event has ended.'**
+  String get notificationEventEndedMessage;
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

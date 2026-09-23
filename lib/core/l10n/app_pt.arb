@@ -24,12 +24,20 @@
   "userDetailsPromoteTitle": "Promover usuário?",
   "userDetailsPromoteMessage": "{name} poderá criar e gerenciar eventos. Deseja continuar?",
   "@userDetailsPromoteMessage": {
-    "placeholders": {"name": {"type": "String"}}
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "userDetailsDemoteTitle": "Rebaixar usuário?",
   "userDetailsDemoteMessage": "{name} perderá as permissões de gerenciamento de eventos. Deseja continuar?",
   "@userDetailsDemoteMessage": {
-    "placeholders": {"name": {"type": "String"}}
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "userDetailsRoleUpdated": "Cargo atualizado com sucesso.",
   "userDetailsLoadError": "Não foi possível carregar os detalhes do usuário.",
@@ -41,9 +49,6 @@
   "welcomeTo": "Bem-vindo ao",
   "whereIf": "Where IF",
   "continueButton": "Continuar",
-
-
-
   "joinThe": "Junte-se ao",
   "team": "Time",
   "email": "E-mail",
@@ -54,9 +59,6 @@
   "signupButton": "Cadastrar-se",
   "or": "ou",
   "googleButton": "Entrar com o Google",
-
-
-
   "whatYour": "Qual é o seu",
   "createPassword": "Crie uma",
   "registerNameTitle": "Como você se\nchama?",
@@ -65,7 +67,6 @@
   "invalidFirstName": "Informe um nome com pelo menos 2 caracteres.",
   "invalidLastName": "Informe um sobrenome com pelo menos 2 caracteres.",
   "accountInvalidFullName": "Informe seu nome e sobrenome.",
-
   "fieldsRequired": "Por favor, preencha os campos",
   "invalidFields": "E-mail ou senha incorretos",
   "authEmailAlreadyInUse": "Este e-mail já está vinculado a uma conta.",
@@ -77,11 +78,8 @@
   "authBackendUnavailable": "A autenticação ainda não está conectada ao servidor.",
   "authUserNotFound": "Conta não encontrada.",
   "authGoogleCanceled": "Login com Google cancelado.",
-
-  
   "emailRequired": "Informe um email",
   "invalidEmail": "E-mail incorreto",
-
   "passwordRequired": "Informe uma senha",
   "passwordMinLength": "A senha deve ter pelo menos 8 caracteres",
   "passwordRequireLowercaseAndUppercase": "Letras maiúsculas e minúsculas",
@@ -93,9 +91,6 @@
   "passwordStrengthFair": "Razoável",
   "passwordStrengthGood": "Boa",
   "passwordStrengthExcellent": "Excelente",
-
-
-
   "checkEmailTitle": "Verifique seu e-mail",
   "checkEmailSentTo": "Enviamos um link para:",
   "checkEmailDescription": "Clique no link para continuar.",
@@ -104,9 +99,6 @@
   "emailVerificationExpired": "Este link expirou. Solicite um novo para continuar.",
   "emailVerificationUnexpectedError": "Não foi possível verificar o e-mail agora.",
   "emailVerificationResendFailed": "Não foi possível reenviar o link.",
-
-
-
   "emailConfirmedTitle": "Email confirmado!",
   "emailConfirmedSubtitle": "Tudo beleza. Agora vamos continuar para criar sua nova senha.",
   "accountConfirmedSubtitle": "Sua conta foi confirmada. Agora você já pode continuar.",
@@ -118,7 +110,6 @@
   "passwordResetFailed": "Não foi possível redefinir sua senha.",
   "passwordResetChangedTitle": "Senha redefinida!",
   "passwordResetChangedSubtitle": "Tudo certo. Agora você já pode entrar usando sua nova senha.",
-
   "eventsTitle": "Eventos",
   "navigationMap": "Mapa",
   "navigationEvents": "Eventos",
@@ -139,11 +130,9 @@
   "eventsEmpty": "Nenhum evento.",
   "eventDetailsUnavailable": "Evento indisponível.",
   "eventEditorImageUploadUnavailable": "Upload de imagem do dispositivo ainda não está disponível. Escolha uma imagem do catálogo.",
-
   "notificationEvent": "Evento",
   "notificationReminder": "Lembrete",
   "notificationUpdate": "Atualização",
-
   "notificationsTitle": "Notificações",
   "notificationManagementCreate": "Novo aviso",
   "notificationManagementCreateHint": "Enviar uma atualização para todos",
@@ -182,22 +171,58 @@
   "notificationTimeNow": "Agora",
   "notificationTimeMinutesAgo": "Há {count} min",
   "@notificationTimeMinutesAgo": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "notificationTimeHoursAgo": "Há {count} h",
   "@notificationTimeHoursAgo": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "notificationTimeYesterday": "Ontem",
   "notificationTimeDaysAgo": "Há {count} dias",
   "@notificationTimeDaysAgo": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "notificationsFilterAll": "Todas",
   "notificationsFilterEvents": "Eventos",
   "notificationsFilterReminders": "Lembretes",
   "notificationsFilterUpdates": "Atualizações",
-
+  "notificationEventCreatedTitle": "Novo evento: {eventTitle}",
+  "@notificationEventCreatedTitle": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationEventCancelledTitle": "Evento cancelado: {eventTitle}",
+  "@notificationEventCancelledTitle": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationEventEndedTitle": "Evento encerrado: {eventTitle}",
+  "@notificationEventEndedTitle": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationEventEndedMessage": "O evento chegou ao fim.",
   "settingsTitle": "Configurações",
   "settingsAccountSection": "Conta",
   "settingsEditProfile": "Editar conta",
@@ -225,18 +250,30 @@
   "helpIntroTitle": "Como podemos ajudar?",
   "helpIntroDescription": "Encontre respostas rápidas sobre os principais recursos do {appName}.",
   "@helpIntroDescription": {
-    "placeholders": {"appName": {"type": "String"}}
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
   },
   "helpTopicsTitle": "Tópicos de ajuda",
   "helpPersonalHistoryTitle": "Como registrar uma atividade no meu histórico?",
   "helpPersonalHistoryDescription": "Abra os detalhes do evento e toque em Adicionar ao meu histórico. Esse registro é uma anotação pessoal e não comprova presença nem substitui a validação do {institutionAcronym}.",
   "@helpPersonalHistoryDescription": {
-    "placeholders": {"institutionAcronym": {"type": "String"}}
+    "placeholders": {
+      "institutionAcronym": {
+        "type": "String"
+      }
+    }
   },
   "helpHoursTitle": "Como são calculadas as horas?",
   "helpHoursDescription": "O contador estima as cargas horárias informadas nos eventos adicionados ao seu histórico. Ele é uma referência pessoal e não substitui o registro oficial do {institutionAcronym}.",
   "@helpHoursDescription": {
-    "placeholders": {"institutionAcronym": {"type": "String"}}
+    "placeholders": {
+      "institutionAcronym": {
+        "type": "String"
+      }
+    }
   },
   "helpRecordsTitle": "Como excluir um registro?",
   "helpRecordsDescription": "Na tela de horas, abra a gaveta de registros e arraste um cartão para o lado. Confirme a exclusão quando o aviso aparecer.",
@@ -270,21 +307,28 @@
   "accountEmailChanged": "E-mail alterado com sucesso.",
   "accountNewNameTitle": "Como devemos\nchamar você?",
   "accountNameChanged": "Nome alterado com sucesso.",
-
   "commonRetry": "Tentar novamente",
   "commonCancel": "Cancelar",
   "commonDelete": "Excluir",
   "complementaryHoursTitle": "Meu\nprogresso",
   "complementaryHoursInformalNotice": "Estimativa pessoal. Não comprova presença nem substitui os registros do {institutionAcronym}.",
   "@complementaryHoursInformalNotice": {
-    "placeholders": {"institutionAcronym": {"type": "String"}}
+    "placeholders": {
+      "institutionAcronym": {
+        "type": "String"
+      }
+    }
   },
   "complementaryHoursLoadError": "Não foi possível carregar o contador.",
   "complementaryHoursProgressSemantics": "{completed} de {target}",
   "@complementaryHoursProgressSemantics": {
     "placeholders": {
-      "completed": {"type": "String"},
-      "target": {"type": "String"}
+      "completed": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
     }
   },
   "complementaryHoursRecords": "Meus registros",
@@ -295,7 +339,9 @@
   "complementaryHoursDeleteMessage": "“{eventName}” será removido do seu contador informal.",
   "@complementaryHoursDeleteMessage": {
     "placeholders": {
-      "eventName": {"type": "String"}
+      "eventName": {
+        "type": "String"
+      }
     }
   },
   "complementaryHoursDeleteError": "Não foi possível excluir o registro.",
@@ -305,7 +351,9 @@
   "eventManagementCount": "{count, plural, =0 {Nenhum evento no catálogo} =1 {1 evento no catálogo} other {{count} eventos no catálogo}}",
   "@eventManagementCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "eventManagementCreate": "Novo evento",
@@ -321,7 +369,9 @@
   "eventManagementDeleteMessage": "“{eventName}” será removido do catálogo.",
   "@eventManagementDeleteMessage": {
     "placeholders": {
-      "eventName": {"type": "String"}
+      "eventName": {
+        "type": "String"
+      }
     }
   },
   "eventManagementDeleted": "Evento excluído.",
@@ -330,7 +380,9 @@
   "eventManagementCancelMessage": "“{eventName}” já está visível no app. Ao cancelar, ele sairá do catálogo e todos receberão uma notificação.",
   "@eventManagementCancelMessage": {
     "placeholders": {
-      "eventName": {"type": "String"}
+      "eventName": {
+        "type": "String"
+      }
     }
   },
   "eventManagementCancelReasonLabel": "Motivo do cancelamento",
@@ -341,7 +393,9 @@
   "eventManagementCancellationNotificationTitle": "Evento cancelado: {eventName}",
   "@eventManagementCancellationNotificationTitle": {
     "placeholders": {
-      "eventName": {"type": "String"}
+      "eventName": {
+        "type": "String"
+      }
     }
   },
   "eventManagementCancelled": "Evento cancelado e notificação enviada.",
@@ -351,7 +405,9 @@
   "eventManagementEndMessage": "“{eventName}” será removido do catálogo.",
   "@eventManagementEndMessage": {
     "placeholders": {
-      "eventName": {"type": "String"}
+      "eventName": {
+        "type": "String"
+      }
     }
   },
   "eventManagementEndedMessage": "Evento encerrado.",
@@ -364,15 +420,23 @@
   "eventEditorStep": "Etapa {current} de {total}",
   "@eventEditorStep": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "editorStep": "Etapa {current} de {total}",
   "@editorStep": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "eventEditorIdentityTitle": "Qual é o evento?",
@@ -434,8 +498,12 @@
   "eventEditorHoursAndMinutes": "{hours}h {minutes}min",
   "@eventEditorHoursAndMinutes": {
     "placeholders": {
-      "hours": {"type": "int"},
-      "minutes": {"type": "int"}
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "eventEditorInvalidTitle": "Digite um título com pelo menos 3 caracteres.",
@@ -479,5 +547,4 @@
   "settingsMapGraphics": "Gráficos do mapa",
   "settingsMapGraphicsLight": "Leve",
   "settingsMapGraphicsComplete": "Completo"
-
 }

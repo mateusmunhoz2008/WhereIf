@@ -7,10 +7,6 @@ import 'package:autth_injustice_app/core/failure/failure.dart';
 import 'package:autth_injustice_app/core/patterns/result.dart';
 import 'package:autth_injustice_app/institution/domain/institution_package.dart';
 
-/// Implementação de [IComplementaryHoursService] com Cloud Firestore.
-///
-/// Lê a mesma coleção que [EventsFirestoreService.setPersonalRecord] escreve:
-/// `/accounts/{uid}/personalActivityRecords`.
 class ComplementaryHoursFirestoreService implements IComplementaryHoursService {
   final FirebaseFirestore _firestore;
   final InstitutionPackage _institutionPackage;

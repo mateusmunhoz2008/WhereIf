@@ -23,6 +23,30 @@ class NotificationCard extends StatelessWidget {
     this.onExternalLinkTap,
   });
 
+  String _resolvedTitle(BuildContext context) {
+    final key = notification.titleL10nKey;
+    final args = notification.titleL10nArgs ?? const [];
+    final eventTitle = args.isNotEmpty ? args[0] : '';
+
+    return switch (key) {
+      'notificationEventCreatedTitle' =>
+        context.l10n.notificationEventCreatedTitle(eventTitle),
+      'notificationEventCancelledTitle' =>
+        context.l10n.notificationEventCancelledTitle(eventTitle),
+      'notificationEventEndedTitle' =>
+        context.l10n.notificationEventEndedTitle(eventTitle),
+      _ => notification.title,
+    };
+  }
+
+  String _resolvedMessage(BuildContext context) {
+    return switch (notification.messageL10nKey) {
+      'notificationEventEndedMessage' =>
+        context.l10n.notificationEventEndedMessage,
+      _ => notification.message,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final style = _NotificationStyle.from(
@@ -30,6 +54,8 @@ class NotificationCard extends StatelessWidget {
       notification.type,
     );
     final radius = BorderRadius.circular(22 * scale);
+    final title = _resolvedTitle(context);
+    final message = _resolvedMessage(context);
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
@@ -136,7 +162,7 @@ class NotificationCard extends StatelessWidget {
                                 curve: Curves.easeOutCubic,
                                 alignment: Alignment.topLeft,
                                 child: Text(
-                                  notification.title,
+                                  title,
                                   maxLines: isExpanded ? null : 2,
                                   overflow: isExpanded
                                       ? TextOverflow.visible
@@ -180,7 +206,7 @@ class NotificationCard extends StatelessWidget {
                                   child: isExpanded
                                       ? _NotificationDescription(
                                           key: const ValueKey('description'),
-                                          message: notification.message,
+                                          message: message,
                                           externalUrl: notification.externalUrl,
                                           onExternalLinkTap: onExternalLinkTap,
                                           scale: scale,

@@ -3,7 +3,6 @@ import 'package:autth_injustice_app/account/domain/services/i_current_account_pr
 import 'package:autth_injustice_app/authentication/data/repositories/i_auth_repository.dart';
 
 /// Expoe somente a conta presente na sessao de autenticacao ativa.
-///
 /// Sem uma sessao, todas as features reconhecem um visitante.
 class AuthenticatedCurrentAccountProvider implements ICurrentAccountProvider {
   final IAuthRepository _authRepository;

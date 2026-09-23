@@ -7,12 +7,6 @@ import 'package:autth_injustice_app/core/failure/failure.dart';
 import 'package:autth_injustice_app/core/patterns/result.dart';
 import 'package:autth_injustice_app/core/typedefs/types_defs.dart';
 
-/// Implementação de [IAccountRemoteStorage] usando Cloud Firestore.
-///
-/// Estrutura no Firestore:
-/// ```
-/// /accounts/{uid}   ← documento com os dados da conta
-/// ```
 final class AccountFirestoreService implements IAccountRemoteStorage {
   final FirebaseFirestore _firestore;
 

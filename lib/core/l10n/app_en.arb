@@ -24,12 +24,20 @@
   "userDetailsPromoteTitle": "Promote user?",
   "userDetailsPromoteMessage": "{name} will be able to create and manage events. Do you want to continue?",
   "@userDetailsPromoteMessage": {
-    "placeholders": {"name": {"type": "String"}}
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "userDetailsDemoteTitle": "Demote user?",
   "userDetailsDemoteMessage": "{name} will lose event management permissions. Do you want to continue?",
   "@userDetailsDemoteMessage": {
-    "placeholders": {"name": {"type": "String"}}
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "userDetailsRoleUpdated": "Role updated successfully.",
   "userDetailsLoadError": "Unable to load user details.",
@@ -41,9 +49,6 @@
   "welcomeTo": "Welcome To",
   "whereIf": "Where IF",
   "continueButton": "Continue",
-
-  
-
   "joinThe": "Join the",
   "team": "Team",
   "email": "Email",
@@ -54,9 +59,6 @@
   "signupButton": "Sign up",
   "or": "or",
   "googleButton": "Sign in with Google",
-
-  
-
   "whatYour": "What's your",
   "createPassword": "Create a",
   "registerNameTitle": "What should we\ncall you?",
@@ -65,8 +67,6 @@
   "invalidFirstName": "Enter a first name with at least 2 characters.",
   "invalidLastName": "Enter a last name with at least 2 characters.",
   "accountInvalidFullName": "Enter your first and last name.",
-
-  
   "fieldsRequired": "Please fill in the fields",
   "invalidFields": "Incorrect email or password",
   "authEmailAlreadyInUse": "This email is already linked to an account.",
@@ -78,10 +78,8 @@
   "authBackendUnavailable": "Authentication is not connected to the server yet.",
   "authUserNotFound": "Account not found.",
   "authGoogleCanceled": "Google sign-in was canceled.",
-
   "emailRequired": "Please enter a email",
   "invalidEmail": "Incorrect email",
-
   "passwordRequired": "Please enter a password",
   "passwordMinLength": "Password must be at least 8 characters long",
   "passwordRequireLowercaseAndUppercase": "Uppercase and lowercase letters",
@@ -93,9 +91,6 @@
   "passwordStrengthFair": "Fair",
   "passwordStrengthGood": "Good",
   "passwordStrengthExcellent": "Excellent",
-
-
-
   "checkEmailTitle": "Check your email",
   "checkEmailSentTo": "We sent a link to:",
   "checkEmailDescription": "Click the link to continue.",
@@ -104,9 +99,6 @@
   "emailVerificationExpired": "This link has expired. Request a new one to continue.",
   "emailVerificationUnexpectedError": "We could not verify the email right now.",
   "emailVerificationResendFailed": "We could not resend the link.",
-
-
-
   "emailConfirmedTitle": "Email confirmed!",
   "emailConfirmedSubtitle": "All set. Now let's continue so you can create your new password.",
   "accountConfirmedSubtitle": "Your account has been confirmed. You can now continue.",
@@ -118,7 +110,6 @@
   "passwordResetFailed": "We could not reset your password.",
   "passwordResetChangedTitle": "Password reset!",
   "passwordResetChangedSubtitle": "All set. You can now sign in using your new password.",
-
   "eventsTitle": "Events",
   "navigationMap": "Map",
   "navigationEvents": "Events",
@@ -139,11 +130,9 @@
   "eventsEmpty": "No events.",
   "eventDetailsUnavailable": "Event unavailable.",
   "eventEditorImageUploadUnavailable": "Uploading an image from your device is not yet available. Choose an image from the catalog",
-
   "notificationEvent": "Event",
   "notificationReminder": "Reminder",
   "notificationUpdate": "Update",
-
   "notificationsTitle": "Notifications",
   "notificationManagementCreate": "New announcement",
   "notificationManagementCreateHint": "Send an update to everyone",
@@ -182,22 +171,58 @@
   "notificationTimeNow": "Now",
   "notificationTimeMinutesAgo": "{count} min ago",
   "@notificationTimeMinutesAgo": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "notificationTimeHoursAgo": "{count}h ago",
   "@notificationTimeHoursAgo": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "notificationTimeYesterday": "Yesterday",
   "notificationTimeDaysAgo": "{count} days ago",
   "@notificationTimeDaysAgo": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "notificationsFilterAll": "All",
   "notificationsFilterEvents": "Events",
   "notificationsFilterReminders": "Reminders",
   "notificationsFilterUpdates": "Updates",
-
+  "notificationEventCreatedTitle": "New event: {eventTitle}",
+  "@notificationEventCreatedTitle": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationEventCancelledTitle": "Event cancelled: {eventTitle}",
+  "@notificationEventCancelledTitle": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationEventEndedTitle": "Event ended: {eventTitle}",
+  "@notificationEventEndedTitle": {
+    "placeholders": {
+      "eventTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationEventEndedMessage": "The event has ended.",
   "settingsTitle": "Settings",
   "settingsAccountSection": "Account",
   "settingsEditProfile": "Edit account",
@@ -225,18 +250,30 @@
   "helpIntroTitle": "How can we help?",
   "helpIntroDescription": "Find quick answers about the main {appName} features.",
   "@helpIntroDescription": {
-    "placeholders": {"appName": {"type": "String"}}
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
   },
   "helpTopicsTitle": "Help topics",
   "helpPersonalHistoryTitle": "How do I record an activity in my history?",
   "helpPersonalHistoryDescription": "Open the event details and tap Add to my history. This is a personal note and does not prove attendance or replace {institutionAcronym} validation.",
   "@helpPersonalHistoryDescription": {
-    "placeholders": {"institutionAcronym": {"type": "String"}}
+    "placeholders": {
+      "institutionAcronym": {
+        "type": "String"
+      }
+    }
   },
   "helpHoursTitle": "How are complementary hours calculated?",
   "helpHoursDescription": "The counter estimates the hours listed for events added to your history. It is a personal reference and does not replace {institutionAcronym}'s official records.",
   "@helpHoursDescription": {
-    "placeholders": {"institutionAcronym": {"type": "String"}}
+    "placeholders": {
+      "institutionAcronym": {
+        "type": "String"
+      }
+    }
   },
   "helpRecordsTitle": "How do I delete a record?",
   "helpRecordsDescription": "On the hours screen, open the records drawer and swipe a card sideways. Confirm the deletion when the prompt appears.",
@@ -270,21 +307,28 @@
   "accountEmailChanged": "Email changed successfully.",
   "accountNewNameTitle": "What should we\ncall you?",
   "accountNameChanged": "Name changed successfully.",
-
   "commonRetry": "Try again",
   "commonCancel": "Cancel",
   "commonDelete": "Delete",
   "complementaryHoursTitle": "My\nprogress",
   "complementaryHoursInformalNotice": "Personal estimate. It does not prove attendance or replace {institutionAcronym} records.",
   "@complementaryHoursInformalNotice": {
-    "placeholders": {"institutionAcronym": {"type": "String"}}
+    "placeholders": {
+      "institutionAcronym": {
+        "type": "String"
+      }
+    }
   },
   "complementaryHoursLoadError": "Unable to load the hours counter.",
   "complementaryHoursProgressSemantics": "{completed} of {target}",
   "@complementaryHoursProgressSemantics": {
     "placeholders": {
-      "completed": {"type": "String"},
-      "target": {"type": "String"}
+      "completed": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
     }
   },
   "complementaryHoursRecords": "My records",
@@ -295,7 +339,9 @@
   "complementaryHoursDeleteMessage": "“{eventName}” will be removed from your informal counter.",
   "@complementaryHoursDeleteMessage": {
     "placeholders": {
-      "eventName": {"type": "String"}
+      "eventName": {
+        "type": "String"
+      }
     }
   },
   "complementaryHoursDeleteError": "Unable to delete the record.",
@@ -305,7 +351,9 @@
   "eventManagementCount": "{count, plural, =0 {No events in the catalog} =1 {1 event in the catalog} other {{count} events in the catalog}}",
   "@eventManagementCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "eventManagementCreate": "New event",
@@ -321,7 +369,9 @@
   "eventManagementDeleteMessage": "“{eventName}” will be removed from the catalog.",
   "@eventManagementDeleteMessage": {
     "placeholders": {
-      "eventName": {"type": "String"}
+      "eventName": {
+        "type": "String"
+      }
     }
   },
   "eventManagementDeleted": "Event deleted.",
@@ -330,7 +380,9 @@
   "eventManagementCancelMessage": "“{eventName}” is already visible in the app. Cancelling it will remove it from the catalog and notify everyone.",
   "@eventManagementCancelMessage": {
     "placeholders": {
-      "eventName": {"type": "String"}
+      "eventName": {
+        "type": "String"
+      }
     }
   },
   "eventManagementCancelReasonLabel": "Cancellation reason",
@@ -341,7 +393,9 @@
   "eventManagementCancellationNotificationTitle": "Event cancelled: {eventName}",
   "@eventManagementCancellationNotificationTitle": {
     "placeholders": {
-      "eventName": {"type": "String"}
+      "eventName": {
+        "type": "String"
+      }
     }
   },
   "eventManagementCancelled": "Event cancelled and notification sent.",
@@ -351,7 +405,9 @@
   "eventManagementEndMessage": "“{eventName}” will be removed from the catalog.",
   "@eventManagementEndMessage": {
     "placeholders": {
-      "eventName": {"type": "String"}
+      "eventName": {
+        "type": "String"
+      }
     }
   },
   "eventManagementEndedMessage": "Event ended.",
@@ -364,15 +420,23 @@
   "eventEditorStep": "Step {current} of {total}",
   "@eventEditorStep": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "editorStep": "Step {current} of {total}",
   "@editorStep": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "eventEditorIdentityTitle": "What is the event?",
@@ -441,8 +505,12 @@
   "eventEditorHoursAndMinutes": "{hours}h {minutes}min",
   "@eventEditorHoursAndMinutes": {
     "placeholders": {
-      "hours": {"type": "int"},
-      "minutes": {"type": "int"}
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "eventEditorInvalidTitle": "Enter a title with at least 3 characters.",
@@ -486,5 +554,4 @@
   "settingsMapGraphics": "Map graphics",
   "settingsMapGraphicsLight": "Light",
   "settingsMapGraphicsComplete": "Complete"
-
 }
