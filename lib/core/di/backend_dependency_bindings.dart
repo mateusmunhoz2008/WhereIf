@@ -16,7 +16,7 @@ import 'package:autth_injustice_app/events/data/services/events_firestore_servic
 import 'package:autth_injustice_app/complementary_hours/data/services/complementary_hours_firestore_service.dart';
 import 'package:autth_injustice_app/dev/demo_backend/services/demo_current_account_provider.dart';
 import 'package:autth_injustice_app/notifications/data/services/notifications_firestore_service.dart';
-import 'package:autth_injustice_app/dev/demo_backend/services/demo_user_management_service.dart';
+import 'package:autth_injustice_app/user_management/data/services/user_management_firestore_service.dart';
 import 'package:autth_injustice_app/events/data/services/i_events_service.dart';
 import 'package:autth_injustice_app/institution/domain/institution_package.dart';
 import 'package:autth_injustice_app/institution/domain/models/institution_backend_config.dart';
@@ -64,7 +64,7 @@ abstract final class BackendDependencyBindings {
         ComplementaryHoursFirestoreService.new,
       )
       ..addSingleton<IUserManagementService>(
-        DemoUserManagementService.new,
+        UserManagementFirestoreService.new
       );
 
     _registerCurrentAccount(injector);

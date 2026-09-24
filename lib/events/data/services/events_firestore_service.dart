@@ -154,9 +154,23 @@ class EventsFirestoreService implements IEventsService {
   }) async {
     try {
       final recordRef = _personalRecord(uid, eventId);
+      final accountRef = _firestore.collection('accounts').doc(uid);
 
       if (!addedToPersonalHistory) {
-        await recordRef.delete();
+        final existing = await recordRef.get();
+        final previousMinutes = existing.exists
+            ? ComplementaryHoursFirestoreMapper.fromSnapshot(existing)
+                .durationMinutes
+            : null;
+
+        final batch = _firestore.batch();
+        batch.delete(recordRef);
+        if (previousMinutes != null && previousMinutes > 0) {
+          batch.update(accountRef, {
+            'totalComplementaryMinutes': FieldValue.increment(-previousMinutes),
+          });
+        }
+        await batch.commit();
         return const Success(false);
       }
 
@@ -170,7 +184,9 @@ class EventsFirestoreService implements IEventsService {
       final complementaryMinutes =
           EventFirestoreMapper.complementaryMinutesFromSnapshot(eventSnapshot);
 
-      await recordRef.set(
+      final batch = _firestore.batch();
+      batch.set(
+        recordRef,
         ComplementaryHoursFirestoreMapper.toMap(
           ComplementaryHoursRecord(
             id: eventId,
@@ -180,6 +196,13 @@ class EventsFirestoreService implements IEventsService {
           ),
         ),
       );
+      if (complementaryMinutes != null && complementaryMinutes > 0) {
+        batch.update(accountRef, {
+          'totalComplementaryMinutes':
+              FieldValue.increment(complementaryMinutes),
+        });
+      }
+      await batch.commit();
 
       return const Success(true);
     } on FirebaseException {
@@ -390,7 +413,7 @@ class EventsFirestoreService implements IEventsService {
       if (!preview.isOngoingAt(now)) {
         return Error(InvalidInputFailure('eventManagementEndError'));
       }
-      
+
       final batch = _firestore.batch();
       batch.update(docRef, {'endedAt': Timestamp.fromDate(now)});
       _writeEventNotification(
