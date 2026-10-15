@@ -22,12 +22,10 @@ class AppBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        foregroundColor ?? Theme.of(context).colorScheme.onTertiary;
+    final color = foregroundColor ?? Theme.of(context).colorScheme.onTertiary;
 
     return IconButton(
-      tooltip:
-          tooltip ?? MaterialLocalizations.of(context).backButtonTooltip,
+      tooltip: tooltip ?? MaterialLocalizations.of(context).backButtonTooltip,
       onPressed: onPressed ?? () => Navigator.of(context).maybePop(),
       padding: EdgeInsets.zero,
       constraints: BoxConstraints.tightFor(width: size, height: size),

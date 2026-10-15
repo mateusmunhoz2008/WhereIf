@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:autth_injustice_app/core/network/firestore_access.dart';
 
 import 'package:autth_injustice_app/account/data/mappers/account_firestore_mapper.dart';
 import 'package:autth_injustice_app/account/data/services/i_account_remote_storage.dart';
@@ -19,13 +20,16 @@ final class AccountFirestoreService implements IAccountRemoteStorage {
   @override
   Future<AccountResult> getAccount(String uid) async {
     try {
-      final snapshot = await _accountDoc(uid).get();
+      final snapshot = await FirestoreAccess.document(_accountDoc(uid));
       if (!snapshot.exists) {
         return Error(NotFoundFailure('accountNotFound'));
       }
 
       return Success(AccountFirestoreMapper.fromSnapshot(snapshot));
-    } on FirebaseException {
+    } on FirebaseException catch (error) {
+      if (error.code == 'permission-denied') {
+        return Error(ForbiddenFailure('accountLoadError'));
+      }
       return Error(RemoteFailure('accountLoadError'));
     } catch (_) {
       return Error(RemoteFailure('accountLoadError'));
@@ -35,7 +39,15 @@ final class AccountFirestoreService implements IAccountRemoteStorage {
   @override
   Future<VoidResult> saveAccount(Account account) async {
     try {
-      await _accountDoc(account.uid).set(AccountFirestoreMapper.toMap(account));
+      final reference = _accountDoc(account.uid);
+      await _firestore.runTransaction<Account>((transaction) async {
+        final existing = await transaction.get(reference);
+        if (existing.exists) {
+          return AccountFirestoreMapper.fromSnapshot(existing);
+        }
+        transaction.set(reference, AccountFirestoreMapper.toMap(account));
+        return account;
+      }, timeout: FirestoreAccess.deadline).timeout(FirestoreAccess.deadline);
       return const Success(null);
     } on FirebaseException {
       return Error(RemoteFailure('accountSaveError'));
@@ -47,9 +59,11 @@ final class AccountFirestoreService implements IAccountRemoteStorage {
   @override
   Future<VoidResult> updateAccount(Account account) async {
     try {
-      await _accountDoc(account.uid).update(
-        AccountFirestoreMapper.toProfileUpdateMap(account),
-      );
+      await _accountDoc(account.uid)
+          .update(
+            AccountFirestoreMapper.toProfileUpdateMap(account),
+          )
+          .timeout(FirestoreAccess.deadline);
       return const Success(null);
     } on FirebaseException {
       return Error(RemoteFailure('accountUpdateError'));
@@ -61,7 +75,7 @@ final class AccountFirestoreService implements IAccountRemoteStorage {
   @override
   Future<VoidResult> deleteAccount(String uid) async {
     try {
-      await _accountDoc(uid).delete();
+      await _accountDoc(uid).delete().timeout(FirestoreAccess.deadline);
       return const Success(null);
     } on FirebaseException {
       return Error(RemoteFailure('accountDeleteError'));

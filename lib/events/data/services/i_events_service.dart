@@ -20,47 +20,32 @@ abstract interface class IEventsService {
     required bool addedToPersonalHistory,
   });
 
-  /// Creates an event as an authorized event manager.
-  ///
-  /// A production adapter stores bundled and remote sources as-is. A source
-  /// selected from the device must be uploaded first and replaced by its URL.
+  /// Device images must be uploaded before their URL is persisted.
   Future<EventCreationResult> createEvent({
     required String actorUid,
     required EventCreationInput input,
   });
 
-  /// Replaces the editable event data as an authorized event manager.
-  ///
-  /// When [input.replacementImageSource] is present, a production adapter
-  /// stores bundled and remote sources as-is or uploads a device file first.
-  /// Without a replacement, the existing image must be preserved.
+  /// Preserves the current image when no replacement is supplied.
   Future<EventUpdateResult> updateEvent({
     required String actorUid,
     required String eventId,
     required EventUpdateInput input,
   });
 
-  /// Deletes an event as an authorized event manager.
-  ///
-  /// The production adapter must enforce the same permission server-side.
+  /// Authorization and publication constraints must also hold on the server.
   Future<EventDeletionResult> deleteEvent({
     required String actorUid,
     required String eventId,
   });
 
-  /// Cancels a published event and emits its campus-wide notification.
-  ///
-  /// The production adapter must persist the cancellation and notification
-  /// atomically so the catalog and feed cannot disagree.
+  /// Persists cancellation and its notification atomically.
   Future<EventCancellationResult> cancelEvent({
     required String actorUid,
     required String eventId,
     required String reason,
   });
 
-  /// Ends an ongoing event before its automatic end or closes a manual event.
-  ///
-  /// A production adapter must write the server timestamp to `endedAt`.
   Future<EventEndResult> endEvent({
     required String actorUid,
     required String eventId,

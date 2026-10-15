@@ -1,4 +1,9 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:autth_injustice_app/core/network/firestore_access.dart';
+import 'package:autth_injustice_app/core/network/network_status.dart';
+import 'package:autth_injustice_app/core/network/queued_write.dart';
 import 'package:autth_injustice_app/complementary_hours/data/mappers/complementary_hours_firestore_mapper.dart';
 import 'package:autth_injustice_app/complementary_hours/domain/models/complementary_hours_record.dart';
 import 'package:autth_injustice_app/core/failure/failure.dart';
@@ -12,8 +17,6 @@ import 'package:autth_injustice_app/events/domain/models/event_preview.dart';
 import 'package:autth_injustice_app/events/domain/models/event_update_input.dart';
 import 'package:autth_injustice_app/events/domain/models/events_catalog.dart';
 import 'package:autth_injustice_app/institution/domain/institution_package.dart';
-import 'package:autth_injustice_app/notifications/data/mappers/notification_firestore_mapper.dart';
-import 'package:autth_injustice_app/notifications/domain/models/app_notification.dart';
 import 'package:autth_injustice_app/notifications/data/mappers/notification_firestore_mapper.dart';
 import 'package:autth_injustice_app/notifications/domain/models/app_notification.dart';
 
@@ -42,7 +45,8 @@ class EventsFirestoreService implements IEventsService {
   }
 
   void _writeEventNotification(
-    WriteBatch batch, {
+    void Function(DocumentReference<Map<String, dynamic>>, Map<String, dynamic>)
+        write, {
     required String eventId,
     required String titleL10nKey,
     required List<String> titleL10nArgs,
@@ -50,7 +54,7 @@ class EventsFirestoreService implements IEventsService {
     String message = '',
     String? messageL10nKey,
   }) {
-    batch.set(
+    write(
       _firestore.collection('notifications').doc(),
       NotificationFirestoreMapper.toMap(
         type: AppNotificationType.event,
@@ -69,14 +73,10 @@ class EventsFirestoreService implements IEventsService {
   Future<EventsCatalogResult> getCatalog() async {
     try {
       final now = DateTime.now();
-      final snapshot = await _events
-          .where(
-            Filter.or(
-              Filter('publishAt', isNull: true),
-              Filter('publishAt', isLessThanOrEqualTo: Timestamp.fromDate(now)),
-            ),
-          )
-          .get();
+      final snapshot = await _publicCatalogQuery(_events.where(Filter.or(
+        Filter('publishAt', isNull: true),
+        Filter('publishAt', isLessThanOrEqualTo: Timestamp.fromDate(now)),
+      )));
 
       final previews = snapshot.docs
           .map((doc) => EventFirestoreMapper.previewFromSnapshot(
@@ -93,12 +93,24 @@ class EventsFirestoreService implements IEventsService {
     }
   }
 
+  Future<QuerySnapshot<Map<String, dynamic>>> _publicCatalogQuery(
+      Query<Map<String, dynamic>> query) async {
+    try {
+      return await query.get().timeout(FirestoreAccess.deadline);
+    } on TimeoutException {
+      NetworkStatus.instance.report(false);
+      return query
+          .get(const GetOptions(source: Source.cache))
+          .timeout(const Duration(seconds: 1));
+    }
+  }
+
   @override
   Future<EventsCatalogResult> getManagementCatalog({
     required String actorUid,
   }) async {
     try {
-      final snapshot = await _events.get();
+      final snapshot = await FirestoreAccess.query(_events);
       final previews = snapshot.docs
           .map((doc) => EventFirestoreMapper.previewFromSnapshot(
                 doc,
@@ -120,7 +132,8 @@ class EventsFirestoreService implements IEventsService {
     required String eventId,
   }) async {
     try {
-      final snapshot = await _events.doc(eventId).get();
+      final snapshot = await FirestoreAccess.document(_events.doc(eventId),
+          cacheFirst: true);
       if (!snapshot.exists) return Error(NotFoundFailure('eventNotFound'));
 
       final preview = EventFirestoreMapper.previewFromSnapshot(
@@ -130,8 +143,14 @@ class EventsFirestoreService implements IEventsService {
 
       var addedToPersonalHistory = false;
       if (uid != null) {
-        final recordSnapshot = await _personalRecord(uid, eventId).get();
-        addedToPersonalHistory = recordSnapshot.exists;
+        try {
+          final recordSnapshot = await FirestoreAccess.document(
+              _personalRecord(uid, eventId),
+              cacheFirst: true);
+          addedToPersonalHistory = recordSnapshot.exists;
+        } catch (_) {
+          // Missing personal metadata must not hide an already cached event.
+        }
       }
 
       return Success(EventDetails(
@@ -156,70 +175,79 @@ class EventsFirestoreService implements IEventsService {
       final recordRef = _personalRecord(uid, eventId);
       final accountRef = _firestore.collection('accounts').doc(uid);
 
-      if (!addedToPersonalHistory) {
-        final existing = await recordRef.get();
-        final previousMinutes = existing.exists
-            ? ComplementaryHoursFirestoreMapper.fromSnapshot(existing)
-                .durationMinutes
-            : null;
+      final saved = await _firestore.runTransaction<bool>((transaction) async {
+        final existing = await transaction.get(recordRef);
+        if (existing.exists == addedToPersonalHistory) {
+          return addedToPersonalHistory;
+        }
+        final account = await transaction.get(accountRef);
+        if (!account.exists) throw UnauthenticatedFailure();
+        final total =
+            (account.data()?['totalComplementaryMinutes'] as num?)?.toInt() ??
+                0;
 
-        final batch = _firestore.batch();
-        batch.delete(recordRef);
-        if (previousMinutes != null && previousMinutes > 0) {
-          batch.update(accountRef, {
-            'totalComplementaryMinutes': FieldValue.increment(-previousMinutes),
+        if (!addedToPersonalHistory) {
+          final minutes =
+              ComplementaryHoursFirestoreMapper.fromSnapshot(existing)
+                      .durationMinutes ??
+                  0;
+          transaction.delete(recordRef);
+          if (minutes > 0) {
+            transaction.update(accountRef, {
+              'totalComplementaryMinutes': math.max(0, total - minutes),
+            });
+          }
+          return false;
+        }
+
+        final snapshot = await transaction.get(_events.doc(eventId));
+        if (!snapshot.exists) throw NotFoundFailure('eventNotFound');
+        final preview = EventFirestoreMapper.previewFromSnapshot(
+          snapshot,
+          _institutionPackage,
+        );
+        final minutes =
+            EventFirestoreMapper.complementaryMinutesFromSnapshot(snapshot);
+        if (minutes != null && minutes < 0) {
+          throw InvalidInputFailure('eventDetailsUnavailable');
+        }
+        transaction.set(
+            recordRef,
+            ComplementaryHoursFirestoreMapper.toMap(
+              ComplementaryHoursRecord(
+                id: eventId,
+                eventName: preview.title,
+                eventDate: preview.startsAt,
+                durationMinutes: minutes,
+              ),
+            ));
+        if (minutes != null && minutes > 0) {
+          transaction.update(accountRef, {
+            'totalComplementaryMinutes': math.max(0, total) + minutes,
           });
         }
-        await batch.commit();
-        return const Success(false);
+        return true;
+      }, timeout: const Duration(seconds: 8));
+      return Success(saved);
+    } on TimeoutException {
+      return Error(RemoteFailure('connectionRequired'));
+    } on Failure catch (failure) {
+      return Error(failure);
+    } on FirebaseException catch (error) {
+      if (FirestoreAccess.networkError(error)) {
+        return Error(RemoteFailure('connectionRequired'));
       }
-
-      final eventSnapshot = await _events.doc(eventId).get();
-      if (!eventSnapshot.exists) return Error(NotFoundFailure('eventNotFound'));
-
-      final preview = EventFirestoreMapper.previewFromSnapshot(
-        eventSnapshot,
-        _institutionPackage,
-      );
-      final complementaryMinutes =
-          EventFirestoreMapper.complementaryMinutesFromSnapshot(eventSnapshot);
-
-      final batch = _firestore.batch();
-      batch.set(
-        recordRef,
-        ComplementaryHoursFirestoreMapper.toMap(
-          ComplementaryHoursRecord(
-            id: eventId,
-            eventName: preview.title,
-            eventDate: preview.startsAt,
-            durationMinutes: complementaryMinutes,
-          ),
-        ),
-      );
-      if (complementaryMinutes != null && complementaryMinutes > 0) {
-        batch.update(accountRef, {
-          'totalComplementaryMinutes':
-              FieldValue.increment(complementaryMinutes),
-        });
-      }
-      await batch.commit();
-
-      return const Success(true);
-    } on FirebaseException {
       return Error(RemoteFailure('eventDetailsUnavailable'));
     } catch (_) {
       return Error(RemoteFailure('eventDetailsUnavailable'));
     }
   }
 
-  // Gerenciamento (manager/adm)
-
   @override
   Future<EventCreationResult> createEvent({
     required String actorUid,
     required EventCreationInput input,
   }) async {
-    // TODO(firebase-storage): upload de fotos do dispositivo.
     if (_isLocalDeviceImage(input.imageSource)) {
       return Error(InvalidInputFailure('eventEditorImageUploadUnavailable'));
     }
@@ -241,7 +269,7 @@ class EventsFirestoreService implements IEventsService {
 
       if (isPublishedImmediately) {
         _writeEventNotification(
-          batch,
+          (reference, data) => batch.set(reference, data),
           eventId: docRef.id,
           titleL10nKey: 'notificationEventCreatedTitle',
           titleL10nArgs: [preview.title],
@@ -249,9 +277,8 @@ class EventsFirestoreService implements IEventsService {
           message: preview.description,
         );
       }
-      // TODO(cloud-functions): quando o evento é publicado no futuro, ninguem esstá no codigo para lancaçar a notificção, vai precisar de uma cloud function
 
-      await batch.commit();
+      await QueuedWrite.wait(batch.commit(), docRef);
 
       return Success(EventDetails(
         event: preview,
@@ -260,6 +287,8 @@ class EventsFirestoreService implements IEventsService {
       ));
     } on FirebaseException catch (error) {
       return Error(_mapFailure(error, fallbackKey: 'eventManagementSaveError'));
+    } on Failure catch (failure) {
+      return Error(failure);
     } catch (_) {
       return Error(RemoteFailure('eventManagementSaveError'));
     }
@@ -271,7 +300,6 @@ class EventsFirestoreService implements IEventsService {
     required String eventId,
     required EventUpdateInput input,
   }) async {
-    // TODO(firebase-storage): mesma observação do createEvent, aplicada à imagem de substituição.
     if (input.replacementImageSource != null &&
         _isLocalDeviceImage(input.replacementImageSource!)) {
       return Error(InvalidInputFailure('eventEditorImageUploadUnavailable'));
@@ -279,7 +307,7 @@ class EventsFirestoreService implements IEventsService {
 
     try {
       final docRef = _events.doc(eventId);
-      final snapshot = await docRef.get();
+      final snapshot = await FirestoreAccess.document(docRef, cacheFirst: true);
       if (!snapshot.exists) return Error(NotFoundFailure('eventNotFound'));
 
       final current = EventFirestoreMapper.previewFromSnapshot(
@@ -288,23 +316,24 @@ class EventsFirestoreService implements IEventsService {
       );
       final updated = input.applyTo(current);
 
-      await docRef.set(
-        EventFirestoreMapper.toMap(
-          updated,
-          complementaryMinutes: input.complementaryMinutes,
-        ),
-      );
-
-      // não afeta quem já se inscreveu no evento, tenho que fazer isso depois
-      final recordSnapshot = await _personalRecord(actorUid, eventId).get();
+      await QueuedWrite.wait(
+          docRef.set(
+            EventFirestoreMapper.toMap(
+              updated,
+              complementaryMinutes: input.complementaryMinutes,
+            ),
+          ),
+          docRef);
 
       return Success(EventDetails(
         event: updated,
-        addedToPersonalHistory: recordSnapshot.exists,
+        addedToPersonalHistory: false,
         complementaryMinutes: input.complementaryMinutes,
       ));
     } on FirebaseException catch (error) {
       return Error(_mapFailure(error, fallbackKey: 'eventManagementSaveError'));
+    } on Failure catch (failure) {
+      return Error(failure);
     } catch (_) {
       return Error(RemoteFailure('eventManagementSaveError'));
     }
@@ -317,23 +346,17 @@ class EventsFirestoreService implements IEventsService {
   }) async {
     try {
       final docRef = _events.doc(eventId);
-      final snapshot = await docRef.get();
-      if (!snapshot.exists) return Error(NotFoundFailure('eventNotFound'));
-
-      final preview = EventFirestoreMapper.previewFromSnapshot(
-        snapshot,
-        _institutionPackage,
-      );
-      final now = DateTime.now();
-      final isUnpublishedDraft =
-          preview.publishAt != null && preview.publishAt!.isAfter(now);
-
-      if (!isUnpublishedDraft) {
-        // Evento já publicado: managers devem cancelar/encerrar, não apagar.
-        return Error(InvalidInputFailure('eventNotFound'));
-      }
-
-      await docRef.delete();
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+        if (!snapshot.exists) throw NotFoundFailure('eventNotFound');
+        final preview = EventFirestoreMapper.previewFromSnapshot(
+            snapshot, _institutionPackage);
+        if (preview.publishAt == null ||
+            !preview.publishAt!.isAfter(DateTime.now())) {
+          throw InvalidInputFailure('eventNotFound');
+        }
+        transaction.delete(docRef);
+      }, timeout: const Duration(seconds: 8), maxAttempts: 1);
       return const Success(true);
     } on FirebaseException catch (error) {
       return Error(
@@ -351,38 +374,38 @@ class EventsFirestoreService implements IEventsService {
   }) async {
     try {
       final docRef = _events.doc(eventId);
-      final snapshot = await docRef.get();
-      if (!snapshot.exists) {
-        return Error(InvalidInputFailure('eventManagementCancelError'));
-      }
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+        if (!snapshot.exists) {
+          throw InvalidInputFailure('eventManagementCancelError');
+        }
 
-      final preview = EventFirestoreMapper.previewFromSnapshot(
-        snapshot,
-        _institutionPackage,
-      );
-      final now = DateTime.now();
-      final isPublished =
-          preview.publishAt == null || !preview.publishAt!.isAfter(now);
+        final preview = EventFirestoreMapper.previewFromSnapshot(
+          snapshot,
+          _institutionPackage,
+        );
+        final now = DateTime.now();
+        final isPublished =
+            preview.publishAt == null || !preview.publishAt!.isAfter(now);
 
-      if (preview.isCancelled || !isPublished) {
-        return Error(InvalidInputFailure('eventManagementCancelError'));
-      }
+        if (preview.isCancelled || !isPublished) {
+          throw InvalidInputFailure('eventManagementCancelError');
+        }
 
-      final batch = _firestore.batch();
-      batch.update(docRef, {
-        'cancelledAt': Timestamp.fromDate(now),
-        'cancellationReason': reason,
-        'cancelledByUid': actorUid,
-      });
-      _writeEventNotification(
-        batch,
-        eventId: eventId,
-        titleL10nKey: 'notificationEventCancelledTitle',
-        titleL10nArgs: [preview.title],
-        fallbackTitle: 'Evento cancelado: ${preview.title}',
-        message: reason,
-      );
-      await batch.commit();
+        transaction.update(docRef, {
+          'cancelledAt': Timestamp.fromDate(now),
+          'cancellationReason': reason,
+          'cancelledByUid': actorUid,
+        });
+        _writeEventNotification(
+          (reference, data) => transaction.set(reference, data),
+          eventId: eventId,
+          titleL10nKey: 'notificationEventCancelledTitle',
+          titleL10nArgs: [preview.title],
+          fallbackTitle: 'Evento cancelado: ${preview.title}',
+          message: reason,
+        );
+      }, timeout: const Duration(seconds: 8), maxAttempts: 1);
 
       return const Success(true);
     } on FirebaseException catch (error) {
@@ -400,32 +423,31 @@ class EventsFirestoreService implements IEventsService {
   }) async {
     try {
       final docRef = _events.doc(eventId);
-      final snapshot = await docRef.get();
-      if (!snapshot.exists) {
-        return Error(InvalidInputFailure('eventManagementEndError'));
-      }
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+        if (!snapshot.exists) {
+          throw InvalidInputFailure('eventManagementEndError');
+        }
 
-      final preview = EventFirestoreMapper.previewFromSnapshot(
-        snapshot,
-        _institutionPackage,
-      );
-      final now = DateTime.now();
-      if (!preview.isOngoingAt(now)) {
-        return Error(InvalidInputFailure('eventManagementEndError'));
-      }
+        final preview = EventFirestoreMapper.previewFromSnapshot(
+          snapshot,
+          _institutionPackage,
+        );
+        final now = DateTime.now();
+        if (!preview.isOngoingAt(now)) {
+          throw InvalidInputFailure('eventManagementEndError');
+        }
 
-      final batch = _firestore.batch();
-      batch.update(docRef, {'endedAt': Timestamp.fromDate(now)});
-      _writeEventNotification(
-        batch,
-        eventId: eventId,
-        titleL10nKey: 'notificationEventEndedTitle',
-        titleL10nArgs: [preview.title],
-        fallbackTitle: 'Evento encerrado: ${preview.title}',
-        messageL10nKey: 'notificationEventEndedMessage',
-      );
-
-      await docRef.update({'endedAt': Timestamp.fromDate(now)});
+        transaction.update(docRef, {'endedAt': Timestamp.fromDate(now)});
+        _writeEventNotification(
+          (reference, data) => transaction.set(reference, data),
+          eventId: eventId,
+          titleL10nKey: 'notificationEventEndedTitle',
+          titleL10nArgs: [preview.title],
+          fallbackTitle: 'Evento encerrado: ${preview.title}',
+          messageL10nKey: 'notificationEventEndedMessage',
+        );
+      }, timeout: const Duration(seconds: 8), maxAttempts: 1);
       return const Success(true);
     } on FirebaseException catch (error) {
       return Error(_mapFailure(error, fallbackKey: 'eventManagementEndError'));

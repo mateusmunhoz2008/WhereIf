@@ -5,8 +5,6 @@ import 'package:autth_injustice_app/authentication/domain/models/auth_session.da
 import 'package:autth_injustice_app/core/typedefs/types_defs.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
-/// Implementação concreta do repositório de autenticação.
-/// Delega tudo ao [IAuthService] e expõe o Signal reativo de sessão.
 class AuthRepositoryImpl implements IAuthRepository {
   final IAuthService _authService;
 

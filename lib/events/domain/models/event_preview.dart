@@ -1,6 +1,7 @@
-import 'event_category.dart';
+import 'package:autth_injustice_app/institution/domain/models/event_category.dart';
 import 'event_external_link.dart';
 import 'event_timing.dart';
+import 'package:autth_injustice_app/map/domain/models/map_location.dart';
 
 const _unsetEventPreviewValue = Object();
 
@@ -10,6 +11,10 @@ class EventPreview {
   final EventCategory category;
   final DateTime startsAt;
   final String location;
+  final List<MapLocation> mapLocations;
+  String get displayLocation => mapLocations.isEmpty
+      ? location
+      : mapLocations.map((place) => place.label).join('\n');
   final String description;
   final String? externalUrl;
   final String imageUrl;
@@ -27,6 +32,7 @@ class EventPreview {
     required this.category,
     required this.startsAt,
     required this.location,
+    this.mapLocations = const [],
     required this.description,
     required this.imageUrl,
     required this.endMode,
@@ -84,6 +90,7 @@ class EventPreview {
     EventCategory? category,
     DateTime? startsAt,
     String? location,
+    List<MapLocation>? mapLocations,
     String? description,
     Object? externalUrl = _unsetEventPreviewValue,
     String? imageUrl,
@@ -101,6 +108,7 @@ class EventPreview {
       category: category ?? this.category,
       startsAt: startsAt ?? this.startsAt,
       location: location ?? this.location,
+      mapLocations: List.unmodifiable(mapLocations ?? this.mapLocations),
       description: description ?? this.description,
       externalUrl: identical(externalUrl, _unsetEventPreviewValue)
           ? this.externalUrl

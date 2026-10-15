@@ -1,6 +1,6 @@
 import 'package:autth_injustice_app/core/l10n/app_localizations.dart';
 import 'package:autth_injustice_app/core/theme/app_theme.dart' as app_theme;
-import 'package:autth_injustice_app/events/domain/models/event_category.dart';
+import 'package:autth_injustice_app/institution/domain/models/event_category.dart';
 import 'package:autth_injustice_app/events/presentation/widgets/event_editor/event_category_selector.dart';
 import 'package:autth_injustice_app/institution/packages/ifpr_pgua/ifpr_pgua_event_categories.dart';
 import 'package:autth_injustice_app/institution/packages/ifpr_pgua/ifpr_pgua_package.dart';

@@ -142,6 +142,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get loginButton => 'Entrar';
 
   @override
+  String get loginCreateAccount => 'Crear cuenta';
+
+  @override
+  String get loginTogglePassword => 'Mostrar u ocultar contraseña';
+
+  @override
   String get dontHaveAccount => '¿No tienes una cuenta?';
 
   @override
@@ -1273,6 +1279,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mapSearch => 'Buscar en el mapa';
 
   @override
+  String get mapSearchHint => 'Eventos y lugares';
+
+  @override
+  String get mapSearchClose => 'Cerrar búsqueda';
+
+  @override
+  String get mapSearchEmpty => 'No se encontraron resultados.';
+
+  @override
   String get mapSearchComingSoon =>
       'La búsqueda de aulas y bloques estará disponible próximamente.';
 
@@ -1280,11 +1295,164 @@ class AppLocalizationsEs extends AppLocalizations {
   String get mapRotate => 'Arrastra para girar el mapa';
 
   @override
-  String get settingsMapGraphics => 'Gráficos del mapa';
+  String get mapRawMode => 'Juicio Final';
 
   @override
-  String get settingsMapGraphicsLight => 'Ligero';
+  String get mapRawModeOn => 'Mostrar el mapa sin iluminación ni efectos';
 
   @override
-  String get settingsMapGraphicsComplete => 'Completo';
+  String get mapRawModeOff => 'Restaurar el aspecto normal del mapa';
+
+  @override
+  String get settingsMapClimate => 'Clima';
+
+  @override
+  String get settingsMapPerformanceMode => 'Modo de rendimiento';
+
+  @override
+  String get settingsMapClimateAutomatic => 'Dinámico';
+
+  @override
+  String get settingsMapClimateMorning => 'Mañana';
+
+  @override
+  String get settingsMapClimateMidday => 'Tarde';
+
+  @override
+  String get settingsMapClimateSunset => 'Atardecer';
+
+  @override
+  String get settingsMapClimateNight => 'Noche';
+
+  @override
+  String get eventDetailsReadMore => 'Leer más';
+
+  @override
+  String get connectionUnavailable =>
+      'Conexión no disponible o inestable. Mostrando datos guardados. Desliza para ocultar.';
+
+  @override
+  String get networkWritePendingTitle => 'Guardado en este dispositivo';
+
+  @override
+  String get networkWritePending =>
+      'El envío aún no se ha confirmado. Los datos están guardados en este dispositivo y se sincronizarán cuando vuelva la conexión y tu cuenta esté autorizada. No es necesario enviarlos otra vez.';
+
+  @override
+  String get networkWriteUnconfirmed =>
+      'No se pudo confirmar el envío. Revisa la lista al reconectar antes de intentarlo otra vez.';
+
+  @override
+  String get networkSyncFailed =>
+      'No se pudo sincronizar un cambio pendiente. Revisa tus eventos y permisos.';
+
+  @override
+  String get connectionRequired =>
+      'No se pudo confirmar la conexión. Inténtalo cuando funcione internet.';
+
+  @override
+  String get onboardingSkip => 'Saltar';
+
+  @override
+  String get onboardingNext => 'Siguiente';
+
+  @override
+  String get onboardingFinish => 'Vamos';
+
+  @override
+  String get onboardingMapTitle => 'Es por aquí.';
+
+  @override
+  String get onboardingMapBody =>
+      'Encuentra edificios, aulas y tu próximo evento. Para quienes estudian aquí o vienen de visita.';
+
+  @override
+  String get onboardingAgendaTitle => 'Mejor saberlo antes.';
+
+  @override
+  String get onboardingAgendaBody =>
+      'Mira qué viene en el campus y sigue los avisos. Así es más fácil organizarte.';
+
+  @override
+  String get onboardingHoursTitle => 'Las horas se suman.';
+
+  @override
+  String get onboardingHoursBody =>
+      'Registra tus actividades y ten una referencia de las horas complementarias que ya hiciste.';
+
+  @override
+  String get onboardingHoursDisclaimer =>
+      'Un registro personal, no un certificado oficial.';
+
+  @override
+  String get onboardingExample => 'Evento de ejemplo';
+
+  @override
+  String get onboardingExampleEvent => 'Feria de proyectos';
+
+  @override
+  String get onboardingExampleLocation => 'Edificio Didáctico';
+
+  @override
+  String get onboardingNotice => 'Hay novedades en camino.';
+
+  @override
+  String get onboardingHoursExample => 'Una referencia de tus horas';
+
+  @override
+  String onboardingProgress(int step, int total) {
+    return 'Paso $step de $total';
+  }
+
+  @override
+  String get settingsOnboarding => 'Ver presentación';
+
+  @override
+  String get eventChooseMapLocations => 'Elegir lugares en el mapa';
+
+  @override
+  String get eventMapLocationsHint =>
+      'Selecciona un edificio, un piso o una sala. Puedes elegir varios lugares.';
+
+  @override
+  String get eventLocationOutsideMap => 'Otro lugar (opcional, fuera del mapa)';
+
+  @override
+  String get mapSearchLocations => 'Buscar edificio, piso o sala';
+
+  @override
+  String get mapLocationsEmpty => 'No se encontraron lugares.';
+
+  @override
+  String get mapLocationsUnavailable => 'No se pudieron cargar los lugares.';
+
+  @override
+  String get mapVisitLocation => 'Visitar lugar';
+
+  @override
+  String get mapEventLocations => 'Lugares del evento';
+
+  @override
+  String get mapOtherEvents => 'Otros eventos en este edificio';
+
+  @override
+  String get mapCloseEvent => 'Cerrar evento';
+
+  @override
+  String get mapEventDetails => 'Ver evento';
+
+  @override
+  String get mapLocationUnavailable =>
+      'Este lugar no está disponible en el mapa actual.';
+
+  @override
+  String mapFloorEventCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count eventos',
+      one: '1 evento',
+    );
+    return '$_temp0';
+  }
 }

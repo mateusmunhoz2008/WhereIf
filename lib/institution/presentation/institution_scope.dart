@@ -13,8 +13,10 @@ class InstitutionScope extends InheritedWidget {
   static InstitutionPackage of(BuildContext context) {
     final scope =
         context.dependOnInheritedWidgetOfExactType<InstitutionScope>();
-    assert(scope != null, 'InstitutionScope is missing above this context.');
-    return scope!.package;
+    if (scope == null) {
+      throw StateError('InstitutionScope is missing above this context.');
+    }
+    return scope.package;
   }
 
   @override

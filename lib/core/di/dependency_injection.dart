@@ -1,4 +1,5 @@
 import 'package:auto_injector/auto_injector.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:autth_injustice_app/app_startup/data/repositories/app_entry_repository_impl.dart';
 import 'package:autth_injustice_app/app_startup/domain/repositories/i_app_entry_repository.dart';
 import 'package:autth_injustice_app/authentication/data/repositories/email_verification_repository_impl.dart';
@@ -60,8 +61,8 @@ import 'package:autth_injustice_app/notifications/domain/usecases/i_notification
 import 'package:autth_injustice_app/notifications/domain/usecases/notifications_usecases_impl.dart';
 import 'package:autth_injustice_app/notifications/presentation/viewmodels/notifications/notifications_viewmodel.dart';
 import 'package:autth_injustice_app/notifications/presentation/viewmodels/notification_editor/notification_editor_viewmodel.dart';
-import 'package:autth_injustice_app/map/data/services/map_graphics_preferences.dart';
-import 'package:autth_injustice_app/map/presentation/viewmodels/map_graphics_controller.dart';
+import 'package:autth_injustice_app/map/presentation/viewmodels/map_climate_controller.dart';
+import 'package:autth_injustice_app/map/presentation/viewmodels/map_performance_controller.dart';
 import 'package:autth_injustice_app/settings/presentation/viewmodels/change_email/change_email_viewmodel.dart';
 import 'package:autth_injustice_app/settings/presentation/viewmodels/change_name/change_name_viewmodel.dart';
 import 'package:autth_injustice_app/settings/presentation/viewmodels/change_password/change_password_viewmodel.dart';
@@ -86,16 +87,18 @@ final injector = AutoInjector();
 
 void setupDependencies({
   required InstitutionPackage institutionPackage,
+  required FirebaseApp firebaseApp,
 }) {
   injector.addInstance<InstitutionPackage>(institutionPackage);
   BackendDependencyBindings.register(
     injector,
     institutionPackage: institutionPackage,
+    firebaseApp: firebaseApp,
   );
   injector.addSingleton<AuthorizationService>(AuthorizationService.new);
   injector.addSingleton<IAppEntryRepository>(AppEntryRepositoryImpl.new);
-  injector.addSingleton<MapGraphicsPreferences>(MapGraphicsPreferences.new);
-  injector.addSingleton<MapGraphicsController>(MapGraphicsController.new);
+  injector.addSingleton<MapClimateController>(MapClimateController.new);
+  injector.addSingleton<MapPerformanceController>(MapPerformanceController.new);
   _registerAuthentication();
   _registerStudentFeatures();
   _registerAccountManagement();
@@ -158,9 +161,9 @@ void _registerStudentFeatures() {
   injector.addSingleton<IUpdateEventUseCase>(UpdateEventUseCase.new);
   injector.addSingleton<IEventsUseCaseFacade>(EventsUseCaseFacadeImpl.new);
   injector.addSingleton<EventsCatalogViewModel>(EventsCatalogViewModel.new);
-  injector.addSingleton<EventDetailsViewModel>(EventDetailsViewModel.new);
-  injector.addSingleton<EventManagementViewModel>(EventManagementViewModel.new);
-  injector.addSingleton<EventEditorViewModel>(EventEditorViewModel.new);
+  injector.add<EventDetailsViewModel>(EventDetailsViewModel.new);
+  injector.add<EventManagementViewModel>(EventManagementViewModel.new);
+  injector.add<EventEditorViewModel>(EventEditorViewModel.new);
 
   injector.addSingleton<INotificationsRepository>(
     NotificationsRepositoryImpl.new,

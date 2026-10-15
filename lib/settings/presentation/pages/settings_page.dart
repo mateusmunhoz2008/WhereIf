@@ -11,7 +11,7 @@ import 'package:autth_injustice_app/settings/presentation/viewmodels/settings/se
 import 'package:autth_injustice_app/settings/presentation/navigation/settings_routes.dart';
 import 'package:autth_injustice_app/settings/presentation/widgets/settings/settings_option_tile.dart';
 import 'package:autth_injustice_app/settings/presentation/widgets/settings/settings_panel.dart';
-import 'package:autth_injustice_app/map/domain/models/map_graphics_quality.dart';
+import 'package:autth_injustice_app/map/domain/models/map_climate.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -67,6 +67,18 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  String _climateLabel(MapClimate mode) => switch (mode) {
+        MapClimate.automatic => context.l10n.settingsMapClimateAutomatic,
+        MapClimate.morning => context.l10n.settingsMapClimateMorning,
+        MapClimate.midday => context.l10n.settingsMapClimateMidday,
+        MapClimate.sunset => context.l10n.settingsMapClimateSunset,
+        MapClimate.night => context.l10n.settingsMapClimateNight,
+      };
+
+  Future<void> _cycleMapClimate() => _viewModel.commands.setMapClimate(
+        _viewModel.mapClimateController.climate.value.next,
+      );
+
   @override
   Widget build(BuildContext context) {
     final responsive = context.responsive;
@@ -85,8 +97,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 _viewModel.state.notificationsEnabled.value;
             final signingOut = _viewModel.state.loading.value;
             final languageCode = Localizations.localeOf(context).languageCode;
-            final mapGraphicsQuality =
-                _viewModel.mapGraphicsController.quality.value;
+            final mapClimate = _viewModel.mapClimateController.climate.value;
+            final performanceMode =
+                _viewModel.mapPerformanceController.enabled.value ?? false;
 
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(
@@ -165,23 +178,30 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                           ),
                           SettingsOptionTile(
-                            icon: Icons.view_in_ar_outlined,
-                            label: context.l10n.settingsMapGraphics,
+                            icon: Icons.wb_twilight_rounded,
+                            label: context.l10n.settingsMapClimate,
                             scale: scale,
                             textScale: textScale,
-                            onTap: () =>
-                                _viewModel.commands.setMapGraphicsQuality(
-                              mapGraphicsQuality == MapGraphicsQuality.complete
-                                  ? MapGraphicsQuality.light
-                                  : MapGraphicsQuality.complete,
-                            ),
+                            onTap: _cycleMapClimate,
                             trailing: SettingsValueBadge(
-                              value: mapGraphicsQuality ==
-                                      MapGraphicsQuality.complete
-                                  ? context.l10n.settingsMapGraphicsComplete
-                                  : context.l10n.settingsMapGraphicsLight,
+                              value: _climateLabel(mapClimate),
                               scale: scale,
                               textScale: textScale,
+                            ),
+                          ),
+                          SettingsOptionTile(
+                            key: const ValueKey('settings-map-performance'),
+                            icon: Icons.speed_rounded,
+                            label: context.l10n.settingsMapPerformanceMode,
+                            scale: scale,
+                            textScale: textScale,
+                            onTap: () => _viewModel.mapPerformanceController
+                                .setEnabled(!performanceMode),
+                            trailing: Switch.adaptive(
+                              value: performanceMode,
+                              activeTrackColor: context.secondary,
+                              onChanged: _viewModel
+                                  .mapPerformanceController.setEnabled,
                             ),
                           ),
                           SettingsOptionTile(
@@ -254,6 +274,17 @@ class _SettingsPageState extends State<SettingsPage> {
                             showChevron: true,
                             onTap: () => context.pushNamed(
                               SettingsRouteNames.about,
+                            ),
+                          ),
+                          SettingsOptionTile(
+                            key: const ValueKey('settings-onboarding'),
+                            icon: Icons.auto_awesome_outlined,
+                            label: context.l10n.settingsOnboarding,
+                            scale: scale,
+                            textScale: textScale,
+                            showChevron: true,
+                            onTap: () => context.pushNamed(
+                              AuthRouteNames.onboardingPreview,
                             ),
                           ),
                         ],

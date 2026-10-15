@@ -24,6 +24,8 @@ class EventsCatalogCommands {
         onSuccess: state.setCatalog,
         onFailure: (failure) => state.showError(failure.msg),
       );
+    } catch (_) {
+      state.showError('eventsLoadError');
     } finally {
       state.setLoading(false);
     }

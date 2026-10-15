@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:autth_injustice_app/core/network/pending_sync_dialog.dart';
 
 import 'package:autth_injustice_app/core/di/dependency_injection.dart';
 import 'package:autth_injustice_app/core/l10n/l10n_extensions.dart';
@@ -47,12 +48,13 @@ class _NotificationEditorPageState extends State<NotificationEditorPage> {
   void initState() {
     super.initState();
     _viewModel = injector.get<NotificationEditorViewModel>();
-    _viewModel.state.reset();
+    _viewModel.commands.resetForSession();
     _pageController = PageController();
   }
 
   @override
   void dispose() {
+    _viewModel.commands.resetForSession();
     _validationErrorTimer?.cancel();
     _pageController.dispose();
     _titleController.dispose();
@@ -108,6 +110,10 @@ class _NotificationEditorPageState extends State<NotificationEditorPage> {
     if (_currentStep == _stepCount - 1) {
       final published = await _viewModel.commands.publishAnnouncement();
       if (!mounted || !published) return;
+      if (_viewModel.state.errorMessage.value == 'networkWritePending') {
+        await showPendingSyncDialog(context);
+        if (!mounted) return;
+      }
       context.pop(true);
       return;
     }
@@ -200,6 +206,8 @@ class _NotificationEditorPageState extends State<NotificationEditorPage> {
 
   String? _localizedError(BuildContext context, String? key) {
     return switch (key) {
+      'networkWriteUnconfirmed' => context.l10n.networkWriteUnconfirmed,
+      'networkWritePending' => context.l10n.networkWritePending,
       'notificationEditorInvalidTitle' =>
         context.l10n.notificationEditorInvalidTitle,
       'notificationEditorInvalidDescription' =>

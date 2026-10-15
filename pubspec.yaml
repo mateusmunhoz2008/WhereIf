@@ -27,6 +27,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   webview_flutter: 4.14.1
+  webview_flutter_android: 4.12.0
 dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_test:
@@ -35,12 +36,22 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  fonts:
+    - family: ArchivoBlack
+      fonts:
+        - asset: assets/fonts/ArchivoBlack-Regular.ttf
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter.ttf
 
   assets:
+    - assets/onboarding/
+    - assets/fonts/ArchivoBlack-OFL.txt
+    - assets/fonts/Inter-OFL.txt
     - assets/icons/
     - assets/institutions/ifpr-pgua/branding/
     - assets/institutions/ifpr-pgua/event_banners/
-    - assets/institutions/ifpr-pgua/map/campus_exterior_standard.glb
+    - assets/institutions/ifpr-pgua/map/campus_exterior_standard.glb.gz
     - assets/institutions/ifpr-pgua/map/campus_map.json
     - assets/institutions/ifpr-pgua/map/viewer/index.html
     - assets/institutions/ifpr-pgua/map/viewer/viewer.bundle.js

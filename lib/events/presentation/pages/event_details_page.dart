@@ -10,6 +10,7 @@ import 'package:autth_injustice_app/core/widgets/app_status_view.dart';
 import 'package:autth_injustice_app/events/presentation/viewmodels/event_details/event_details_viewmodel.dart';
 import 'package:autth_injustice_app/events/presentation/widgets/event_details/event_details_actions.dart';
 import 'package:autth_injustice_app/events/presentation/widgets/event_details/event_details_hero.dart';
+import 'package:autth_injustice_app/events/domain/models/event_preview.dart';
 import 'package:autth_injustice_app/map/presentation/navigation/map_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -38,8 +39,23 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     unawaited(_viewModel.commands.loadEvent(widget.eventId));
   }
 
-  void _openMap() {
-    context.goNamed(MapRouteNames.map);
+  @override
+  void didUpdateWidget(EventDetailsPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.eventId != widget.eventId) {
+      unawaited(_viewModel.commands.loadEvent(widget.eventId));
+    }
+  }
+
+  @override
+  void dispose() {
+    _viewModel.dispose();
+    super.dispose();
+  }
+
+  void _openMap(EventPreview event) {
+    context.goNamed(MapRouteNames.map,
+        queryParameters: {'event': event.id}, extra: event);
   }
 
   Future<void> _openExternalLink(String value) async {
@@ -47,6 +63,9 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
     var opened = false;
     try {
       opened = uri != null &&
+          (uri.scheme == 'https' || uri.scheme == 'http') &&
+          uri.host.isNotEmpty &&
+          uri.userInfo.isEmpty &&
           await launchUrl(
             uri,
             mode: LaunchMode.externalApplication,
@@ -129,12 +148,15 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
                     personalRecordUpdating: state.updatingPersonalRecord.value,
                     onPersonalRecordTap:
                         _viewModel.commands.togglePersonalRecord,
-                    onMapTap: _openMap,
-                    onExternalLinkTap: event.externalUrl == null
+                    onMapTap: event.mapLocations.isEmpty
                         ? null
-                        : () => unawaited(
-                              _openExternalLink(event.externalUrl!),
-                            ),
+                        : () => _openMap(event),
+                    onExternalLinkTap:
+                        event.externalUrl?.trim().isNotEmpty != true
+                            ? null
+                            : () => unawaited(
+                                  _openExternalLink(event.externalUrl!),
+                                ),
                   ),
                 ),
               ),

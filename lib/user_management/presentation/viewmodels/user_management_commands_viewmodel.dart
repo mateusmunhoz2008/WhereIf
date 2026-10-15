@@ -1,29 +1,59 @@
 import 'package:autth_injustice_app/authorization/domain/models/account_role.dart';
+import 'package:autth_injustice_app/core/failure/failure.dart';
+import 'package:autth_injustice_app/user_management/domain/facades/i_user_management_use_case_facade.dart';
 import 'package:autth_injustice_app/user_management/presentation/commands/user_management_commands.dart';
 import 'package:autth_injustice_app/user_management/presentation/viewmodels/user_management_state_viewmodel.dart';
 
 class UserManagementCommands {
   final UserManagementState state;
-  final LoadManagedUsersCommand _loadUsersCommand;
+  final IUserManagementUseCaseFacade _facade;
+  int _generation = 0;
+  bool _disposed = false;
 
-  const UserManagementCommands({
+  UserManagementCommands({
     required this.state,
-    required LoadManagedUsersCommand loadUsersCommand,
-  }) : _loadUsersCommand = loadUsersCommand;
+    required IUserManagementUseCaseFacade facade,
+  }) : _facade = facade;
+
+  void resetForSession() {
+    _generation++;
+    state.reset();
+  }
+
+  void dispose() {
+    _disposed = true;
+    resetForSession();
+  }
+
+  bool _isCurrent(int generation) => !_disposed && generation == _generation;
 
   Future<void> loadUsers({bool forceRefresh = false}) async {
-    if (state.loading.value || (!forceRefresh && state.hasLoaded)) return;
+    if (_disposed ||
+        state.loading.value ||
+        (!forceRefresh && state.hasLoaded)) {
+      return;
+    }
 
     state.setLoading(true);
     state.clearError();
+    final generation = _generation;
     try {
-      final result = await _loadUsersCommand.executeWith(());
+      final result = await LoadManagedUsersCommand(_facade).executeWith(());
+      if (!_isCurrent(generation)) return;
       result.fold(
         onSuccess: state.setUsers,
-        onFailure: (failure) => state.showError(failure.msg),
+        onFailure: (failure) {
+          if (failure is ForbiddenFailure ||
+              failure is UnauthenticatedFailure) {
+            resetForSession();
+          }
+          state.showError(failure.msg);
+        },
       );
+    } catch (_) {
+      if (_isCurrent(generation)) state.showError('userManagementLoadError');
     } finally {
-      state.setLoading(false);
+      if (_isCurrent(generation)) state.setLoading(false);
     }
   }
 

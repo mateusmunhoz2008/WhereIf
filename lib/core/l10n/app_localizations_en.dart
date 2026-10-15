@@ -141,6 +141,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginButton => 'Enter';
 
   @override
+  String get loginCreateAccount => 'Create account';
+
+  @override
+  String get loginTogglePassword => 'Show or hide password';
+
+  @override
   String get dontHaveAccount => 'Don\'t have an account?';
 
   @override
@@ -1258,6 +1264,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapSearch => 'Search the map';
 
   @override
+  String get mapSearchHint => 'Events and places';
+
+  @override
+  String get mapSearchClose => 'Close search';
+
+  @override
+  String get mapSearchEmpty => 'No results found.';
+
+  @override
   String get mapSearchComingSoon =>
       'Room and building search will be available soon.';
 
@@ -1265,11 +1280,165 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mapRotate => 'Drag to rotate the map';
 
   @override
-  String get settingsMapGraphics => 'Map graphics';
+  String get mapRawMode => 'Judgment Day';
 
   @override
-  String get settingsMapGraphicsLight => 'Light';
+  String get mapRawModeOn => 'Show the raw map without lighting or effects';
 
   @override
-  String get settingsMapGraphicsComplete => 'Complete';
+  String get mapRawModeOff => 'Restore the normal map appearance';
+
+  @override
+  String get settingsMapClimate => 'Climate';
+
+  @override
+  String get settingsMapPerformanceMode => 'Performance mode';
+
+  @override
+  String get settingsMapClimateAutomatic => 'Dynamic';
+
+  @override
+  String get settingsMapClimateMorning => 'Morning';
+
+  @override
+  String get settingsMapClimateMidday => 'Afternoon';
+
+  @override
+  String get settingsMapClimateSunset => 'Sunset';
+
+  @override
+  String get settingsMapClimateNight => 'Night';
+
+  @override
+  String get eventDetailsReadMore => 'Read more';
+
+  @override
+  String get connectionUnavailable =>
+      'Connection unavailable or unstable. Showing saved data. Swipe to dismiss.';
+
+  @override
+  String get networkWritePendingTitle => 'Saved on this device';
+
+  @override
+  String get networkWritePending =>
+      'The upload has not been confirmed yet. Your data is saved on this device and will sync when connectivity returns and your account is authorized. You do not need to submit again.';
+
+  @override
+  String get networkWriteUnconfirmed =>
+      'The upload could not be confirmed. Check the list after reconnecting before trying again.';
+
+  @override
+  String get networkSyncFailed =>
+      'A pending change could not be synced. Check your events and permissions.';
+
+  @override
+  String get connectionRequired =>
+      'Could not confirm connectivity. Try again when your internet connection is working.';
+
+  @override
+  String get onboardingSkip => 'Skip';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingFinish => 'Let\'s go';
+
+  @override
+  String get onboardingMapTitle => 'Right this way.';
+
+  @override
+  String get onboardingMapBody =>
+      'Find buildings, rooms and your next event. Whether you study here or are just visiting.';
+
+  @override
+  String get onboardingAgendaTitle => 'Good to know ahead.';
+
+  @override
+  String get onboardingAgendaBody =>
+      'See what\'s coming up on campus and follow announcements. A little help planning your day.';
+
+  @override
+  String get onboardingHoursTitle => 'The hours add up.';
+
+  @override
+  String get onboardingHoursBody =>
+      'Log your activities and get an estimate of the complementary hours you\'ve already completed.';
+
+  @override
+  String get onboardingHoursDisclaimer =>
+      'A personal tracker, not an official certificate.';
+
+  @override
+  String get onboardingExample => 'Sample event';
+
+  @override
+  String get onboardingExampleEvent => 'Project fair';
+
+  @override
+  String get onboardingExampleLocation => 'Teaching Building';
+
+  @override
+  String get onboardingNotice => 'Something\'s coming up.';
+
+  @override
+  String get onboardingHoursExample => 'An estimate of your hours';
+
+  @override
+  String onboardingProgress(int step, int total) {
+    return 'Step $step of $total';
+  }
+
+  @override
+  String get settingsOnboarding => 'View introduction';
+
+  @override
+  String get eventChooseMapLocations => 'Choose map locations';
+
+  @override
+  String get eventMapLocationsHint =>
+      'Select a building, a floor or a room. You can choose multiple locations.';
+
+  @override
+  String get eventLocationOutsideMap =>
+      'Other location (optional, outside the map)';
+
+  @override
+  String get mapSearchLocations => 'Search buildings, floors or rooms';
+
+  @override
+  String get mapLocationsEmpty => 'No locations found.';
+
+  @override
+  String get mapLocationsUnavailable => 'Unable to load locations.';
+
+  @override
+  String get mapVisitLocation => 'Visit location';
+
+  @override
+  String get mapEventLocations => 'Event locations';
+
+  @override
+  String get mapOtherEvents => 'Other events in this building';
+
+  @override
+  String get mapCloseEvent => 'Close event';
+
+  @override
+  String get mapEventDetails => 'View event';
+
+  @override
+  String get mapLocationUnavailable =>
+      'This location is not available on the current map.';
+
+  @override
+  String mapFloorEventCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count events',
+      one: '1 event',
+    );
+    return '$_temp0';
+  }
 }

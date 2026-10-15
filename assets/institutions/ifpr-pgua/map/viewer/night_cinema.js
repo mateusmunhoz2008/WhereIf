@@ -1,20 +1,22 @@
 import * as THREE from './vendor/three.module.min.js';
 
-// World-space surface detail and light projections; no UVs or image assets
-// are required by the standard campus GLB. Sources never follow the camera.
-export function createNightCinema(root, scene, windowGroups, settings) {
-  const maxWindows = 24;
-  const sources = [];
+// World-space surface detail; no UVs or image assets are required by the
+// standard campus GLB.
+export function createNightCinema(root, scene, settings, { textures = true, shaders = true } = {}) {
   const moonHits = [];
   const beams = [];
   const uniforms = {
     ncNight: { value: 0 },
+    ncSurface: { value: 0 },
+    ncSunHighlights: { value: 1 },
+    ncReflections: { value: 1 },
+    ncFoliageStrength: { value: 0 },
+    ncSunDirection: { value: new THREE.Vector3(0, 1, 0) },
+    ncSunColor: { value: new THREE.Color() },
+    ncLeafShadowOffset: { value: new THREE.Vector4() },
     ncDetail: { value: settings.textureDetail ?? 1.65 },
     ncTextures: { value: 1 },
-    ncSpill: { value: settings.windowSpill ?? 1.5 },
     ncMoon: { value: settings.moonShafts ?? 0.9 },
-    ncWindows: { value: Array.from({ length: maxWindows }, () => new THREE.Vector4()) },
-    ncShapes: { value: Array.from({ length: maxWindows }, () => new THREE.Vector4()) },
     ncMoonHits: { value: Array.from({ length: 3 }, () => new THREE.Vector4()) },
   };
   root.updateWorldMatrix(true, true);
@@ -31,6 +33,8 @@ export function createNightCinema(root, scene, windowGroups, settings) {
       visited.add(material);
       const floor = /pavement|asphalt|ground|street/i.test(material.name);
       const grass = /grass|grama/i.test(material.name);
+      const road = /asphalt|street|rua/i.test(material.name);
+      const foliage = (window.WHEREIF_MAP_TUNING?.renderer?.foliageMaterials ?? []).includes(material.name);
       const previous = material.onBeforeCompile.bind(material);
       const previousKey = material.customProgramCacheKey.bind(material)();
       material.onBeforeCompile = (shader, renderer) => {
@@ -41,8 +45,12 @@ export function createNightCinema(root, scene, windowGroups, settings) {
           '#include <begin_vertex>\nncWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;');
         shader.fragmentShader = `
           varying vec3 ncWorld;
-          uniform float ncNight, ncDetail, ncTextures, ncSpill, ncMoon;
-          uniform vec4 ncWindows[24], ncShapes[24], ncMoonHits[3];
+          uniform float ncNight, ncSurface, ncDetail, ncTextures, ncMoon;
+          uniform float ncSunHighlights, ncReflections;
+          uniform float ncFoliageStrength;
+          uniform vec3 ncSunDirection, ncSunColor;
+          uniform vec4 ncLeafShadowOffset;
+          uniform vec4 ncMoonHits[3];
           float ncHash(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
           float ncNoise(vec3 p) {
             vec3 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
@@ -52,21 +60,30 @@ export function createNightCinema(root, scene, windowGroups, settings) {
               mix(ncHash(i+vec3(0,1,1)),ncHash(i+vec3(1,1,1)),f.x),f.y),f.z);
           }
         ` + shader.fragmentShader;
-        shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
+        if (textures) shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
           #include <color_fragment>
-          float ncFine = ncNoise(ncWorld * ${grass ? '7.5' : '2.0'});
-          float ncBroad = ncNoise(ncWorld * 0.32);
-          float ncTextureAmount = ncTextures * ncNight;
-          diffuseColor.rgb *= mix(1.0, 0.70 + ncFine * 0.35 + ncBroad * 0.22, ncTextureAmount);
+          float ncFine = ncNoise(ncWorld * ${grass ? '7.5' : road ? '5.0' : floor ? '2.0' : '18.0'});
+          float ncBroad = ncNoise(ncWorld * ${road ? '1.1' : grass || floor ? '0.32' : '3.2'});
+          float ncTextureAmount = ncTextures * ncSurface;
+          diffuseColor.rgb *= mix(1.0, ${road
+            ? '0.94 + ncFine * 0.10 + ncBroad * 0.04'
+            : grass || floor
+            ? '0.70 + ncFine * 0.35 + ncBroad * 0.22'
+            : '0.97 + ncFine * 0.04 + ncBroad * 0.02'}, ncTextureAmount);
         `);
-        shader.fragmentShader = shader.fragmentShader.replace('#include <roughnessmap_fragment>', `
+        else shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>',
+          '#include <color_fragment>\nfloat ncBroad = 0.5;');
+        if (textures) shader.fragmentShader = shader.fragmentShader.replace('#include <roughnessmap_fragment>', `
           #include <roughnessmap_fragment>
           roughnessFactor = clamp(roughnessFactor * mix(1.0,
-            ${grass ? '1.0' : '0.88 + ncBroad * 0.20 + ncFine * 0.06'}, ncTextureAmount), 0.07, 1.0);
+            ${grass ? '1.0' : road ? '0.96 + ncBroad * 0.05 + ncFine * 0.02'
+              : '0.88 + ncBroad * 0.20 + ncFine * 0.06'}, ncTextureAmount), 0.07, 1.0);
         `);
-        shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `
+        if (textures) shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `
           #include <normal_fragment_maps>
-          float ncHeight = (ncFine * 0.007 + ncBroad * 0.024) * ncDetail * ncTextureAmount;
+          float ncHeight = (${road ? 'ncFine * 0.003 + ncBroad * 0.005'
+            : grass || floor ? 'ncFine * 0.007 + ncBroad * 0.024'
+            : 'ncFine * 0.0008 + ncBroad * 0.0004'}) * ncDetail * ncTextureAmount;
           vec3 ncDx = dFdx(-vViewPosition), ncDy = dFdy(-vViewPosition);
           vec3 ncR1 = cross(ncDy, normal), ncR2 = cross(normal, ncDx);
           float ncDet = dot(ncDx, ncR1);
@@ -77,21 +94,42 @@ export function createNightCinema(root, scene, windowGroups, settings) {
           roughnessFactor = clamp(sqrt(roughnessFactor*roughnessFactor +
             min(ncVariance*0.5,0.2)*ncTextureAmount), 0.07, 1.0);
         `);
-        if (floor) shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
-          vec3 ncLighting = vec3(0.0);
-          for (int i = 0; i < 24; i++) {
-            vec4 source = ncWindows[i], shape = ncShapes[i];
-            vec2 delta = ncWorld.xz - source.xz;
-            float along = dot(delta, shape.xy);
-            float across = dot(delta, vec2(-shape.y, shape.x));
-            float width = max(shape.z * (1.0 + max(along, 0.0) * 0.035), 0.1);
-            float reach = max(shape.w, 0.1);
-            float pool = exp(-pow(across / width, 2.0) * 1.8) * exp(-max(along, 0.0)/reach*2.8);
-            pool *= smoothstep(-0.1, 0.5, along) * (1.0-smoothstep(reach*0.7, reach, along));
-            pool *= 1.0 - smoothstep(source.y+0.1, source.y+1.0, ncWorld.y);
-            float bars = 0.62 + 0.38*smoothstep(0.10,0.26,abs(sin(across*2.2)));
-            ncLighting += vec3(1.0,0.48,0.14) * pool * bars * source.w * ncSpill * 1.8;
+        if (shaders) shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_end>', `
+          #include <lights_fragment_end>
+          reflectedLight.directDiffuse *= ncSunHighlights;
+          reflectedLight.directSpecular *= ncSunHighlights * ncReflections;
+          #ifdef USE_CLEARCOAT
+            clearcoatSpecularDirect *= ncSunHighlights * ncReflections;
+          #endif
+        `);
+        if (shaders && foliage) shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
+          // Uniform branch: the canopy transmission contributes exactly zero
+          // at night or with strength zero. Skip its extra shadow sample then.
+          if (ncFoliageStrength != 0.0 && ncNight != 1.0) {
+          // Approximate light crossing a shallow canopy, in world space.
+          // Sampling toward the sun avoids treating the canopy as opaque solid.
+          float leafVisibility = 1.0;
+          #if defined(USE_SHADOWMAP) && NUM_DIR_LIGHT_SHADOWS > 0
+            DirectionalLightShadow leafShadow = directionalLightShadows[0];
+            leafVisibility = receiveShadow ? getShadow(directionalShadowMap[0],
+              leafShadow.shadowMapSize, leafShadow.shadowIntensity,
+              leafShadow.shadowBias, leafShadow.shadowRadius,
+              vDirectionalShadowCoord[0] + ncLeafShadowOffset) : 1.0;
+          #endif
+          vec3 leafNormal = inverseTransformDirection(normal, viewMatrix);
+          float leafFacing = dot(leafNormal, ncSunDirection);
+          float leafTransmission = 0.22 + 0.78 * max(-leafFacing, 0.0);
+          vec3 leafPigment = sqrt(max(diffuseColor.rgb, vec3(0.0)));
+          outgoingLight += leafPigment * ncSunColor * leafTransmission *
+            leafVisibility * ncFoliageStrength * (1.0 - ncNight);
           }
+          #include <opaque_fragment>
+        `);
+        if (shaders && floor) shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
+          // Daytime keeps the same sun shader; moon pools contribute zero.
+          // Avoid three exponentials per pixel when their uniforms disable it.
+          if (ncNight != 0.0 && ncMoon != 0.0) {
+          vec3 ncLighting = vec3(0.0);
           for (int i = 0; i < 3; i++) {
             vec4 hit = ncMoonHits[i];
             vec2 delta = ncWorld.xz - hit.xz;
@@ -100,58 +138,18 @@ export function createNightCinema(root, scene, windowGroups, settings) {
             ncLighting += vec3(0.35,0.53,0.92) * pool * ncMoon * 0.9;
           }
           outgoingLight += ncLighting * ncNight * (0.74 + ncBroad * 0.26);
+          }
           #include <opaque_fragment>
         `);
       };
-      material.customProgramCacheKey = () => `${previousKey}:night-cinema-3:${floor}:${grass}`;
-      material.userData.nightProceduralTexture = true;
+      material.customProgramCacheKey = () => `${previousKey}:night-cinema-9:${floor}:${grass}:${road}:${foliage}:${textures}:${shaders}`;
+      material.userData.nightProceduralTexture = textures;
       material.needsUpdate = true;
     }
   });
 
   const ray = new THREE.Raycaster();
   const down = new THREE.Vector3(0, -1, 0);
-  // Cluster real window triangles into small facade patches, not one light
-  // at the centre of an entire building or at the centre of a preset group.
-  for (const group of windowGroups.values()) for (const preset of group) {
-    const patches = new Map();
-    preset.node.traverse((mesh) => {
-      if (!mesh.isMesh) return;
-      const pos = mesh.geometry.attributes.position, indices = mesh.geometry.index;
-      if (!pos) return;
-      const count = indices?.count ?? pos.count;
-      for (let i = 0; i + 2 < count; i += 3) {
-        const vertices = [0, 1, 2].map((j) => new THREE.Vector3()
-          .fromBufferAttribute(pos, indices ? indices.getX(i+j) : i+j).applyMatrix4(mesh.matrixWorld));
-        const normal = vertices[1].clone().sub(vertices[0]).cross(vertices[2].clone().sub(vertices[0]));
-        const area = normal.length() * 0.5;
-        if (area < 0.02) continue;
-        normal.normalize();
-        if (Math.abs(normal.y) > 0.4) continue;
-        const center = vertices[0].clone().add(vertices[1]).add(vertices[2]).divideScalar(3);
-        const key = [Math.floor(center.x/7), Math.floor(center.y/4), Math.floor(center.z/7),
-          Math.round(normal.x),Math.round(normal.z)].join(':');
-        const patch = patches.get(key) ?? { center: new THREE.Vector3(), normal, area: 0, preset };
-        patch.center.addScaledVector(center, area); patch.area += area;
-        patches.set(key, patch);
-      }
-    });
-    const candidates = [...patches.values()].sort((a,b) => b.area-a.area);
-    for (const patch of candidates.slice(0, 3)) {
-      patch.center.divideScalar(patch.area);
-      patch.normal.y = 0; patch.normal.normalize();
-      const origin = patch.center.clone().addScaledVector(patch.normal, 0.3);
-      ray.set(origin, patch.normal); ray.far = 14;
-      const obstacle = ray.intersectObjects(solidMeshes, false)[0];
-      patch.reach = Math.min(14, obstacle?.distance ?? 14);
-      if (patch.reach < 1) continue;
-      patch.width = THREE.MathUtils.clamp(Math.sqrt(patch.area), 1.8, 4.0);
-      sources.push(patch);
-      if (sources.length >= maxWindows) break;
-    }
-    if (sources.length >= maxWindows) break;
-  }
-
   let moonInstalled = false;
   function installMoon(keyLight, frame) {
     if (moonInstalled || !frame) return;
@@ -196,26 +194,38 @@ export function createNightCinema(root, scene, windowGroups, settings) {
   }
 
   return {
-    update(amount, enabled, keyLight, frame) {
-      if (amount > 0.01) installMoon(keyLight, frame);
+    update(amount, enabled, keyLight, frame, dawnAmount = 0, detail, sunHighlights = 1, reflections = 1, foliageStrength = 0) {
+      if (shaders && amount > 0.01) installMoon(keyLight, frame);
       uniforms.ncNight.value = amount;
-      uniforms.ncTextures.value = enabled ? 1 : 0;
-      uniforms.ncDetail.value = settings.textureDetail ?? 1.65;
-      uniforms.ncSpill.value = settings.windowSpill ?? 1.5;
+      uniforms.ncSurface.value = Math.max(amount, dawnAmount);
+      uniforms.ncSunHighlights.value = sunHighlights;
+      uniforms.ncReflections.value = reflections;
+      uniforms.ncFoliageStrength.value = foliageStrength;
+      if (keyLight) {
+        uniforms.ncSunDirection.value.copy(keyLight.position).sub(keyLight.target.position).normalize();
+        uniforms.ncSunColor.value.copy(keyLight.color).multiplyScalar(keyLight.intensity * 0.22);
+        const direction = uniforms.ncSunDirection.value;
+        uniforms.ncLeafShadowOffset.value.set(direction.x * 3, direction.y * 3, direction.z * 3, 0);
+        if (keyLight.shadow) uniforms.ncLeafShadowOffset.value.applyMatrix4(keyLight.shadow.matrix);
+      }
+      uniforms.ncTextures.value = textures && enabled ? 1 : 0;
+      uniforms.ncDetail.value = detail ?? settings.textureDetail ?? 1.65;
       uniforms.ncMoon.value = settings.moonShafts ?? 0.9;
-      sources.forEach((source, i) => {
-        const emission = Math.max(0, ...source.preset.materialStates.map(({ material }) => {
-          const color = material.emissive;
-          return color ? Math.max(color.r, color.g, color.b) * (material.emissiveIntensity ?? 0) : 0;
-        }));
-        uniforms.ncWindows.value[i].set(source.center.x,source.center.y,source.center.z,emission);
-        uniforms.ncShapes.value[i].set(source.normal.x,source.normal.z,source.width,source.reach);
-      });
       for (const beam of beams) {
         beam.visible = amount > 0.01 && uniforms.ncMoon.value > 0;
         beam.material.uniforms.opacity.value = amount * uniforms.ncMoon.value * 0.085;
       }
     },
-    stats() { return { surfaceMaterials: visited.size, windowProjections: sources.length, moonShafts: beams.length, textures: uniforms.ncTextures.value > 0 }; },
+    stats() { return { surfaceMaterials: visited.size, windowProjections: 0, moonShafts: beams.length,
+      textures: uniforms.ncTextures.value > 0, shaders,
+      sunHighlights: uniforms.ncSunHighlights.value,
+      reflections: uniforms.ncReflections.value,
+      foliageStrength: uniforms.ncFoliageStrength.value }; },
+    dispose() {
+      for (const beam of beams) {
+        beam.removeFromParent(); beam.geometry.dispose(); beam.material.dispose();
+      }
+      beams.length = 0;
+    },
   };
 }

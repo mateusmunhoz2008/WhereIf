@@ -4,12 +4,11 @@ import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:autth_injustice_app/authentication/domain/models/auth_session.dart';
 
-/// Contrato canônico da autenticação consumido pela camada de domínio.
 abstract interface class IAuthRepository {
   AuthSession? get currentSession;
   Signal<AuthSession?> get sessionSignal;
 
-  Future<void> initSession();  
+  Future<void> initSession();
   Future<AuthSessionResult> signIn(String email, String password);
   Future<AuthSessionResult> signInWithGoogle();
   Future<AuthSessionResult> signUp({

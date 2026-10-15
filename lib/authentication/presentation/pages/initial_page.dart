@@ -1,202 +1,37 @@
 import 'package:autth_injustice_app/app_startup/domain/repositories/i_app_entry_repository.dart';
-import 'package:autth_injustice_app/authentication/presentation/widgets/backgrounds/clouds.dart';
+import 'package:autth_injustice_app/authentication/presentation/widgets/campus_onboarding.dart';
 import 'package:autth_injustice_app/core/di/dependency_injection.dart';
-import 'package:autth_injustice_app/core/extensions/responsive_extensions.dart';
-import 'package:autth_injustice_app/core/l10n/l10n_extensions.dart';
-import 'package:autth_injustice_app/core/theme/app_theme.dart';
-import 'package:autth_injustice_app/core/widgets/app_action_button.dart';
-import 'package:autth_injustice_app/map/presentation/navigation/map_routes.dart';
+import 'package:autth_injustice_app/events/presentation/navigation/events_routes.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:go_router/go_router.dart';
 
-class InitialPage extends StatefulWidget {
-  const InitialPage({super.key});
+class InitialPage extends StatelessWidget {
+  const InitialPage(
+      {super.key,
+      this.entryRepository,
+      this.onCompleted,
+      this.preview = false});
 
-  @override
-  State<InitialPage> createState() => _InitialPageState();
-}
+  final IAppEntryRepository? entryRepository;
+  final VoidCallback? onCompleted;
+  final bool preview;
 
-class _InitialPageState extends State<InitialPage>
-    with TickerProviderStateMixin {
-  late final AnimationController _irisController;
-  late final AnimationController _animController;
-  late final Animation<Offset> _textSlide;
-  late final Animation<double> _textOpacity;
-  late final Animation<Offset> _buttonSlide;
-  late final Animation<double> _buttonOpacity;
-  bool _continuing = false;
-
-  Future<void> _continueToMap() async {
-    if (_continuing) return;
-    setState(() => _continuing = true);
-
-    try {
-      await injector.get<IAppEntryRepository>().markInitialPageCompleted();
-    } catch (_) {
-      // The visitor can still use the app if local preferences are unavailable.
+  Future<void> _finish(BuildContext context) async {
+    if (!preview) {
+      try {
+        await (entryRepository ?? injector.get<IAppEntryRepository>())
+            .markInitialPageCompleted();
+      } catch (_) {}
     }
-
-    if (mounted) context.goNamed(MapRouteNames.map);
+    if (!context.mounted) return;
+    if (onCompleted case final callback?) {
+      callback();
+    } else {
+      context.goNamed(EventsRouteNames.catalog);
+    }
   }
 
   @override
-  void initState() {
-    super.initState();
-
-    _irisController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
-    _irisController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _animController.forward();
-      }
-    });
-
-    _textSlide =
-        Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(
-      CurvedAnimation(
-          parent: _animController,
-          curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic)),
-    );
-    _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-          parent: _animController,
-          curve: const Interval(0.0, 0.9, curve: Curves.easeOut)),
-    );
-
-    _buttonSlide =
-        Tween<Offset>(begin: const Offset(0, 1.0), end: Offset.zero).animate(
-      CurvedAnimation(
-          parent: _animController,
-          curve: const Interval(0.1, 1.0, curve: Curves.easeOutCubic)),
-    );
-    _buttonOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-          parent: _animController,
-          curve: const Interval(0.3, 1.0, curve: Curves.easeIn)),
-    );
-
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _irisController.forward();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _irisController.dispose();
-    _animController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final themeColors = context.colors;
-    final textTheme = context.text;
-
-    return Scaffold(
-      backgroundColor: context.colors.tertiary,
-      body: AnimatedBuilder(
-        animation: _irisController,
-        builder: (context, child) {
-          return ClipPath(
-            clipper: IrisClipper(_irisController.value),
-            child: child,
-          );
-        },
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: context.initialPageGradient,
-          ),
-          child: SizedBox.expand(
-            child: Stack(
-              children: [
-                const CloudBackground(),
-                SafeArea(
-                  // Removido o ConstrainedBox e Align para o conteúdo esticar 100% da tela
-                  child: Padding(
-                    padding: context.extraPagePadding,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Espaçamento dinâmico no topo
-                        SizedBox(height: context.headerTopSpacing),
-                        RepaintBoundary(
-                          child: SlideTransition(
-                            position: _textSlide,
-                            child: FadeTransition(
-                              opacity: _textOpacity,
-                              child: Text(
-                                '${context.l10n.welcomeTo}\n${context.l10n.whereIf}',
-                                textAlign: TextAlign.start,
-                                style: textTheme.headlineLarge?.copyWith(
-                                  color: themeColors.onPrimary,
-                                  // Fonte dinâmica para evitar estouro em telas pequenas
-                                  fontSize:
-                                      context.isVerySmallScreen ? 28 : null,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        RepaintBoundary(
-                          child: SlideTransition(
-                            position: _buttonSlide,
-                            child: FadeTransition(
-                              opacity: _buttonOpacity,
-                              child: AppActionButton(
-                                text: context.l10n.continueButton,
-                                color: context.tertiary.withValues(alpha: 0.95),
-                                foregroundColor: context.onTertiary,
-                                isLoading: _continuing,
-                                onPressed: _continuing ? null : _continueToMap,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: context.isVerySmallScreen ? 16 : 16),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class IrisClipper extends CustomClipper<Path> {
-  final double progress;
-
-  IrisClipper(this.progress);
-
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    final center = Offset(size.width / 2, size.height / 2);
-
-    final maxRadius = center.distance;
-    final radius = maxRadius * progress;
-
-    path.addOval(Rect.fromCircle(center: center, radius: radius));
-    return path;
-  }
-
-  @override
-  bool shouldReclip(covariant IrisClipper oldClipper) {
-    return oldClipper.progress != progress;
-  }
+  Widget build(BuildContext context) =>
+      CampusOnboarding(onFinished: () => _finish(context));
 }

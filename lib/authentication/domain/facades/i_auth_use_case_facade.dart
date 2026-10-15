@@ -1,5 +1,3 @@
-
-
 import 'package:autth_injustice_app/core/typedefs/types_defs.dart';
 
 abstract interface class IAuthUseCaseFacade {

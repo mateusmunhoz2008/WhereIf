@@ -1,6 +1,7 @@
 import 'package:autth_injustice_app/core/theme/app_theme.dart';
 import 'package:autth_injustice_app/events/domain/models/event_preview.dart';
 import 'package:autth_injustice_app/events/presentation/widgets/common/event_card_visual_style.dart';
+import 'package:autth_injustice_app/events/presentation/widgets/common/event_horizontal_rail.dart';
 import 'package:autth_injustice_app/events/presentation/widgets/events_catalog/event_banner.dart';
 import 'package:flutter/material.dart';
 
@@ -28,32 +29,27 @@ class EventBannerRail extends StatelessWidget {
         (large ? (isCompact ? 200.0 : 244.0) : (isCompact ? 200.0 : 222.0));
     final width = railHeight * (large ? 1.295 : 0.748);
 
-    return SizedBox(
+    return EventHorizontalRail(
       height: railHeight,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        clipBehavior: Clip.none,
-        padding: EdgeInsets.only(
-          left: horizontalPadding,
-          right: horizontalPadding,
-        ),
-        itemCount: events.length,
-        separatorBuilder: (_, __) => SizedBox(width: isCompact ? 12 : 16),
-        itemBuilder: (context, index) {
-          final event = events[index];
-
-          return SizedBox(
-            width: width,
-            child: EventBanner(
-              event: event,
-              large: large,
-              accentColor: EventCardVisualStyle.accentAt(index),
-              onTap: () => onEventTap(event),
-            ),
-          );
-        },
+      spacing: isCompact ? 12 : 16,
+      padding: EdgeInsets.only(
+        left: horizontalPadding,
+        right: horizontalPadding,
       ),
+      itemCount: events.length,
+      itemBuilder: (context, index) {
+        final event = events[index];
+
+        return SizedBox(
+          width: width,
+          child: EventBanner(
+            event: event,
+            large: large,
+            accentColor: EventCardVisualStyle.accentAt(index),
+            onTap: () => onEventTap(event),
+          ),
+        );
+      },
     );
   }
 }

@@ -3,12 +3,15 @@ sealed class Failure implements Exception {
   Failure(this.msg);
 
   @override
-  String toString() => '$runtimeType: $msg!!!';
+  String toString() => '$runtimeType: $msg';
+}
+
+class PendingSyncFailure extends Failure {
+  PendingSyncFailure() : super('networkWritePending');
 }
 
 class DefaultFailure extends Failure {
-  DefaultFailure([String? msg])
-      : super(msg ?? 'fieldsRequired'); // Usa uma chave como padrão
+  DefaultFailure([String? msg]) : super(msg ?? 'fieldsRequired');
 }
 
 class ValidationError extends Failure {

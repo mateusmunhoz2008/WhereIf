@@ -7,6 +7,13 @@ extension AppLocalizationsErrorExt on BuildContext {
     if (l10n == null) return key;
 
     switch (key) {
+      case 'accountLoadError':
+      case 'connectionRequired':
+        return l10n.connectionRequired;
+      case 'networkWritePending':
+        return l10n.networkWritePending;
+      case 'networkWriteUnconfirmed':
+        return l10n.networkWriteUnconfirmed;
       // Campos de login
       case 'fieldsRequired':
         return l10n.fieldsRequired;

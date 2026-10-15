@@ -1,26 +1,18 @@
 import 'package:signals_flutter/signals_flutter.dart';
 
 class RegisterState {
-  /// Indica se há uma operação em andamento
   final loading = signal(false);
 
-  /// Mensagem de erro e sucesso exibida na tela
   final errorMessage = signal<String?>(null);
   final success = signal(false);
-
-  // ----------------------------------------------------------
-  // Loading
-  // ----------------------------------------------------------
+  int _errorRevision = 0;
 
   void setLoading(bool value) {
     loading.value = value;
   }
 
-  // ----------------------------------------------------------
-  // Erros
-  // ----------------------------------------------------------
-
   void showError(String message) {
+    _errorRevision++;
     errorMessage.value = message;
   }
 
@@ -29,6 +21,7 @@ class RegisterState {
   }
 
   void reset() {
+    _errorRevision++;
     loading.value = false;
     errorMessage.value = null;
     success.value = false;
@@ -36,13 +29,15 @@ class RegisterState {
 
   Future<void> showTemporaryError(String message) async {
     showError(message);
+    final revision = _errorRevision;
 
     await Future.delayed(const Duration(seconds: 3));
 
-    clearError();
+    if (revision == _errorRevision) clearError();
   }
 
   void clearError() {
+    _errorRevision++;
     errorMessage.value = null;
   }
 }

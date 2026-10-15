@@ -103,7 +103,7 @@ class IfprPguaPackage implements InstitutionPackage {
 
   @override
   InstitutionBackendConfig get backend => const InstitutionBackendConfig(
-        runtime: InstitutionBackendRuntime.hybridDemo,
+        runtime: InstitutionBackendRuntime.firebase,
         firebaseOptionsKey: 'ifpr-pgua',
         firebaseProjectId: 'whereif-87272',
         storageBucket: 'whereif-87272.firebasestorage.app',

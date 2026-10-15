@@ -1,4 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:autth_injustice_app/core/network/firestore_access.dart';
+import 'package:autth_injustice_app/core/network/queued_write.dart';
 import 'package:autth_injustice_app/core/failure/failure.dart';
 import 'package:autth_injustice_app/core/patterns/result.dart';
 import 'package:autth_injustice_app/notifications/data/mappers/notification_firestore_mapper.dart';
@@ -9,12 +12,14 @@ import 'package:autth_injustice_app/notifications/domain/notifications_types.dar
 
 class NotificationsFirestoreService implements INotificationsService {
   final FirebaseFirestore _firestore;
+  final FirebaseAuth _firebaseAuth;
 
-  /// Quantidade de notificações mais recentes retornadas por consulta.
   static const _feedLimit = 100;
 
-  NotificationsFirestoreService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  NotificationsFirestoreService(
+      {FirebaseFirestore? firestore, FirebaseAuth? firebaseAuth})
+      : _firestore = firestore ?? FirebaseFirestore.instance,
+        _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
 
   CollectionReference<Map<String, dynamic>> get _notifications =>
       _firestore.collection('notifications');
@@ -29,14 +34,20 @@ class NotificationsFirestoreService implements INotificationsService {
   @override
   Future<NotificationsResult> getNotifications(String uid) async {
     try {
+      if (_firebaseAuth.currentUser?.uid != uid) {
+        return Error(UnauthenticatedFailure());
+      }
       final results = await Future.wait([
-        _notifications.orderBy('createdAt', descending: true).limit(_feedLimit).get(),
-        _readMarkers(uid).get(),
+        FirestoreAccess.query(_notifications
+            .orderBy('createdAt', descending: true)
+            .limit(_feedLimit)),
+        FirestoreAccess.query(_readMarkers(uid)),
       ]);
-      final feedSnapshot =
-          results[0] as QuerySnapshot<Map<String, dynamic>>;
-      final readSnapshot =
-          results[1] as QuerySnapshot<Map<String, dynamic>>;
+      final feedSnapshot = results[0];
+      final readSnapshot = results[1];
+      if (_firebaseAuth.currentUser?.uid != uid) {
+        return Error(UnauthenticatedFailure());
+      }
 
       final readIds = readSnapshot.docs.map((doc) => doc.id).toSet();
 
@@ -48,8 +59,8 @@ class NotificationsFirestoreService implements INotificationsService {
       );
 
       return Success(List.unmodifiable(notifications));
-    } on FirebaseException {
-      return Error(RemoteFailure('notificationsLoadErrorMessage'));
+    } on FirebaseException catch (error) {
+      return Error(_loadFailure(error));
     } catch (_) {
       return Error(RemoteFailure('notificationsLoadErrorMessage'));
     }
@@ -61,15 +72,27 @@ class NotificationsFirestoreService implements INotificationsService {
     String notificationId,
   ) async {
     try {
-      final exists = (await _notifications.doc(notificationId).get()).exists;
+      final exists = (await FirestoreAccess.document(
+              _notifications.doc(notificationId),
+              cacheFirst: true))
+          .exists;
       if (!exists) return Error(NotFoundFailure('notificationNotFound'));
+      if (_firebaseAuth.currentUser?.uid != uid) {
+        return Error(UnauthenticatedFailure());
+      }
 
-      await _readMarkers(uid).doc(notificationId).set({
-        'readAt': Timestamp.now(),
-      });
+      final marker = _readMarkers(uid).doc(notificationId);
+      await QueuedWrite.wait(
+          marker.set({
+            'readAt': Timestamp.now(),
+          }),
+          marker,
+          deadline: const Duration(milliseconds: 300));
       return const Success(null);
-    } on FirebaseException {
-      return Error(RemoteFailure('notificationsLoadErrorMessage'));
+    } on PendingSyncFailure {
+      return const Success(null);
+    } on FirebaseException catch (error) {
+      return Error(_loadFailure(error));
     } catch (_) {
       return Error(RemoteFailure('notificationsLoadErrorMessage'));
     }
@@ -78,20 +101,27 @@ class NotificationsFirestoreService implements INotificationsService {
   @override
   Future<NotificationActionResult> markAllAsRead(String uid) async {
     try {
-      final feedSnapshot = await _notifications
+      final feedSnapshot = await FirestoreAccess.query(_notifications
           .orderBy('createdAt', descending: true)
-          .limit(_feedLimit)
-          .get();
+          .limit(_feedLimit));
+      if (_firebaseAuth.currentUser?.uid != uid) {
+        return Error(UnauthenticatedFailure());
+      }
 
       final batch = _firestore.batch();
       for (final doc in feedSnapshot.docs) {
         batch.set(_readMarkers(uid).doc(doc.id), {'readAt': Timestamp.now()});
       }
-      await batch.commit();
+      if (feedSnapshot.docs.isNotEmpty) {
+        await QueuedWrite.wait(
+            batch.commit(), _readMarkers(uid).doc(feedSnapshot.docs.first.id));
+      }
 
       return const Success(null);
-    } on FirebaseException {
-      return Error(RemoteFailure('notificationsLoadErrorMessage'));
+    } on PendingSyncFailure {
+      return const Success(null);
+    } on FirebaseException catch (error) {
+      return Error(_loadFailure(error));
     } catch (_) {
       return Error(RemoteFailure('notificationsLoadErrorMessage'));
     }
@@ -103,17 +133,22 @@ class NotificationsFirestoreService implements INotificationsService {
     required NotificationAnnouncementInput input,
   }) async {
     try {
+      if (_firebaseAuth.currentUser?.uid != actorUid) {
+        return Error(UnauthenticatedFailure());
+      }
       final docRef = _notifications.doc();
       final createdAt = DateTime.now();
 
-      await docRef.set(NotificationFirestoreMapper.toMap(
-        type: AppNotificationType.update,
-        title: input.title,
-        message: input.message,
-        createdAt: createdAt,
-        authorUid: actorUid,
-        externalUrl: input.externalUrl,
-      ));
+      await QueuedWrite.wait(
+          docRef.set(NotificationFirestoreMapper.toMap(
+            type: AppNotificationType.update,
+            title: input.title,
+            message: input.message,
+            createdAt: createdAt,
+            authorUid: actorUid,
+            externalUrl: input.externalUrl,
+          )),
+          docRef);
 
       return Success(AppNotification(
         id: docRef.id,
@@ -127,6 +162,8 @@ class NotificationsFirestoreService implements INotificationsService {
       ));
     } on FirebaseException catch (error) {
       return Error(_mapFailure(error));
+    } on Failure catch (failure) {
+      return Error(failure);
     } catch (_) {
       return Error(RemoteFailure('notificationEditorPublishError'));
     }
@@ -138,4 +175,9 @@ class NotificationsFirestoreService implements INotificationsService {
     }
     return RemoteFailure('notificationEditorPublishError');
   }
+
+  Failure _loadFailure(FirebaseException error) =>
+      error.code == 'permission-denied'
+          ? ForbiddenFailure('notificationsLoadErrorMessage')
+          : RemoteFailure('notificationsLoadErrorMessage');
 }

@@ -10,11 +10,8 @@ import 'package:autth_injustice_app/authentication/data/services/password_reset/
 import 'package:autth_injustice_app/authentication/data/services/remote/i_auth_service.dart';
 import 'package:autth_injustice_app/authentication/data/services/remote/firebase_auth_service.dart';
 import 'package:autth_injustice_app/complementary_hours/data/services/i_complementary_hours_service.dart';
-import 'package:autth_injustice_app/dev/demo_backend/demo_backend_seed.dart';
-import 'package:autth_injustice_app/dev/demo_backend/demo_backend_store.dart';
 import 'package:autth_injustice_app/events/data/services/events_firestore_service.dart';
 import 'package:autth_injustice_app/complementary_hours/data/services/complementary_hours_firestore_service.dart';
-import 'package:autth_injustice_app/dev/demo_backend/services/demo_current_account_provider.dart';
 import 'package:autth_injustice_app/notifications/data/services/notifications_firestore_service.dart';
 import 'package:autth_injustice_app/user_management/data/services/user_management_firestore_service.dart';
 import 'package:autth_injustice_app/events/data/services/i_events_service.dart';
@@ -24,32 +21,57 @@ import 'package:autth_injustice_app/notifications/data/services/i_notifications_
 import 'package:autth_injustice_app/settings/data/services/i_account_security_service.dart';
 import 'package:autth_injustice_app/settings/data/services/unconfigured_account_security_service.dart';
 import 'package:autth_injustice_app/user_management/data/services/i_user_management_service.dart';
-import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-/// Centraliza os adaptadores que serao substituidos pelo backend real.
 abstract final class BackendDependencyBindings {
   static void register(
     AutoInjector injector, {
     required InstitutionPackage institutionPackage,
+    required FirebaseApp firebaseApp,
   }) {
     switch (institutionPackage.backend.runtime) {
-      case InstitutionBackendRuntime.hybridDemo:
-        _registerHybridDemo(injector);
-      case InstitutionBackendRuntime.demo:
       case InstitutionBackendRuntime.firebase:
-        throw UnsupportedError(
-          'Backend runtime "${institutionPackage.backend.runtime.name}" has '
-          'no registered adapters yet.',
+        _registerFirebase(
+          injector,
+          institutionPackage: institutionPackage,
+          firebaseApp: firebaseApp,
         );
     }
   }
 
-  static void _registerHybridDemo(AutoInjector injector) {
+  static void _registerFirebase(
+    AutoInjector injector, {
+    required InstitutionPackage institutionPackage,
+    required FirebaseApp firebaseApp,
+  }) {
+    final backend = institutionPackage.backend;
+    if (firebaseApp.options.projectId != backend.firebaseProjectId ||
+        firebaseApp.options.storageBucket != backend.storageBucket) {
+      throw StateError('Firebase app does not match the institution backend.');
+    }
+
+    final firestore = FirebaseFirestore.instanceFor(
+      app: firebaseApp,
+      databaseId: backend.firestoreDatabaseId,
+    );
+    final firebaseAuth = FirebaseAuth.instanceFor(app: firebaseApp);
+
     injector
-      ..addSingleton<IAccountRemoteStorage>(AccountFirestoreService.new)
-      ..addSingleton<IAuthService>(FirebaseAuthService.new)
+      ..addInstance<FirebaseFirestore>(firestore)
+      ..addInstance<FirebaseAuth>(firebaseAuth)
+      ..addSingleton<IAccountRemoteStorage>(
+        () => AccountFirestoreService(firestore: firestore),
+      )
+      ..addSingleton<IAuthService>(
+        (IAccountRemoteStorage accountStorage) => FirebaseAuthService(
+          firebaseAuth: firebaseAuth,
+          accountStorage: accountStorage,
+        ),
+      )
       ..addSingleton<IEmailVerificationService>(
-        FirebaseEmailVerificationService.new,
+        () => FirebaseEmailVerificationService(firebaseAuth: firebaseAuth),
       )
       ..addSingleton<IPasswordResetService>(
         UnconfiguredPasswordResetService.new,
@@ -57,42 +79,32 @@ abstract final class BackendDependencyBindings {
       ..addSingleton<IAccountSecurityService>(
         UnconfiguredAccountSecurityService.new,
       )
-      ..addSingleton<DemoBackendStore>(DemoBackendStore.new)
-      ..addSingleton<IEventsService>(EventsFirestoreService.new)
-      ..addSingleton<INotificationsService>(NotificationsFirestoreService.new)
+      ..addSingleton<IEventsService>(
+        () => EventsFirestoreService(
+          firestore: firestore,
+          institutionPackage: institutionPackage,
+        ),
+      )
+      ..addSingleton<INotificationsService>(
+        () => NotificationsFirestoreService(
+            firestore: firestore, firebaseAuth: firebaseAuth),
+      )
       ..addSingleton<IComplementaryHoursService>(
-        ComplementaryHoursFirestoreService.new,
+        () => ComplementaryHoursFirestoreService(
+          firestore: firestore,
+          firebaseAuth: firebaseAuth,
+          institutionPackage: institutionPackage,
+        ),
       )
       ..addSingleton<IUserManagementService>(
-        UserManagementFirestoreService.new
-      );
-
-    _registerCurrentAccount(injector);
-  }
-
-  static void _registerCurrentAccount(AutoInjector injector) {
-    const demoRole = String.fromEnvironment('DEMO_ROLE');
-
-    if (!kDebugMode || demoRole.isEmpty) {
-      injector.addSingleton<ICurrentAccountProvider>(
+        () => UserManagementFirestoreService(
+          firestore: firestore,
+          firebaseAuth: firebaseAuth,
+          institutionPackage: institutionPackage,
+        ),
+      )
+      ..addSingleton<ICurrentAccountProvider>(
         AuthenticatedCurrentAccountProvider.new,
       );
-      return;
-    }
-
-    final account = switch (demoRole) {
-      'student' => DemoBackendSeed.studentAccount,
-      'eventManager' => DemoBackendSeed.eventManagerAccount,
-      'administrator' => DemoBackendSeed.administratorAccount,
-      _ => throw ArgumentError.value(
-          demoRole,
-          'DEMO_ROLE',
-          'Use student, eventManager or administrator.',
-        ),
-    };
-
-    injector.addInstance<ICurrentAccountProvider>(
-      DemoCurrentAccountProvider(account),
-    );
   }
 }

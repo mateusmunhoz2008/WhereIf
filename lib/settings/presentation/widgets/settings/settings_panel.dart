@@ -13,8 +13,7 @@ class SettingsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final panelColor =
-        context.isDarkMode ? context.tertiary : context.tertiary;
+    final panelColor = context.isDarkMode ? context.tertiary : context.tertiary;
 
     return DecoratedBox(
       decoration: BoxDecoration(

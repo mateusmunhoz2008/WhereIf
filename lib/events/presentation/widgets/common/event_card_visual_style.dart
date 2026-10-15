@@ -12,6 +12,22 @@ abstract final class EventCardVisualStyle {
 
   static Color accentAt(int index) => _accents[index % _accents.length];
 
+  static List<Shadow> textShadows(
+    BuildContext context, {
+    bool prominent = false,
+  }) =>
+      [
+        Shadow(
+          color: Colors.black.withValues(
+            alpha: context.isDarkMode
+                ? (prominent ? 0.65 : 0.58)
+                : (prominent ? 0.24 : 0.18),
+          ),
+          blurRadius: prominent ? 8 : 3,
+          offset: Offset(0, prominent ? 2 : 1),
+        ),
+      ];
+
   static List<BoxShadow> shadows(
     BuildContext context, {
     required Color accentColor,

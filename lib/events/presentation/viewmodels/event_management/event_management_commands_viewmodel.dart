@@ -1,123 +1,133 @@
+import 'package:autth_injustice_app/core/failure/failure.dart';
+import 'package:autth_injustice_app/core/patterns/operation_scope.dart';
+import 'package:autth_injustice_app/core/patterns/result.dart';
+import 'package:autth_injustice_app/events/domain/facades/i_events_use_case_facade.dart';
 import 'package:autth_injustice_app/events/presentation/commands/events_commands.dart';
 
 import 'event_management_state_viewmodel.dart';
 
-class EventManagementCommands {
+class EventManagementCommands with OperationScope {
   final EventManagementState state;
-  final LoadManagementEventsCatalogCommand _loadEventsCatalogCommand;
-  final DeleteEventCommand _deleteEventCommand;
-  final CancelEventCommand _cancelEventCommand;
-  final EndEventCommand _endEventCommand;
+  final IEventsUseCaseFacade _facade;
+  bool _refreshAfterLoading = false;
 
   EventManagementCommands({
     required this.state,
-    required LoadManagementEventsCatalogCommand loadEventsCatalogCommand,
-    required DeleteEventCommand deleteEventCommand,
-    required CancelEventCommand cancelEventCommand,
-    required EndEventCommand endEventCommand,
-  })  : _loadEventsCatalogCommand = loadEventsCatalogCommand,
-        _deleteEventCommand = deleteEventCommand,
-        _cancelEventCommand = cancelEventCommand,
-        _endEventCommand = endEventCommand;
+    required IEventsUseCaseFacade facade,
+  }) : _facade = facade;
+
+  void resetForSession() {
+    invalidateOperations();
+    _refreshAfterLoading = false;
+    state.reset();
+  }
+
+  void dispose() {
+    disposeOperations();
+    state.reset();
+  }
 
   Future<void> loadEvents({bool forceRefresh = false}) async {
-    if (state.loading.value || (!forceRefresh && state.hasLoaded)) return;
-
+    if (operationsDisposed) return;
+    if (state.loading.value) {
+      _refreshAfterLoading |= forceRefresh;
+      return;
+    }
+    if (!forceRefresh && state.hasLoaded) return;
+    final generation = operationGeneration;
     state.setLoading(true);
     state.clearError();
-
     try {
-      final result = await _loadEventsCatalogCommand.executeWith(());
-      result.fold(
-        onSuccess: state.setCatalog,
-        onFailure: (failure) => state.showError(failure.msg),
-      );
+      final result =
+          await LoadManagementEventsCatalogCommand(_facade).executeWith(());
+      if (!acceptsOperation(generation)) return;
+      result.fold(onSuccess: state.setCatalog, onFailure: _showFailure);
+    } catch (_) {
+      if (acceptsOperation(generation)) {
+        state.showError('eventManagementLoadError');
+      }
     } finally {
-      state.setLoading(false);
+      if (acceptsOperation(generation)) {
+        state.setLoading(false);
+        if (_refreshAfterLoading) {
+          _refreshAfterLoading = false;
+          await loadEvents(forceRefresh: true);
+        }
+      }
     }
   }
 
-  Future<bool> deleteEvent(String eventId) async {
-    if (state.deletingEventId.value != null ||
-        state.endingEventId.value != null) {
-      return false;
-    }
-
-    state.setDeletingEvent(eventId);
-    try {
-      final result = await _deleteEventCommand.executeWith(
-        (eventId: eventId),
+  Future<bool> deleteEvent(String eventId) => _mutate(
+        eventId,
+        execute: () =>
+            DeleteEventCommand(_facade).executeWith((eventId: eventId)),
+        errorKey: 'eventManagementDeleteError',
       );
 
-      final deleted = result.fold(
-        onSuccess: (value) => value,
-        onFailure: (_) => false,
-      );
-      if (!deleted) return false;
-
-      await Future<void>.delayed(const Duration(milliseconds: 210));
-      state.removeEvent(eventId);
-      return true;
-    } finally {
-      state.setDeletingEvent(null);
-    }
-  }
-
-  Future<bool> endEvent(String eventId) async {
-    if (state.endingEventId.value != null ||
-        state.deletingEventId.value != null) {
-      return false;
-    }
-
-    state.setEndingEvent(eventId);
-    try {
-      final result = await _endEventCommand.executeWith(
-        (eventId: eventId),
+  Future<bool> endEvent(String eventId) => _mutate(
+        eventId,
+        execute: () => EndEventCommand(_facade).executeWith((eventId: eventId)),
+        errorKey: 'eventManagementEndError',
+        ending: true,
       );
 
-      final ended = result.fold(
-        onSuccess: (value) => value,
-        onFailure: (_) => false,
+  Future<bool> cancelEvent({required String eventId, required String reason}) =>
+      _mutate(
+        eventId,
+        execute: () => CancelEventCommand(_facade)
+            .executeWith((eventId: eventId, reason: reason)),
+        errorKey: 'eventManagementCancelError',
       );
-      if (!ended) return false;
 
-      await Future<void>.delayed(const Duration(milliseconds: 210));
-      state.removeEvent(eventId);
-      return true;
-    } finally {
-      state.setEndingEvent(null);
-    }
-  }
-
-  Future<bool> cancelEvent({
-    required String eventId,
-    required String reason,
+  Future<bool> _mutate(
+    String eventId, {
+    required Future<Result<bool, Failure>> Function() execute,
+    required String errorKey,
+    bool ending = false,
   }) async {
-    if (state.deletingEventId.value != null ||
+    if (operationsDisposed ||
+        state.deletingEventId.value != null ||
         state.endingEventId.value != null) {
       return false;
     }
-
-    state.setDeletingEvent(eventId);
+    final generation = operationGeneration;
+    if (ending) {
+      state.setEndingEvent(eventId);
+    } else {
+      state.setDeletingEvent(eventId);
+    }
     try {
-      final result = await _cancelEventCommand.executeWith(
-        (
-          eventId: eventId,
-          reason: reason,
-        ),
-      );
-
-      final cancelled = result.fold(
-        onSuccess: (value) => value,
-        onFailure: (_) => false,
-      );
-      if (!cancelled) return false;
-
+      final result = await execute();
+      if (!acceptsOperation(generation)) return false;
+      final changed = result.fold(
+          onSuccess: (value) => value,
+          onFailure: (failure) {
+            _showFailure(failure);
+            return false;
+          });
+      if (!changed) return false;
       await Future<void>.delayed(const Duration(milliseconds: 210));
+      if (!acceptsOperation(generation)) return false;
       state.removeEvent(eventId);
       return true;
+    } catch (_) {
+      if (acceptsOperation(generation)) state.showError(errorKey);
+      return false;
     } finally {
-      state.setDeletingEvent(null);
+      if (acceptsOperation(generation)) {
+        if (ending) {
+          state.setEndingEvent(null);
+        } else {
+          state.setDeletingEvent(null);
+        }
+      }
     }
+  }
+
+  void _showFailure(Failure failure) {
+    if (failure is ForbiddenFailure || failure is UnauthenticatedFailure) {
+      resetForSession();
+    }
+    state.showError(failure.msg);
   }
 }

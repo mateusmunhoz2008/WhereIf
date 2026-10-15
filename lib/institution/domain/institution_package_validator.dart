@@ -55,6 +55,7 @@ abstract final class InstitutionPackageValidator {
     final categoryIds =
         categories.map((category) => category.storageValue).toList();
     if (categoryIds.isEmpty ||
+        categoryIds.any((id) => id.trim().isEmpty) ||
         categoryIds.toSet().length != categoryIds.length) {
       errors.add('Event category ids must be non-empty and unique.');
     }
@@ -63,7 +64,8 @@ abstract final class InstitutionPackageValidator {
     }
     for (final category in categories) {
       final missingLanguageCodes = languageCodes
-          .where((code) => !category.localizedLabels.containsKey(code))
+          .where((code) =>
+              category.localizedLabels[code]?.trim().isNotEmpty != true)
           .toList();
       if (missingLanguageCodes.isNotEmpty) {
         errors.add(
@@ -86,7 +88,11 @@ abstract final class InstitutionPackageValidator {
       ...package.map.allResources,
     ].where((resource) => resource.isBundled);
     for (final resource in bundledResources) {
-      if (!resource.location.startsWith(bundledAssetPrefix)) {
+      if (!resource.location.startsWith(bundledAssetPrefix) ||
+          resource.location.contains('\\') ||
+          resource.location
+              .split('/')
+              .any((part) => part == '..' || part == '.')) {
         errors.add(
           'Bundled resource "${resource.location}" must belong to '
           'package "${package.id}".',
@@ -112,6 +118,10 @@ abstract final class InstitutionPackageValidator {
     if (package.backend.firebaseOptionsKey.trim().isEmpty ||
         package.backend.firebaseProjectId.trim().isEmpty ||
         package.backend.storageBucket.trim().isEmpty ||
+        package.backend.firestoreDatabaseId.trim().isEmpty ||
+        package.backend.firestoreDatabaseId.contains('/') ||
+        package.backend.firestoreDatabaseId !=
+            package.backend.firestoreDatabaseId.trim() ||
         package.backend.schemaVersion <= 0) {
       errors.add('Backend manifest is incomplete.');
     }

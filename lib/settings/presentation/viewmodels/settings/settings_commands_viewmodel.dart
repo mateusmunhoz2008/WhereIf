@@ -2,8 +2,8 @@ import 'package:autth_injustice_app/app_startup/domain/repositories/i_app_entry_
 import 'package:autth_injustice_app/authentication/domain/facades/i_auth_use_case_facade.dart';
 import 'package:autth_injustice_app/core/l10n/locale_controller.dart';
 import 'package:autth_injustice_app/core/theme/theme_controller.dart';
-import 'package:autth_injustice_app/map/domain/models/map_graphics_quality.dart';
-import 'package:autth_injustice_app/map/presentation/viewmodels/map_graphics_controller.dart';
+import 'package:autth_injustice_app/map/domain/models/map_climate.dart';
+import 'package:autth_injustice_app/map/presentation/viewmodels/map_climate_controller.dart';
 
 import 'settings_state_viewmodel.dart';
 
@@ -13,7 +13,7 @@ class SettingsCommands {
   final LocaleController _localeController;
   final IAuthUseCaseFacade _authFacade;
   final IAppEntryRepository _appEntryRepository;
-  final MapGraphicsController _mapGraphicsController;
+  final MapClimateController _mapClimateController;
 
   SettingsCommands({
     required this.state,
@@ -21,28 +21,26 @@ class SettingsCommands {
     required LocaleController localeController,
     required IAuthUseCaseFacade authFacade,
     required IAppEntryRepository appEntryRepository,
-    required MapGraphicsController mapGraphicsController,
+    required MapClimateController mapClimateController,
   })  : _themeController = themeController,
         _localeController = localeController,
         _authFacade = authFacade,
         _appEntryRepository = appEntryRepository,
-        _mapGraphicsController = mapGraphicsController;
+        _mapClimateController = mapClimateController;
 
-  void setDarkMode(bool enabled) {
-    _themeController.setDarkMode(enabled);
-  }
+  Future<void> setDarkMode(bool enabled) =>
+      _themeController.setDarkMode(enabled);
+
+  Future<void> cycleLanguage(String currentLanguageCode) =>
+      _localeController.cycleLanguage(currentLanguageCode);
 
   void setNotificationsEnabled(bool enabled) {
     // O adaptador de push persistira a preferencia e pedira permissao nativa.
     state.setNotificationsEnabled(enabled);
   }
 
-  void cycleLanguage(String currentLanguageCode) {
-    _localeController.cycleLanguage(currentLanguageCode);
-  }
-
-  Future<void> setMapGraphicsQuality(MapGraphicsQuality quality) =>
-      _mapGraphicsController.setQuality(quality);
+  Future<void> setMapClimate(MapClimate mode) =>
+      _mapClimateController.setClimate(mode);
 
   Future<bool> signOut() async {
     if (state.loading.value) return false;

@@ -59,7 +59,9 @@ class CheckEmailCommands {
         await Future<void>.delayed(pollingInterval);
       }
     } catch (_) {
-      state.showError('emailVerificationUnexpectedError');
+      if (generation == _monitorGeneration) {
+        state.showError('emailVerificationUnexpectedError');
+      }
     } finally {
       if (generation == _monitorGeneration) {
         state.setLoading(false);
@@ -76,9 +78,11 @@ class CheckEmailCommands {
     state
       ..setResending(true)
       ..clearError();
+    final generation = _monitorGeneration;
 
     try {
       final result = await _facade.resend((email: email, flow: flow));
+      if (generation != _monitorGeneration) return false;
       return result.fold(
         onSuccess: (_) => true,
         onFailure: (failure) {
@@ -87,15 +91,18 @@ class CheckEmailCommands {
         },
       );
     } catch (_) {
-      state.showError('emailVerificationResendFailed');
+      if (generation == _monitorGeneration) {
+        state.showError('emailVerificationResendFailed');
+      }
       return false;
     } finally {
-      state.setResending(false);
+      if (generation == _monitorGeneration) state.setResending(false);
     }
   }
 
   void cancelMonitoring() {
     _monitorGeneration++;
     state.setLoading(false);
+    state.setResending(false);
   }
 }

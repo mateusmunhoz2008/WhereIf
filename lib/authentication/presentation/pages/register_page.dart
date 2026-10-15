@@ -171,7 +171,6 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // CRUCIAL: Impede que a tela inteira esprema/suba quando o teclado abrir
       resizeToAvoidBottomInset: false,
       backgroundColor: context.colors.onError,
       body: PageView(
@@ -339,7 +338,6 @@ class _SignupStepGenericState extends State<SignupStepGeneric> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. IMAGEM DE FUNDO (Acompanha a largura da tela)
           Positioned(
             left: 0,
             bottom: -150,
@@ -354,8 +352,6 @@ class _SignupStepGenericState extends State<SignupStepGeneric> {
               ),
             ),
           ),
-
-          // 2. CONTEÚDO VISUAL (Formulário fluindo livremente na tela)
           SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -367,8 +363,6 @@ class _SignupStepGenericState extends State<SignupStepGeneric> {
                     child: AppBackButton(onPressed: widget.onBack),
                   ),
                 ),
-
-                // O ScrollView pega toda a área acima do botão
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -462,8 +456,6 @@ class _SignupStepGenericState extends State<SignupStepGeneric> {
               ],
             ),
           ),
-
-          // 3. BOTÃO FIXO NO RODAPÉ
           Positioned(
             bottom: 0,
             left: 0,

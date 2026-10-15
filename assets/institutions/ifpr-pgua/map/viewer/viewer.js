@@ -7,41 +7,97 @@ import { RenderPass } from './vendor/postprocessing/RenderPass.js';
 import { ShaderPass } from './vendor/postprocessing/ShaderPass.js';
 import { UnrealBloomPass } from './vendor/postprocessing/UnrealBloomPass.js';
 import { createNightCinema } from './night_cinema.js';
+import { createInteriorNavigation } from './interior_navigation.js';
+import { createFpsCounter } from './fps_counter.js';
+import { createSelectionOutline, createTextureSelectionOutline } from './selection_outline.js';
+import { createMobileBloom } from './mobile_bloom.js';
+import { createMapAntialias, normalizedMapQuality } from './map_antialias.js';
+import { createMapFeaturePanel, normalizedMapFeatures, toggledMapFeatures, mapFeatureTopics } from './map_feature_panel.js';
+import { normalizedSelectionOptions, optimizedSelectionOptions } from './selection_options.js';
+import { readRenderPreferences, saveRenderPreferences } from './render_preferences.js';
+import { loadSelectionCache } from './selection_cache.js';
+import { createNavigationOffsetCache } from './navigation_cache.js';
+import { collectSelectionWindowMeshes } from './selection_geometry_outline.js';
+import { performanceMapPreset, matchesPerformancePreset, readNormalRenderPreferences, saveNormalRenderPreferences } from './map_performance_preset.js';
+import { createMapEventMarkers, normalizedInteriorEventSize } from './map_event_markers.js';
 
+const viewerEvents = new AbortController();
 const tuning = window.WHEREIF_MAP_TUNING ?? {};
+const geometryOnly = window.WHEREIF_GEOMETRY_ONLY === true;
+let basicLightingTest = geometryOnly && window.WHEREIF_BASIC_LIGHTING === true;
+const featurePanelEnabled = geometryOnly && window.WHEREIF_FEATURE_PANEL === true;
+const savedRenderPreferences = readRenderPreferences();
+let interiorEventSize = normalizedInteriorEventSize(savedRenderPreferences.interiorEventSize);
+let eventMarkerAutoLayout = savedRenderPreferences.eventMarkerAutoLayout !== false;
+let performanceModeEnabled = typeof savedRenderPreferences.performanceModeEnabled==='boolean'
+  ? savedRenderPreferences.performanceModeEnabled : matchesPerformancePreset(savedRenderPreferences);
+const initialRenderPreferences = performanceModeEnabled ? performanceMapPreset : savedRenderPreferences;
+let performanceModeApplying = false;
+let performanceModeQueue = Promise.resolve();
+let testFeatures = normalizedMapFeatures(featurePanelEnabled
+  ? initialRenderPreferences.features ?? tuning.renderer?.approvedMapFeatures ?? { lighting: basicLightingTest }
+  : { lighting: basicLightingTest });
+let featurePanel = null;
+let featureApplyQueue = Promise.resolve();
+let featureBusy = false;
+const testMaterialSources = new Map();
+const testOwnedMaterials = new Set();
+const testGrassColors = new Map();
+const testInteriorParents = new Map();
+const testInteriorNodes = new Map();
 const rendererTuning = tuning.renderer ?? {};
+const approvedFeatureAppearance = rendererTuning.approvedFeatureAppearance ?? {};
 const cameraTuning = tuning.camera ?? {};
 const controlsTuning = tuning.controls ?? {};
 const lightingTuning = tuning.lighting ?? {};
 const nightSkyTuning = lightingTuning.nightSky ?? {};
 const selectionTuning = tuning.selection ?? {};
+let selectionOptions;
+try { selectionOptions = normalizedSelectionOptions(initialRenderPreferences.selectionOptions); }
+catch { selectionOptions = normalizedSelectionOptions(); }
+let interfaceBlurEnabled = initialRenderPreferences.interfaceBlurEnabled ?? tuning.renderer?.approvedInterfaceBlur ?? true;
+let navBlurEnabled = initialRenderPreferences.navBlurEnabled ?? tuning.renderer?.approvedNavBlur ?? true;
+let selectionPreparedCache = null;
+let selectionCacheLoader = null;
 const postProcessingTuning = rendererTuning.postProcessing ?? {};
 const nightLook = lightingTuning.nightLook ?? {};
 const defaultNightLook = { ...nightLook };
 const defaultToneMapping = rendererTuning.toneMapping ?? 'aces';
 const defaultBloom = { ...postProcessingTuning.bloom };
 const materialTextureStates = new WeakMap();
-let texturesEnabled = true;
+let texturesEnabled = nightLook.textures !== false;
 let nightCinema = null;
 
 const graphicsProfileStorageKey = 'whereif.map.graphicsProfile';
-const savedGraphicsProfile = (() => {
-  try {
-    const value = localStorage.getItem(graphicsProfileStorageKey);
-    return value === 'basic' || value === 'balanced' || value === 'cinematic'
-      ? value
-      : 'auto';
-  } catch (_) {
-    return 'auto';
-  }
-})();
-let graphicsProfile = savedGraphicsProfile === 'auto'
-  ? 'cinematic'
-  : savedGraphicsProfile;
+// One map profile for every device, including devices with an old saved choice.
+const savedGraphicsProfile = 'basic';
+let graphicsProfile = 'basic';
+// Quality is selected by the user, never inferred from RAM, GPU or phone model.
+// Keep the same approved resolution and shadow budget on every device.
+const renderBudget = {
+  pixels: Infinity,
+  maxRatio: 3,
+  shadowSize: 2048,
+};
+let mapQuality;
+try { mapQuality = normalizedMapQuality(initialRenderPreferences.quality ?? rendererTuning.approvedMapQuality); }
+catch { mapQuality = normalizedMapQuality(); }
+let initialAntialias = mapQuality.antialias;
+mapQuality.antialias = 'off';
+let mapAntialias = null;
+let qualityApplyQueue = Promise.resolve();
+
+function hardwarePixelRatio() {
+  return renderBudget.maxRatio;
+}
+
+function budgetPixelRatio() {
+  return THREE.MathUtils.clamp(hardwarePixelRatio() * mapQuality.sharpness / 100, .5, 4);
+}
 
 function applyBasicGraphicsTuning() {
-  rendererTuning.maxPixelRatio = 3;
-  rendererTuning.interactionPixelRatio = 1;
+  rendererTuning.maxPixelRatio = budgetPixelRatio();
+  rendererTuning.interactionPixelRatio = rendererTuning.maxPixelRatio;
   rendererTuning.environmentIntensity = Math.min(
     rendererTuning.environmentIntensity ?? 0.42,
     0.42,
@@ -51,7 +107,7 @@ function applyBasicGraphicsTuning() {
   atmosphere.resolution = 560;
   const shadows = lightingTuning.shadows ??= {};
   shadows.enabled = true;
-  shadows.mapSize = 4096;
+  shadows.mapSize = renderBudget.shadowSize;
   (lightingTuning.groundRays ??= {}).enabled = false;
   (lightingTuning.sunProjection ??= {}).enabled = false;
 }
@@ -86,7 +142,13 @@ if (graphicsProfile === 'balanced') applyBalancedGraphicsTuning();
 if (graphicsProfile === 'cinematic') applyCinematicGraphicsTuning();
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(cameraTuning.fov ?? 42, 1, 0.1, 5000);
+const perspectiveCamera = new THREE.PerspectiveCamera(cameraTuning.fov ?? 42, 1, 0.1, 5000);
+const topCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 5000);
+let camera = perspectiveCamera;
+let mapViewMode = '3d';
+let topViewHalfHeight = 1;
+let mapEventNavigationRequest = 0;
+let mapEventNavigationQueue = Promise.resolve();
 
 function updatePerspectiveProjection(viewCamera) {
   viewCamera.updateProjectionMatrix();
@@ -98,35 +160,13 @@ function updatePerspectiveProjection(viewCamera) {
 const renderer = new THREE.WebGLRenderer({
   antialias: graphicsProfile === 'cinematic',
   alpha: false,
+  stencil: true,
   precision: 'highp',
   powerPreference: 'high-performance',
 });
-
-function detectGraphicsProfile() {
-  if (savedGraphicsProfile !== 'auto') return savedGraphicsProfile;
-  const gl = renderer.getContext();
-  const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-  const gpu = debugInfo
-    ? String(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)).toLowerCase()
-    : '';
-  const memory = Number(navigator.deviceMemory) || 0;
-  const userAgent = navigator.userAgent.toLowerCase();
-  const deviceSignature = `${gpu} ${userAgent}`;
-  const flagshipGalaxy = /sm-s(?:9|8)[0-9]{2}/.test(deviceSignature);
-  const clearlyLimited =
-    /mali-g5[0-9]|mali-g6[0-8]|sm-a(?:0|1|2)[0-9]/.test(deviceSignature) ||
-    (!flagshipGalaxy && memory > 0 && memory <= 4);
-  const clearlyPowerful =
-    flagshipGalaxy ||
-    /adreno.*7[0-9]{2}|xclipse|apple gpu/.test(gpu) ||
-    memory >= 8;
-  return clearlyPowerful && !clearlyLimited ? 'cinematic' : 'basic';
-}
-
-graphicsProfile = detectGraphicsProfile();
-if (graphicsProfile === 'basic') applyBasicGraphicsTuning();
-if (graphicsProfile === 'balanced') applyBalancedGraphicsTuning();
-if (graphicsProfile === 'cinematic') applyCinematicGraphicsTuning();
+const gpuInfo = renderer.getContext().getExtension('WEBGL_debug_renderer_info');
+const gpuName = gpuInfo ? String(renderer.getContext().getParameter(gpuInfo.UNMASKED_RENDERER_WEBGL)) : '';
+applyBasicGraphicsTuning();
 
 const toneMappings = {
   aces: THREE.ACESFilmicToneMapping,
@@ -159,12 +199,122 @@ renderer.setPixelRatio(
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 applyToneMapping(rendererTuning.toneMapping);
 renderer.toneMappingExposure = rendererTuning.exposure ?? 0.88;
-renderer.shadowMap.enabled = lightingTuning.shadows?.enabled ?? true;
+renderer.shadowMap.enabled = !geometryOnly && (lightingTuning.shadows?.enabled ?? true);
 renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.shadowMap.autoUpdate = false;
 document.body.appendChild(renderer.domElement);
+const fpsCounter = createFpsCounter(window.WHEREIF_SHOW_FPS === true);
+const eventAnchorCache = new Map();
+let mapEvents = [];
+let pendingMarkerPointer = null;
+function forwardMapPointer(event,target) {
+  const forwarded=new PointerEvent('pointerdown',{bubbles:false,cancelable:true,
+    pointerId:event.pointerId,pointerType:event.pointerType,isPrimary:event.isPrimary,
+    clientX:event.clientX,clientY:event.clientY,button:event.button,buttons:event.buttons,
+    pressure:event.pressure});
+  forwarded.mapMarkerTarget=target;
+  renderer.domElement.dispatchEvent(forwarded);
+  renderer.domElement.setPointerCapture(event.pointerId);
+}
+function forwardPendingMarkerPointer() {
+  const pending=pendingMarkerPointer;pendingMarkerPointer=null;
+  if(pending)forwardMapPointer(pending.event,pending.target);
+}
+const eventMarkers = createMapEventMarkers({
+  onPointerDown(event,target) {
+    if(event.pointerType!=='touch'||viewTransition)return;
+    if(event.isPrimary){pendingMarkerPointer={event,target};return;}
+    if(pendingMarkerPointer){forwardPendingMarkerPointer();forwardMapPointer(event,target);}
+    else if(cameraPointerIds.size>0)forwardMapPointer(event,target);
+  },
+  onPointerEnd(event) {
+    if(pendingMarkerPointer?.event.pointerId===event.pointerId)pendingMarkerPointer=null;
+  },
+  interiorSize: interiorEventSize,
+  autoLayout: eventMarkerAutoLayout,
+  anchorFor(location,floor) {
+    const key=floor ? `${floor.id}/${location.spaceNodeName??''}` : location.zoneId;
+    if(eventAnchorCache.has(key))return eventAnchorCache.get(key);
+    const space=floor?.spaces.find(entry=>entry.nodeName===location.spaceNodeName);
+    const bounds=space?.bounds??floor?.bounds;
+    const zone=config?.zones.find(entry=>entry.id===location.zoneId);
+    const node=zone?zoneNodes.get(zone.nodeName):null;
+    const box=bounds??(node?new THREE.Box3().setFromObject(node):null);
+    if(!box || box.isEmpty())return null;
+    const anchor=box.getCenter(new THREE.Vector3());anchor.y=box.max.y+1.5;
+    eventAnchorCache.set(key,anchor);return anchor;
+  },
+  onSelected:payload=>send('eventSelected',payload),
+});
+
+const objectFades = new Set();
+function prepareObjectFade(objects, from) {
+  // The basic selection path must not allocate transparent material copies.
+  if (!selectionOptions.objectFade) return { cleanup() {}, start: () => Promise.resolve() };
+  const copies = new Map();
+  const meshes = [];
+  const visited = new Set();
+  const copyFor = source => {
+    if (!copies.has(source)) {
+      const material = source.clone();
+      material.onBeforeCompile = source.onBeforeCompile.bind(source);
+      material.customProgramCacheKey = source.customProgramCacheKey.bind(source);
+      material.transparent = true;
+      material.depthWrite = false;
+      material.forceSinglePass = true;
+      copies.set(source, { material, opacity: source.opacity });
+    }
+    return copies.get(source).material;
+  };
+  for (const object of objects) object.traverse(mesh => {
+    if (!mesh.isMesh || mesh.userData.interiorSpace?.marker === mesh) return;
+    if (visited.has(mesh)) return;
+    visited.add(mesh);
+    meshes.push({ mesh, material: mesh.material });
+    mesh.material = Array.isArray(mesh.material) ? mesh.material.map(copyFor) : copyFor(mesh.material);
+  });
+  const setOpacity = amount => {
+    for (const state of copies.values()) state.material.opacity = state.opacity * amount;
+  };
+  setOpacity(from);
+  const fade = { startedAt: Infinity, from, to: from, duration: 180, setOpacity, cleaned: false,
+    resolve: null, cleanup() {
+      if (fade.cleaned) return;
+      fade.cleaned = true;
+      for (const state of meshes) state.mesh.material = state.material;
+      for (const state of copies.values()) state.material.dispose();
+      objectFades.delete(fade);
+      fade.resolve?.();
+    }, start(to) {
+      fade.to = to;
+      fade.startedAt = performance.now();
+      requestRender();
+      return new Promise(resolve => { fade.resolve = resolve; });
+    } };
+  objectFades.add(fade);
+  return fade;
+}
+
+function updateObjectFades(time) {
+  let animating = false;
+  for (const fade of objectFades) {
+    if (!Number.isFinite(fade.startedAt)) continue;
+    const progress = Math.min(1, (time - fade.startedAt) / fade.duration);
+    const eased = progress * progress * (3 - 2 * progress);
+    fade.setOpacity(fade.from + (fade.to - fade.from) * eased);
+    if (progress < 1) animating = true;
+    else {
+      fade.startedAt = Infinity;
+      fade.resolve?.();
+      fade.resolve = null;
+    }
+  }
+  return animating;
+}
 
 let effectComposer = null;
+let mobileBloom = null;
+let sceneRenderPass = null;
 let bloomPass = null;
 let cinematicGradePass = null;
 const materialEnvironmentIntensities = new WeakMap();
@@ -181,6 +331,7 @@ const cinematicGradeShader = {
     neutralWarmResponse: { value: 0.22 },
     contrast: { value: 1 },
     saturation: { value: 1 },
+    temperature: { value: 0 },
     atmosphereTexture: { value: null },
     atmosphereBaseColor: { value: new THREE.Color('#090a0d') },
     surfaceRayStrength: { value: 0 },
@@ -202,6 +353,7 @@ const cinematicGradeShader = {
     uniform float neutralWarmResponse;
     uniform float contrast;
     uniform float saturation;
+    uniform float temperature;
     uniform sampler2D atmosphereTexture;
     uniform vec3 atmosphereBaseColor;
     uniform float surfaceRayStrength;
@@ -244,6 +396,12 @@ const cinematicGradeShader = {
         warmMask * warmStrength * surfaceResponse
       );
 
+      float filterLuminance = gradeLuminance(color);
+      vec3 temperatureGain = mix(vec3(0.68, 1.0, 1.35),
+        vec3(1.35, 1.0, 0.68), temperature * 0.5 + 0.5);
+      temperatureGain = mix(vec3(1.0), temperatureGain, abs(temperature));
+      color *= temperatureGain;
+      color *= filterLuminance / max(gradeLuminance(color), 0.00001);
       float gradedLuminance = gradeLuminance(color);
       color = mix(vec3(gradedLuminance), color, saturation);
       color = (color - vec3(0.18)) * contrast + vec3(0.18);
@@ -252,30 +410,52 @@ const cinematicGradeShader = {
   `,
 };
 
-function installPostProcessing() {
+function installPostProcessing({ debug = false } = {}) {
+  if (geometryOnly && !debug) return;
   const bloom = postProcessingTuning.bloom ?? {};
-  if (bloom.enabled === false || effectComposer) return;
+  if (effectComposer || mobileBloom) return;
+  if (debug && testFeatures.bloom && !testFeatures.grading) {
+    mobileBloom = createMobileBloom(renderer, bloom);
+    bloomPass = mobileBloom;
+    return;
+  }
 
   effectComposer = new EffectComposer(renderer);
   if (renderer.capabilities.isWebGL2) {
     const context = renderer.getContext();
     const supportedSamples = context.getParameter(context.MAX_SAMPLES) ?? 0;
-    const requestedSamples = postProcessingTuning.multisample ?? 4;
+    // HDR + four MSAA samples duplicated across ping-pong targets was the
+    // largest allocation. Pixel coverage provides smoothing at a fixed budget.
+    const requestedSamples = 0;
     const samples = Math.min(requestedSamples, supportedSamples);
     effectComposer.renderTarget1.samples = samples;
     effectComposer.renderTarget2.samples = samples;
   }
-  effectComposer.addPass(new RenderPass(scene, camera));
-  bloomPass = new UnrealBloomPass(
-    new THREE.Vector2(1, 1),
-    bloom.strength ?? 0.72,
-    bloom.radius ?? 0.46,
-    bloom.threshold ?? 0.72,
-  );
-  effectComposer.addPass(bloomPass);
-  cinematicGradePass = new ShaderPass(cinematicGradeShader);
-  cinematicGradePass.uniforms.atmosphereTexture.value = atmosphereTexture;
-  effectComposer.addPass(cinematicGradePass);
+  sceneRenderPass = new RenderPass(scene, camera);
+  effectComposer.addPass(sceneRenderPass);
+  if (!debug || testFeatures.bloom) {
+    bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(1, 1),
+      bloom.strength ?? 0.72,
+      bloom.radius ?? 0.46,
+      bloom.threshold ?? 0.72,
+    );
+    // Bloom only processes color; depth attachments serve no purpose here.
+    for (const target of [bloomPass.renderTargetBright,
+      ...bloomPass.renderTargetsHorizontal, ...bloomPass.renderTargetsVertical]) {
+      target.depthBuffer = false;
+      target.stencilBuffer = false;
+    }
+    const sizeBloom = bloomPass.setSize.bind(bloomPass);
+    bloomPass.setSize = (width, height) => sizeBloom(
+      Math.max(1, Math.round(width * 0.5)), Math.max(1, Math.round(height * 0.5)));
+    effectComposer.addPass(bloomPass);
+  }
+  if (!debug || testFeatures.grading) {
+    cinematicGradePass = new ShaderPass(cinematicGradeShader);
+    cinematicGradePass.uniforms.atmosphereTexture.value = atmosphereTexture;
+    effectComposer.addPass(cinematicGradePass);
+  }
   effectComposer.addPass(new OutputPass());
 }
 
@@ -357,13 +537,10 @@ function updateDirectSunExposure(profile) {
   );
 }
 
-const selectionMaskTarget = new THREE.WebGLRenderTarget(1, 1, {
-  minFilter: THREE.LinearFilter,
-  magFilter: THREE.LinearFilter,
-  format: THREE.RGBAFormat,
-  depthBuffer: true,
-  stencilBuffer: false,
-});
+const selectionOutline = createSelectionOutline(renderer,{preparedFor:node=>selectionPreparedCache?.[node.name],windowNodesFor:node=>{
+  const zone=config?.zones.find(zone=>zoneNodes.get(zone.nodeName)===node);
+  return zone ? selectionWindowMeshes : [];
+}});
 const pickingTarget = new THREE.WebGLRenderTarget(1, 1, {
   minFilter: THREE.NearestFilter,
   magFilter: THREE.NearestFilter,
@@ -380,63 +557,9 @@ const pickingMaterials = pickingColors.map(
       toneMapped: false,
     }),
 );
-const selectionMaskMaterial = new THREE.MeshBasicMaterial({
-  color: 0xffffff,
-  side: THREE.DoubleSide,
-});
-const outlineMaterial = new THREE.ShaderMaterial({
-  transparent: true,
-  depthTest: false,
-  depthWrite: false,
-  toneMapped: false,
-  uniforms: {
-    maskTexture: { value: selectionMaskTarget.texture },
-    texelSize: { value: new THREE.Vector2(1, 1) },
-    outlineColor: { value: new THREE.Color('#ffffff') },
-    outlineOpacity: { value: 0 },
-    outlineWidth: { value: 1 },
-  },
-  vertexShader: `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: `
-    uniform sampler2D maskTexture;
-    uniform vec2 texelSize;
-    uniform vec3 outlineColor;
-    uniform float outlineOpacity;
-    uniform float outlineWidth;
-    varying vec2 vUv;
-
-    float maskAt(vec2 offset, float radius) {
-      return texture2D(maskTexture, vUv + offset * texelSize * radius).r;
-    }
-
-    void main() {
-      float center = texture2D(maskTexture, vUv).r;
-      float outer = 0.0;
-      for (int ring = 1; ring <= 3; ring++) {
-        float radius = outlineWidth * float(ring) / 3.0;
-        outer = max(outer, maskAt(vec2( 1.0,  0.0), radius));
-        outer = max(outer, maskAt(vec2(-1.0,  0.0), radius));
-        outer = max(outer, maskAt(vec2( 0.0,  1.0), radius));
-        outer = max(outer, maskAt(vec2( 0.0, -1.0), radius));
-        outer = max(outer, maskAt(vec2( 0.707,  0.707), radius));
-        outer = max(outer, maskAt(vec2(-0.707,  0.707), radius));
-        outer = max(outer, maskAt(vec2( 0.707, -0.707), radius));
-        outer = max(outer, maskAt(vec2(-0.707, -0.707), radius));
-      }
-      float edge = smoothstep(0.04, 0.7, outer) * (1.0 - center);
-      gl_FragColor = vec4(outlineColor, edge * outlineOpacity);
-    }
-  `,
-});
-const outlineScene = new THREE.Scene();
-const outlineCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-outlineScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), outlineMaterial));
+const outlineMaterial = selectionOutline.material;
+const outlineScene = selectionOutline.scene;
+const outlineCamera = selectionOutline.camera;
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = false;
@@ -462,14 +585,67 @@ const zoneNodes = new Map();
 let config = null;
 let previewLocalTimeMinutes = null;
 let daylightPreviewOverrides = null;
+let morningLook = {};
+const defaultMiddayLook = { ...rendererTuning.approvedMiddayLook };
+let middayLook = { ...defaultMiddayLook };
+const defaultSunsetLook = { ...rendererTuning.approvedSunsetLook };
+let sunsetLook = { ...defaultSunsetLook };
+const savedSkySettings = {
+  midday: { ...rendererTuning.middaySky },
+  sunset: { ...rendererTuning.sunsetSky },
+  morning: { ...rendererTuning.morningSky },
+};
+function isSunset() { const m = localTimeMinutes(); return m >= 990 && m < 1140; }
+function isMidday() { const m = localTimeMinutes(); return m >= 660 && m < 990; }
+function isDayCustomization() { return isMorning() || isMidday() || isSunset(); }
+// Sample the approved lighting once per period; clock time only selects a period.
+function presetTimeMinutes() {
+  if (isMorning()) return 360;
+  if (isMidday()) return 720;
+  if (isSunset()) return 1080;
+  return 1260;
+}
+function activeColorTemperature() {
+  const look = isSunset() ? sunsetLook : isMidday() ? middayLook : isMorning() ? morningLook : nightLook;
+  return THREE.MathUtils.clamp(look.temperature ?? 0, -1, 1);
+}
+function effectiveMorningLook() {
+  if (isSunset()) return { reflections: rendererTuning.sunsetEnvironmentScale ?? 4.5,
+    wetness: 0, floorRoughness: 0.82, textureDetail: 1,
+    sunHighlights: 1, textures: true, ...sunsetLook };
+  if (isMidday()) return { reflections: 1, wetness: 0,
+    floorRoughness: 0.82, textureDetail: 1, sunHighlights: 1,
+    textures: true, ...middayLook };
+  const preset = rendererTuning.approvedDawnSurface;
+  const amount = phaseEnvelope(presetTimeMinutes(), preset ?? {});
+  const defaults = { reflections: rendererTuning.dawnSurface?.environmentScale ?? 8,
+    wetness: rendererTuning.dawnSurface?.pavement?.clearcoat ?? 0.65,
+    floorRoughness: rendererTuning.dawnSurface?.pavement?.roughness ?? 0.27,
+    textureDetail: 1.65, sunHighlights: 1, textures: true };
+  for (const [key, value] of Object.entries(preset?.values ?? {})) {
+    if (typeof value === 'number') defaults[key] = THREE.MathUtils.lerp(defaults[key], value, amount);
+  }
+  return { ...defaults, ...morningLook };
+}
+function isMorning() { const m = localTimeMinutes(); return m >= 330 && m < 660; }
 let model = null;
+let interiors = null;
+let interiorLoading = false;
+let interiorRequest = 0;
+let exteriorNavigation = null;
+let rawModeEnabled = false;
+const rawMaterialStates = [];
+const rawMaterials = new Set();
+const rawBackground = new THREE.Color('#303030');
 let pointerStart = null;
+const cameraPointerIds = new Set();
 let initialCameraPosition = null;
 let initialTarget = null;
 let initialAzimuth = null;
 let lastSentBearing = null;
 let lastCameraStateSentAt = 0;
 let resettingCamera = null;
+let viewTransition = null;
 let hemisphereLight = null;
 let ambientLight = null;
 let keyLight = null;
@@ -489,12 +665,78 @@ let atmosphereTexture = null;
 let atmospherePaintSignature = null;
 let nightSkyPoints = null;
 let nightSkyMaterial = null;
+let middaySkyMesh = null;
+let sunsetSkyMesh = null;
+let morningSkyMesh = null;
 const materialBaseFinishes = new WeakMap();
 const windowPresetGroups = new Map();
+let selectionWindowMeshes = [];
 const windowGlowLights = [];
+const windowOwnedMaterials = new Set();
 let animationFrame = null;
+let viewerDisposed = false;
+let viewerSuspended = false;
+let diagnosticsEnabled = false;
+let diagnosticsTimer = null;
+let diagnosticsGpuExtension = null;
+let diagnosticsGpuQuery = null;
+let diagnosticsGpuMs = null;
+let diagnosticsRenderMaxMs = 0;
+let diagnosticsStage = 'Criando renderizador';
+let diagnosticsStageStartedAt = performance.now();
+const loadingStages = [];
+
+function configureDiagnostics(enabled) {
+  diagnosticsEnabled = enabled;
+  if (!enabled || diagnosticsTimer !== null) return;
+  const gl = renderer.getContext();
+  diagnosticsGpuExtension = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+  renderer.info.autoReset = false;
+  diagnosticsTimer = setInterval(() => {
+    if (viewerDisposed) return;
+    send('diagnostics', diagnosticsSnapshot());
+    diagnosticsRenderMaxMs = 0;
+  }, 2000);
+}
+
+function diagnosticsSnapshot() {
+  const gl = renderer.getContext();
+  if (diagnosticsGpuQuery && diagnosticsGpuExtension) {
+    const disjoint = gl.getParameter(diagnosticsGpuExtension.GPU_DISJOINT_EXT);
+    const available = gl.getQueryParameter(diagnosticsGpuQuery, gl.QUERY_RESULT_AVAILABLE);
+    if (available || disjoint) {
+      if (!disjoint) diagnosticsGpuMs = gl.getQueryParameter(diagnosticsGpuQuery, gl.QUERY_RESULT) / 1e6;
+      else diagnosticsGpuMs = null;
+      gl.deleteQuery(diagnosticsGpuQuery);
+      diagnosticsGpuQuery = null;
+    }
+  }
+  return { stage: diagnosticsStage, renderCpuMaxMs: diagnosticsRenderMaxMs,
+    framesRendered: renderer.info.render.frame,
+    gpuAvailable: diagnosticsGpuExtension !== null, gpuMaxMs: diagnosticsGpuMs,
+    drawCalls: renderer.info.render.calls, triangles: renderer.info.render.triangles,
+    textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries,
+    pixelRatio: renderer.getPixelRatio(), shadowMapSize: renderer.shadowMap.enabled ? keyLight?.shadow.mapSize.x ?? 0 : 0,
+    pixelBudget: renderBudget.pixels,
+    gpuName, geometryOnly, basicLightingTest,
+    loadingStages: [...loadingStages],
+    testStage: geometryOnly ? (basicLightingTest ? 'basic-lighting' : 'raw') : 'full',
+    rawMode: rawModeEnabled,
+    msaaSamples: rawModeEnabled ? 0 : effectComposer?.renderTarget1.samples ?? 0 };
+}
+
+function recordLoadingStage(stage) {
+  const now = performance.now();
+  const previousStageMs = now - diagnosticsStageStartedAt;
+  loadingStages.push({ stage: diagnosticsStage, ms: Math.round(previousStageMs) });
+  diagnosticsStage = stage;
+  diagnosticsStageStartedAt = now;
+  if (diagnosticsEnabled) send('diagnostics', { ...diagnosticsSnapshot(), previousStageMs });
+}
 let selectedMeshes = [];
 let selectedMaterialStates = [];
+let selectedMaterialCache = new WeakMap();
+const selectionVariantMaterials = new Set();
 let selectionState = null;
 let selectedZoneId = null;
 let lastFocusedZoneId = null;
@@ -505,6 +747,9 @@ let navigationTargetHeight = null;
 let navigationHull = [];
 let navigationEdges = [];
 let navigationInset = 0;
+const navigationOffsetCache = createNavigationOffsetCache();
+const navigationPolygonCache = new WeakMap();
+const emptyNavigationOffsets = [];
 let navigationSpring = null;
 let cameraFocus = null;
 let controlsInteractionActive = false;
@@ -530,8 +775,8 @@ function normalizedBearingDegrees(value) {
 
 function currentBearingDegrees() {
   if (initialAzimuth === null) return 0;
-  const offset = camera.position.clone().sub(controls.target);
-  const azimuth = Math.atan2(offset.x, offset.z);
+  const azimuth = Math.atan2(camera.position.x - controls.target.x,
+    camera.position.z - controls.target.z);
   return normalizedBearingDegrees(
     THREE.MathUtils.radToDeg(azimuth - initialAzimuth),
   );
@@ -540,17 +785,19 @@ function currentBearingDegrees() {
 function sendCameraState({ force = false } = {}) {
   if (initialAzimuth === null) return;
   const now = performance.now();
+  if (!force && now - lastCameraStateSentAt < 48) return;
   const bearing = currentBearingDegrees();
   const change = lastSentBearing === null
     ? Infinity
     : Math.abs(normalizedBearingDegrees(bearing - lastSentBearing));
-  if (!force && (now - lastCameraStateSentAt < 48 || change < 0.08)) return;
+  if (!force && change < 0.08) return;
   lastSentBearing = bearing;
   lastCameraStateSentAt = now;
   send('camera', { bearing });
 }
 
 function beginManualCameraGesture() {
+  if (viewTransition) return;
   resettingCamera = null;
   cameraFocus = null;
   navigationSpring = null;
@@ -585,14 +832,32 @@ function findModelNode(root, nodeName) {
   return originalNameNode;
 }
 
-function releaseSelectedMeshes() {
-  for (const mesh of selectedMeshes) mesh.layers.disable(1);
+function releaseSelectedMaterials() {
   for (const state of selectedMaterialStates) {
     state.mesh.material = state.originalMaterial;
-    for (const entry of state.materials) entry.material.dispose();
+    for (const entry of state.materials) {
+      if (entry.owned) entry.material.dispose();
+    }
   }
-  selectedMeshes = [];
   selectedMaterialStates = [];
+}
+
+function releaseSelectedMeshes() {
+  selectionOutline.clear();
+  for (const mesh of selectedMeshes) mesh.layers.disable(1);
+  releaseSelectedMaterials();
+  selectedMeshes = [];
+}
+
+function disposeSelectionVariants() {
+  for (const material of selectionVariantMaterials) material.dispose();
+  selectionVariantMaterials.clear();
+  selectedMaterialCache = new WeakMap();
+}
+
+function isWindowSelectionPart(mesh, material) {
+  const name = `${mesh?.name ?? ''} ${material?.name ?? ''}`.toLowerCase();
+  return /window|janela/.test(name);
 }
 
 function prepareSelectedMaterial(mesh) {
@@ -601,23 +866,59 @@ function prepareSelectedMaterial(mesh) {
     ? originalMaterial
     : [originalMaterial];
   const materials = sourceMaterials.map((source) => {
+    if (isWindowSelectionPart(mesh, source)) {
+      return { material: source, effectUniforms: null, owned: false };
+    }
+    const cached = selectedMaterialCache.get(source);
+    if (cached) {
+      const uniforms = cached.effectUniforms;
+      uniforms.colorA.value.copy(selectionState.accentColor);
+      uniforms.colorB.value.copy(selectionState.flashColor);
+      uniforms.roomColorA.value.copy(selectionState.accentColor);
+      uniforms.roomColorB.value.copy(selectionState.accentColor).multiplyScalar(0.42);
+      uniforms.roomMin.value.copy(selectionState.roomBounds?.min ?? new THREE.Vector3());
+      if (selectionState.roomBounds) selectionState.roomBounds.getSize(uniforms.roomSize.value);
+      else uniforms.roomSize.value.set(1, 1, 1);
+      uniforms.intensity.value = uniforms.light.value = 0;
+      return cached;
+    }
     const material = source.clone();
+    // Three.js does not clone shader callbacks. Preserve surface lighting
+    // and its original baselines before adding the selection animation.
+    if (materialEnvironmentIntensities.has(source)) {
+      materialEnvironmentIntensities.set(material, materialEnvironmentIntensities.get(source));
+    }
+    if (materialNightFinishes.has(source)) {
+      materialNightFinishes.set(material, materialNightFinishes.get(source));
+    }
     const effectUniforms = {
       colorA: { value: selectionState.accentColor.clone() },
       colorB: { value: selectionState.flashColor.clone() },
       intensity: { value: 0 },
+      light: { value: 0 },
+      lightBrightness: { value: 0.78 },
+      roomColorA: { value: selectionState.accentColor.clone() },
+      roomColorB: { value: selectionState.accentColor.clone().multiplyScalar(0.42) },
+      roomMin: { value: selectionState.roomBounds?.min.clone() ?? new THREE.Vector3() },
+      roomSize: { value: selectionState.roomBounds?.getSize(new THREE.Vector3()) ?? new THREE.Vector3(1, 1, 1) },
       phase: { value: 0 },
       frequency: {
         value: selectionTuning.flashSpatialFrequency ?? 0.075,
       },
     };
-    const sourceOnBeforeCompile = material.onBeforeCompile.bind(material);
-    const sourceProgramCacheKey = material.customProgramCacheKey.bind(material);
+    const sourceOnBeforeCompile = source.onBeforeCompile.bind(source);
+    const sourceProgramCacheKey = source.customProgramCacheKey.bind(source);
     material.onBeforeCompile = (shader, webGlRenderer) => {
       sourceOnBeforeCompile(shader, webGlRenderer);
       shader.uniforms.whereIfSelectionColorA = effectUniforms.colorA;
       shader.uniforms.whereIfSelectionColorB = effectUniforms.colorB;
       shader.uniforms.whereIfSelectionIntensity = effectUniforms.intensity;
+      shader.uniforms.whereIfSelectionLight = effectUniforms.light;
+      shader.uniforms.whereIfSelectionLightBrightness = effectUniforms.lightBrightness;
+      shader.uniforms.whereIfRoomColorA = effectUniforms.roomColorA;
+      shader.uniforms.whereIfRoomColorB = effectUniforms.roomColorB;
+      shader.uniforms.whereIfRoomMin = effectUniforms.roomMin;
+      shader.uniforms.whereIfRoomSize = effectUniforms.roomSize;
       shader.uniforms.whereIfSelectionPhase = effectUniforms.phase;
       shader.uniforms.whereIfSelectionFrequency = effectUniforms.frequency;
       shader.vertexShader = `
@@ -635,6 +936,12 @@ function prepareSelectedMaterial(mesh) {
         uniform vec3 whereIfSelectionColorA;
         uniform vec3 whereIfSelectionColorB;
         uniform float whereIfSelectionIntensity;
+        uniform float whereIfSelectionLight;
+        uniform float whereIfSelectionLightBrightness;
+        uniform vec3 whereIfRoomColorA;
+        uniform vec3 whereIfRoomColorB;
+        uniform vec3 whereIfRoomMin;
+        uniform vec3 whereIfRoomSize;
         uniform float whereIfSelectionPhase;
         uniform float whereIfSelectionFrequency;
         varying vec3 vWhereIfSelectionWorldPosition;
@@ -642,6 +949,7 @@ function prepareSelectedMaterial(mesh) {
       `.replace(
         '#include <dithering_fragment>',
         `
+          if (whereIfSelectionIntensity > 0.0001) {
           float whereIfSelectionWave = 0.5 + 0.5 * sin(
             (vWhereIfSelectionWorldPosition.x +
               vWhereIfSelectionWorldPosition.z * 0.72) *
@@ -663,17 +971,31 @@ function prepareSelectedMaterial(mesh) {
             whereIfSelectionColor,
             whereIfSelectionIntensity
           );
+          }
+          if (whereIfSelectionLight > 0.0001) {
+          vec3 whereIfRoomPosition = (vWhereIfSelectionWorldPosition - whereIfRoomMin)
+            / max(whereIfRoomSize, vec3(0.01));
+          float whereIfRoomGradient = smoothstep(0.0, 1.0,
+            whereIfRoomPosition.x * 0.55 + whereIfRoomPosition.z * 0.45);
+          vec3 whereIfRoomLight = mix(whereIfRoomColorA, whereIfRoomColorB,
+            whereIfRoomGradient) * whereIfSelectionLightBrightness;
+          gl_FragColor.rgb = mix(gl_FragColor.rgb, whereIfRoomLight, whereIfSelectionLight);
+          }
           #include <dithering_fragment>
         `,
       );
     };
     material.customProgramCacheKey = () =>
-      `${sourceProgramCacheKey()}-whereif-selection-gradient-v1`;
+      `${sourceProgramCacheKey()}-whereif-selection-gradient-v3`;
     material.needsUpdate = true;
-    return {
+    const entry = {
       material,
       effectUniforms,
+      owned: false,
     };
+    selectedMaterialCache.set(source, entry);
+    selectionVariantMaterials.add(material);
+    return entry;
   });
   mesh.material = Array.isArray(originalMaterial)
     ? materials.map((entry) => entry.material)
@@ -681,11 +1003,17 @@ function prepareSelectedMaterial(mesh) {
   selectedMaterialStates.push({ mesh, originalMaterial, materials });
 }
 
-function updateSelectedMaterialGradient(intensity, phase) {
+function updateSelectedMaterialGradient(intensity, phase, light = 0) {
+  const useComposer = effectComposer &&
+    (bloomPass?.enabled || isDayCustomization() || activeColorTemperature() !== 0);
   for (const state of selectedMaterialStates) {
     for (const entry of state.materials) {
+      if (!entry.effectUniforms) continue;
       entry.effectUniforms.intensity.value = intensity;
       entry.effectUniforms.phase.value = phase;
+      entry.effectUniforms.light.value = light;
+      entry.effectUniforms.lightBrightness.value = 0.78 /
+        (useComposer ? Math.max(0.1, renderer.toneMappingExposure) : 1);
     }
   }
 }
@@ -693,7 +1021,7 @@ function updateSelectedMaterialGradient(intensity, phase) {
 function clearSelection({ animate = true } = {}) {
   selectedZoneId = null;
   if (!selectionState) return;
-  if (animate) {
+  if (animate && selectionOptions.outlineAnimation) {
     selectionState.leavingAt ??= performance.now();
   } else {
     releaseSelectedMeshes();
@@ -703,7 +1031,50 @@ function clearSelection({ animate = true } = {}) {
   requestRender();
 }
 
+function startSelectionEffect(node, { lit = false } = {}) {
+  clearSelection({ animate: false });
+  selectionState = {
+    node,
+    effectsSettled: false,
+    startedAt: performance.now(),
+    restingLight: lit && selectionOptions.roomGlow ? 0.68 : 0,
+    room: lit,
+    roomBounds: lit ? new THREE.Box3().setFromObject(node) : null,
+    leavingAt: null,
+    startColor: new THREE.Color(
+      cssColor(selectionTuning.startColor, '#ffffff'),
+    ),
+    accentColor: new THREE.Color(
+      cssColor(config.accentColor, '#a64cff'),
+    ),
+    flashColor: new THREE.Color(
+      cssColor(config.selectionFlashColor, '#ff435f'),
+    ),
+    effectColor: new THREE.Color(),
+  };
+  node.traverse((object) => {
+    if (!object.isMesh || !object.geometry) return;
+    if (object.userData.interiorSpace?.marker === object) return;
+    const materials = Array.isArray(object.material)
+      ? object.material
+      : [object.material];
+    if (materials.every((material) => isWindowSelectionPart(object, material))) {
+      return;
+    }
+    if ((lit && selectionOptions.roomGlow) ||
+        (selectionOptions.pulse && (selectionTuning.flashIntensity ?? 0) > 0)) {
+      prepareSelectedMaterial(object);
+    }
+    if (selectionOptions.outline) object.layers.enable(1);
+    selectedMeshes.push(object);
+  });
+  if (selectionOptions.outline) selectionOutline.select(node);
+  updateSelectionEffects(performance.now());
+  requestRender();
+}
+
 function selectZone(zoneId) {
+  if (rawModeEnabled && !(featurePanelEnabled && testFeatures.selection)) return false;
   const zone = config.zones.find((entry) => entry.id === zoneId);
   const node = zone ? zoneNodes.get(zone.nodeName) : null;
   if (!zone || !node) {
@@ -720,28 +1091,8 @@ function selectZone(zoneId) {
   const shouldFocus =
     lastFocusedZoneId !== zone.id || cameraMovedSinceFocus;
 
-  clearSelection({ animate: false });
+  startSelectionEffect(node);
   selectedZoneId = zone.id;
-  selectionState = {
-    startedAt: performance.now(),
-    leavingAt: null,
-    startColor: new THREE.Color(
-      cssColor(selectionTuning.startColor, '#ffffff'),
-    ),
-    accentColor: new THREE.Color(
-      cssColor(config.accentColor, '#a64cff'),
-    ),
-    flashColor: new THREE.Color(
-      cssColor(config.selectionFlashColor, '#ff435f'),
-    ),
-    effectColor: new THREE.Color(),
-  };
-  node.traverse((object) => {
-    if (!object.isMesh || !object.geometry) return;
-    prepareSelectedMaterial(object);
-    object.layers.enable(1);
-    selectedMeshes.push(object);
-  });
 
   if (shouldFocus) {
     focusNode(node, zone.focus);
@@ -759,18 +1110,109 @@ function findZoneForObject(object) {
     for (const zone of config.zones) {
       if (zoneNodes.get(zone.nodeName) === current) return zone;
     }
+
     current = current.parent;
   }
   return null;
 }
 
+function interiorDirection(zoneId) {
+  const focus = config?.zones.find((zone) => zone.id === zoneId)?.focus;
+  if (Array.isArray(focus?.position) && Array.isArray(focus?.target)) {
+    const direction = new THREE.Vector3().fromArray(focus.position)
+      .sub(new THREE.Vector3().fromArray(focus.target));
+    if (direction.lengthSq() > 1e-6) return direction.normalize();
+  }
+  if (Array.isArray(focus?.direction)) {
+    const direction = new THREE.Vector3().fromArray(focus.direction);
+    if (direction.lengthSq() > 1e-6) return direction.normalize();
+  }
+  return camera.position.clone().sub(controls.target).normalize();
+}
+
+function interiorRoomDirection(zoneId) {
+  const direction = interiorDirection(zoneId);
+  const minimum = cameraTuning.interiorRoomMinElevationDegrees?.[zoneId];
+  if (!Number.isFinite(minimum)) return direction;
+  const horizontal = Math.hypot(direction.x, direction.z);
+  if (horizontal < 1e-6) return direction;
+  const elevation = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(minimum, 0, 85));
+  // Preserve the saved azimuth, and raise only views below the room minimum.
+  direction.y = Math.max(direction.y, Math.tan(elevation) * horizontal);
+  return direction.normalize();
+}
+
+function selectInteriorSpace(space) {
+  if(!interiors?.current)return;
+  interiors.select(space);
+  if(space){
+    startSelectionEffect(space.node,{lit:true});
+    focusNode(space.node,{useVisualCenter:true,
+      direction:interiorRoomDirection(interiors.current.zoneId).toArray(),
+      distanceScale:cameraTuning.interiorRoomDistanceScales?.[interiors.current.zoneId]??1.25});
+  }else clearSelection();
+  sendInteriorState();requestRender();
+}
+
+function navigateToMapLocation(location) {
+  const request=++mapEventNavigationRequest;
+  const run=mapEventNavigationQueue.catch(()=>{}).then(async()=>{
+    while(!viewerDisposed && (modelLoading || interiorLoading || featureBusy))await yieldLoadingWork();
+    if(viewerDisposed || request!==mapEventNavigationRequest)return false;
+    const zone=config?.zones.find(entry=>entry.id===location?.zoneId);
+    const node=zone?zoneNodes.get(zone.nodeName):null;
+    const floor=location?.floorId?interiors?.floors.get(location.floorId):null;
+    const space=location?.spaceNodeName?floor?.spaces.find(entry=>entry.nodeName===location.spaceNodeName):null;
+    if(!node || (location.floorId && (!floor || floor.zoneId!==zone.id)) ||
+       (location.spaceNodeName && !space))return false;
+    if(interiors?.current && interiors.current.zoneId!==zone.id)exitInterior({focus:false});
+    selectedZoneId=zone.id;send('selected',{zoneId:zone.id});
+    if(floor){
+      await setInteriorFloor(zone.id,floor.id);
+      if(viewerDisposed || request!==mapEventNavigationRequest)return false;
+      if(interiors?.current?.id!==floor.id)return false;
+      if(space)selectInteriorSpace(space);
+      selectedZoneId=zone.id;send('selected',{zoneId:zone.id});
+    }else{
+      if(interiors?.current)await exitInteriorWithFade();
+      if(viewerDisposed || request!==mapEventNavigationRequest)return false;
+      startSelectionEffect(node);focusNode(node,zone.focus);
+      selectedZoneId=zone.id;lastFocusedZoneId=zone.id;cameraMovedSinceFocus=false;
+      send('selected',{zoneId:zone.id});
+    }
+    requestRender();return true;
+  });
+  mapEventNavigationQueue=run;return run;
+}
+
+function setEventMarkers(events) {
+  mapEvents=Array.isArray(events)?events:[];
+  eventAnchorCache.clear();eventMarkers.setEvents(mapEvents);requestRender();
+}
+
 function selectAt(clientX, clientY) {
+  if (geometryOnly && !(featurePanelEnabled && testFeatures.selection)) return true;
+  if (featureBusy) return true;
   if (!model || !config) return false;
+  if (interiorLoading) return true;
 
   const viewportBounds = renderer.domElement.getBoundingClientRect();
   pointer.x = ((clientX - viewportBounds.left) / viewportBounds.width) * 2 - 1;
   pointer.y = -((clientY - viewportBounds.top) / viewportBounds.height) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
+
+  if (interiors?.current) {
+    const space = interiors.pick(raycaster);
+    if (!space && !interiors.activeFloors.some(floor =>
+        raycaster.ray.intersectsBox(floor.bounds))) {
+      // A tap on the campus outside this building leaves the interior too.
+      // Empty corridors inside the floor only clear the room selection.
+      void exitInteriorWithFade({ focus: false });
+      return true;
+    }
+    selectInteriorSpace(space);
+    return !space;
+  }
 
   const pickedZone = pickZoneAt(clientX, clientY, viewportBounds);
   const intersections = raycaster.intersectObjects(
@@ -843,6 +1285,13 @@ function pickZoneAt(clientX, clientY, viewportBounds) {
   });
 
   scene.background = null;
+  // O ceu e decorativo: nao pode ser confundido com um bloco ao tocar no vazio.
+  const middaySkyWasVisible = middaySkyMesh?.visible;
+  if (middaySkyMesh) middaySkyMesh.visible = false;
+  const sunsetSkyWasVisible = sunsetSkyMesh?.visible;
+  if (sunsetSkyMesh) sunsetSkyMesh.visible = false;
+  const morningSkyWasVisible = morningSkyMesh?.visible;
+  if (morningSkyMesh) morningSkyMesh.visible = false;
   camera.layers.set(0);
   camera.setViewOffset(
     drawingSize.x,
@@ -867,6 +1316,9 @@ function pickZoneAt(clientX, clientY, viewportBounds) {
   camera.clearViewOffset();
   camera.layers.mask = originalLayerMask;
   scene.background = originalBackground;
+  if (middaySkyMesh) middaySkyMesh.visible = middaySkyWasVisible;
+  if (sunsetSkyMesh) sunsetSkyMesh.visible = sunsetSkyWasVisible;
+  if (morningSkyMesh) morningSkyMesh.visible = morningSkyWasVisible;
   renderer.setRenderTarget(originalRenderTarget);
   renderer.setClearColor(originalClearColor, originalClearAlpha);
   renderer.autoClear = originalAutoClear;
@@ -983,7 +1435,8 @@ function clipNavigationPolygon(polygon, edge, requiredDistance) {
   if (polygon.length === 0) return [];
   const result = [];
   const signedDistance = (point) =>
-    edge.inward.dot(point.clone().sub(edge.origin)) - requiredDistance;
+    (point.x - edge.origin.x) * edge.inward.x +
+    (point.y - edge.origin.y) * edge.inward.y - requiredDistance;
 
   for (let index = 0; index < polygon.length; index++) {
     const current = polygon[index];
@@ -1086,8 +1539,22 @@ function constrainNavigationPoint(point, offsets = []) {
 
   if (navigationEdges.length > 0) {
     const position = new THREE.Vector2(constrained.x, constrained.z);
-    const polygon = feasibleNavigationPolygon(offsets);
-    const closest = closestPointInPolygon(position, polygon);
+    const anchor = camera.isOrthographicCamera ? cameraTuning.topView?.initialTarget : null;
+    let cached = navigationPolygonCache.get(offsets);
+    if (!cached || cached.hull !== navigationHull || cached.edges !== navigationEdges ||
+        cached.inset !== navigationInset || cached.anchorX !== anchor?.[0] || cached.anchorZ !== anchor?.[2]) {
+      let polygon = feasibleNavigationPolygon(offsets);
+      if (anchor) {
+        // Keep the approved framing reachable while constraining the visible
+        // area at every other edge. The anchor itself must stay on the terrain.
+        const savedAnchor = closestPointInPolygon(new THREE.Vector2(anchor[0], anchor[2]), navigationHull);
+        polygon = convexHull([...polygon, savedAnchor]);
+      }
+      cached = { hull: navigationHull, edges: navigationEdges, inset: navigationInset,
+        anchorX: anchor?.[0], anchorZ: anchor?.[2], polygon };
+      navigationPolygonCache.set(offsets, cached);
+    }
+    const closest = closestPointInPolygon(position, cached.polygon);
     constrained.x = closest.x;
     constrained.z = closest.y;
   } else {
@@ -1103,6 +1570,7 @@ function constrainNavigationPoint(point, offsets = []) {
     );
   }
   if (
+    !interiors?.current &&
     cameraTuning.navigation?.lockTargetToGround !== false &&
     navigationTargetHeight !== null
   ) {
@@ -1117,7 +1585,11 @@ function viewportNavigationOffsets(
 ) {
   if (!navigationBounds || navigationTargetHeight === null) return null;
 
-  const viewport = cameraTuning.navigation?.viewport ?? {};
+  const viewport = viewCamera.isOrthographicCamera
+    ? { left: 0.90, right: 0.90, top: 0.72, bottom: 0.80 }
+    : cameraTuning.navigation?.viewport ?? {};
+  const cached = navigationOffsetCache.get(viewCamera, viewTarget, navigationTargetHeight, viewport);
+  if (cached) return cached.offsets;
   const left = -(viewport.left ?? 0.58);
   const right = viewport.right ?? 0.58;
   const top = viewport.top ?? 0.42;
@@ -1150,30 +1622,33 @@ function viewportNavigationOffsets(
     if (!groundPoint) continue;
     offsets.push(groundPoint.sub(viewTarget));
   }
-  if (offsets.length === 0) return null;
-
-  return offsets.map((offset) => new THREE.Vector2(offset.x, offset.z));
+  return navigationOffsetCache.set(viewCamera, viewTarget, navigationTargetHeight, viewport,
+    offsets.length ? offsets.map((offset) => new THREE.Vector2(offset.x, offset.z)) : null);
 }
 
 function constrainedNavigationTarget(
   viewCamera = camera,
   viewTarget = controls.target,
 ) {
+  // Interior bounds are axis-aligned; this path never consumes ground rays.
+  if (!navigationEdges.length) return constrainNavigationPoint(viewTarget);
   const offsets = viewportNavigationOffsets(viewCamera, viewTarget);
-  return constrainNavigationPoint(viewTarget, offsets ?? []);
+  return constrainNavigationPoint(viewTarget, offsets ?? emptyNavigationOffsets);
 }
 
 function applyNavigationConstraint({ elastic = false } = {}) {
+  if (cameraFocus?.interiorTravel) return;
+  if (viewTransition) return;
   if (!navigationBounds || navigationConstraintSuspended) return;
 
   const rigidTarget = constrainedNavigationTarget();
-  const desiredTarget = rigidTarget.clone();
+  const desiredTarget = rigidTarget;
   if (elastic) {
     const size = navigationBounds.getSize(new THREE.Vector3());
     const overshootRatio = cameraTuning.navigation?.maxOvershootRatio ?? 0.035;
     const overshoot = controls.target.clone().sub(rigidTarget);
     overshoot.y = 0;
-    overshoot.multiplyScalar(
+    overshoot.multiplyScalar(mapViewMode === '2d' ? 1 :
       THREE.MathUtils.clamp(
         cameraTuning.navigation?.elasticResistance ?? 0.18,
         0.05,
@@ -1194,6 +1669,12 @@ function applyNavigationConstraint({ elastic = false } = {}) {
 }
 
 function enableElasticDistanceBounds() {
+  if (mapViewMode === '2d') {
+    const limits = topViewZoomLimits();
+    controls.minZoom = limits.min * 0.86;
+    controls.maxZoom = limits.max * 1.14;
+    return;
+  }
   if (!(baseMinDistance > 0) || !Number.isFinite(baseMaxDistance)) return;
   const ratio = THREE.MathUtils.clamp(
     cameraTuning.navigation?.maxZoomOvershootRatio ?? 0.10,
@@ -1205,6 +1686,8 @@ function enableElasticDistanceBounds() {
 }
 
 function applyDistanceConstraint({ elastic = false } = {}) {
+  if (cameraFocus?.interiorTravel) return;
+  if (mapViewMode === '2d') return;
   if (!(baseMinDistance > 0) || !Number.isFinite(baseMaxDistance)) return;
   const offset = camera.position.clone().sub(controls.target);
   const distance = offset.length();
@@ -1246,6 +1729,30 @@ function applyDistanceConstraint({ elastic = false } = {}) {
 }
 
 function startNavigationReturn() {
+  if (viewTransition) return;
+  if (mapViewMode === '2d') {
+    const limits = topViewZoomLimits();
+    const zoom = THREE.MathUtils.clamp(camera.zoom, limits.min, limits.max);
+    const preview = camera.clone();
+    preview.zoom = zoom;
+    preview.updateProjectionMatrix();
+    const target = constrainedNavigationTarget(preview, controls.target);
+    const correction = target.clone().sub(controls.target);
+    if (correction.lengthSq() < 0.000001 && Math.abs(camera.zoom - zoom) < 0.000001) {
+      controls.minZoom = limits.min;
+      controls.maxZoom = limits.max;
+      return;
+    }
+    navigationSpring = {
+      startedAt: performance.now(), duration: 650, bounce: 0.5,
+      fromPosition: camera.position.clone(), fromTarget: controls.target.clone(),
+      toPosition: camera.position.clone().add(correction), toTarget: target,
+      fromZoom: camera.zoom, toZoom: zoom,
+    };
+    beginCameraTransitionResolution();
+    requestRender();
+    return;
+  }
   if (!navigationBounds || navigationConstraintSuspended) return;
   const offset = camera.position.clone().sub(controls.target);
   const distance = offset.length();
@@ -1274,7 +1781,7 @@ function startNavigationReturn() {
 
   navigationSpring = {
     startedAt: performance.now(),
-    duration: cameraTuning.navigation?.returnDuration ?? 280,
+    duration: cameraTuning.navigation?.returnDuration ?? 180,
     fromPosition: camera.position.clone(),
     fromTarget: controls.target.clone(),
     toPosition: destination,
@@ -1289,13 +1796,18 @@ function startNavigationReturn() {
   requestRender();
 }
 
+const focusPointCache = new WeakMap();
 function focusPointsForNode(node) {
+  node.updateWorldMatrix(true, false);
+  const cached = focusPointCache.get(node);
+  const transformKey = node.matrixWorld.elements.join(',');
+  if (cached?.transformKey === transformKey) return cached.points;
   const meshes = [];
   let vertexCount = 0;
   node.updateWorldMatrix(true, true);
   node.traverse((object) => {
     const positions = object.geometry?.attributes?.position;
-    if (!object.isMesh || !object.visible || !positions) return;
+    if (!object.isMesh || !object.visible || !positions || object.userData.interiorSpace?.marker === object) return;
     meshes.push({ object, positions });
     vertexCount += positions.count;
   });
@@ -1305,15 +1817,17 @@ function focusPointsForNode(node) {
   const points = [];
   let globalIndex = 0;
   for (const { object, positions } of meshes) {
-    for (let index = 0; index < positions.count; index++, globalIndex++) {
-      if (globalIndex % stride !== 0) continue;
+    const first = (stride - globalIndex % stride) % stride;
+    for (let index = first; index < positions.count; index += stride) {
       points.push(
         new THREE.Vector3()
           .fromBufferAttribute(positions, index)
           .applyMatrix4(object.matrixWorld),
       );
     }
+    globalIndex += positions.count;
   }
+  focusPointCache.set(node, { transformKey, points });
   return points;
 }
 
@@ -1321,7 +1835,7 @@ function focusDistanceForPoints(points, target, direction, options = {}) {
   const safeWidth = options.safeWidth ?? selectionTuning.focusSafeWidth ?? 0.84;
   const safeHeight = options.safeHeight ?? selectionTuning.focusSafeHeight ?? 0.58;
   const padding = options.padding ?? selectionTuning.focusPadding ?? 1.08;
-  const testCamera = camera.clone();
+  const testCamera = perspectiveCamera.clone();
   const projected = new THREE.Vector3();
 
   function fits(distance) {
@@ -1334,7 +1848,7 @@ function focusDistanceForPoints(points, target, direction, options = {}) {
       if (
         projected.z < -1 ||
         projected.z > 1 ||
-        Math.abs(projected.x) > safeWidth ||
+    Math.abs(projected.x) > safeWidth ||
         Math.abs(projected.y) > safeHeight
       ) {
         return false;
@@ -1355,7 +1869,7 @@ function focusDistanceForPoints(points, target, direction, options = {}) {
 }
 
 function constrainedFocusTarget(target, direction, distance) {
-  const testCamera = camera.clone();
+  const testCamera = perspectiveCamera.clone();
   testCamera.position.copy(target).addScaledVector(direction, distance);
   testCamera.lookAt(target);
   testCamera.updateMatrixWorld();
@@ -1383,6 +1897,36 @@ function previewColor(value, fallback) {
 }
 
 function daylightProfileWithPreview(profile) {
+  if (isDayCustomization()) {
+    const morningLook = isMidday() ? middayLook : effectiveMorningLook();
+    profile = { ...profile, rays: { ...profile.rays }, key: { ...profile.key },
+      ambient: { ...profile.ambient }, hemisphere: { ...profile.hemisphere },
+      fill: { ...profile.fill }, grading: { ...profile.grading } };
+    if (isMidday()) {
+      // Nao herda a cor/posicao do entardecer pela interpolacao das horas.
+      const midday = rendererTuning.middayLighting ?? {};
+      profile.key.color = previewColor(midday.sunColor, profile.key.color);
+      profile.key.positionOffset = midday.sunPosition ?? profile.key.positionOffset;
+      profile.ambient.color = previewColor(midday.ambientColor, profile.ambient.color);
+      profile.hemisphere.skyColor = previewColor(midday.skyColor, profile.hemisphere.skyColor);
+      profile.hemisphere.groundColor = previewColor(midday.groundColor, profile.hemisphere.groundColor);
+      profile.fill.color = previewColor(midday.fillColor, profile.fill.color);
+      profile.fill.positionOffset = midday.fillPosition ?? profile.fill.positionOffset;
+      profile.grading.warmStrength = 0;
+      profile.grading.neutralWarmResponse = 0;
+      profile.shadowIntensity = 0.95;
+    }
+    for (const key of ['exposure', 'shadowRadius']) {
+      if (Number.isFinite(morningLook[key])) profile[key] = morningLook[key];
+    }
+    for (const key of ['key', 'ambient', 'hemisphere', 'fill']) {
+      if (Number.isFinite(morningLook[key])) profile[key].intensity = morningLook[key];
+    }
+    if (Number.isFinite(morningLook.rays)) profile.rays.opacity = morningLook.rays;
+    for (const key of ['contrast', 'saturation']) {
+      if (Number.isFinite(morningLook[key])) profile.grading[key] = morningLook[key];
+    }
+  }
   const preview = daylightPreviewOverrides;
   if (!preview) return profile;
 
@@ -1578,7 +2122,18 @@ function windowPresetGroupName(nodeName, prefix) {
     .replace(/_\d+$/, '');
 }
 
-function prepareWindowPresets(root) {
+function clearWindowPresets() {
+  windowPresetGroups.clear();
+  for (const light of windowGlowLights) {
+    scene.remove(light);
+    light.dispose?.();
+  }
+  windowGlowLights.length = 0;
+  for (const material of windowOwnedMaterials) material.dispose();
+  windowOwnedMaterials.clear();
+}
+
+function prepareWindowPresets(root, { glowEnabled, glowMaxLights = Infinity, preserveSurface = false } = {}) {
   const settings = lightingTuning.dayCycle?.windows;
   const prefix = settings?.nodePrefix ?? 'janelas_preset_';
   const surfaceMaterialName = (
@@ -1587,7 +2142,7 @@ function prepareWindowPresets(root) {
   let surfaceMaterial = null;
 
   root.traverse((object) => {
-    if (surfaceMaterial || !object.isMesh) return;
+    if (preserveSurface || surfaceMaterial || !object.isMesh) return;
     const materials = Array.isArray(object.material)
       ? object.material
       : [object.material];
@@ -1596,12 +2151,7 @@ function prepareWindowPresets(root) {
     ) ?? null;
   });
 
-  windowPresetGroups.clear();
-  for (const light of windowGlowLights) {
-    scene.remove(light);
-    light.dispose?.();
-  }
-  windowGlowLights.length = 0;
+  clearWindowPresets();
 
   root.traverse((object) => {
     if (!object.name?.startsWith(prefix)) return;
@@ -1625,11 +2175,14 @@ function prepareWindowPresets(root) {
           material.color.set(settings?.fallbackSurfaceColor ?? '#85898d');
         }
         material.name = `${source.name || 'window'}_surface`;
+        windowOwnedMaterials.add(material);
         // Windows must behave like the facade while the sun is present:
         // no environment reflection and full participation in cast shadows.
-        if ('envMapIntensity' in material) material.envMapIntensity = 0;
-        if ('roughness' in material) material.roughness = 1;
-        if ('clearcoat' in material) material.clearcoat = 0;
+        if (!preserveSurface) {
+          if ('envMapIntensity' in material) material.envMapIntensity = 0;
+          if ('roughness' in material) material.roughness = 1;
+          if ('clearcoat' in material) material.clearcoat = 0;
+        }
         material.needsUpdate = true;
         const supportsEmission = material.emissive?.isColor === true;
         materialStates.push({
@@ -1663,18 +2216,51 @@ function prepareWindowPresets(root) {
 
   for (const group of windowPresetGroups.values()) {
     group.sort((a, b) => a.score - b.score);
-    if (settings?.glowEnabled !== true) continue;
-    for (const preset of group) {
+  }
+  if (glowEnabled ?? settings?.glowEnabled === true) {
+    // Give each building one light before allocating more to the same facade.
+    // The complete test stays bounded, never one light per individual window.
+    const groups = [...windowPresetGroups.values()];
+    const candidates = [...groups.map(group => group[0]), ...groups.flatMap(group => group.slice(1))];
+    for (const preset of candidates.slice(0, glowMaxLights)) {
       const bounds = new THREE.Box3().setFromObject(preset.node);
       if (bounds.isEmpty()) continue;
       const size = bounds.getSize(new THREE.Vector3());
       const center = bounds.getCenter(new THREE.Vector3());
       center.y = bounds.min.y + size.y * 0.46;
+      // A preset can contain windows on several facades. Its bounding-box
+      // center may be inside the building, far from every pane. Anchor the
+      // optional light to an actual vertical pane, slightly outside its face.
+      const panePosition = new THREE.Vector3();
+      const paneNormal = new THREE.Vector3();
+      const bestPosition = new THREE.Vector3();
+      const bestNormal = new THREE.Vector3();
+      const normalMatrix = new THREE.Matrix3();
+      let nearestPane = Infinity;
+      preset.node.traverse(mesh => {
+        if (!mesh.isMesh) return;
+        const positions = mesh.geometry.getAttribute('position');
+        const normals = mesh.geometry.getAttribute('normal');
+        if (!positions || !normals) return;
+        normalMatrix.getNormalMatrix(mesh.matrixWorld);
+        const stride = Math.max(1, Math.floor(positions.count / 256));
+        for (let index = 0; index < positions.count; index += stride) {
+          paneNormal.fromBufferAttribute(normals, index).applyNormalMatrix(normalMatrix);
+          if (Math.abs(paneNormal.y) > 0.4) continue;
+          panePosition.fromBufferAttribute(positions, index).applyMatrix4(mesh.matrixWorld);
+          const distance = panePosition.distanceToSquared(center);
+          if (distance < nearestPane) {
+            nearestPane = distance;
+            bestPosition.copy(panePosition); bestNormal.copy(paneNormal);
+          }
+        }
+      });
+      if (Number.isFinite(nearestPane)) center.copy(bestPosition).addScaledVector(bestNormal, 1.2);
       const glow = new THREE.PointLight(
         settings?.color ?? '#fff4cf',
         0,
-        Math.max(size.x, size.y, size.z) *
-          (settings?.glowDistanceRatio ?? 0.72),
+        Math.min(28, Math.max(16, Math.max(size.x, size.y, size.z) *
+          (settings?.glowDistanceRatio ?? 0.72))),
         settings?.glowDecay ?? 2,
       );
       glow.position.copy(center);
@@ -1691,7 +2277,7 @@ function applyWindowPresetLighting() {
   const settings = lightingTuning.dayCycle?.windows ?? {};
   const lightColor = new THREE.Color(settings.color ?? '#ffdca0');
   const amount = THREE.MathUtils.clamp(
-    cyclicScheduleAmount(settings.schedule, localTimeMinutes()),
+    cyclicScheduleAmount(settings.schedule, presetTimeMinutes()),
     0,
     1,
   );
@@ -1716,8 +2302,9 @@ function applyWindowPresetLighting() {
     for (let index = 0; index < group.length; index++) {
       const preset = group[index];
       const active = index < activeCount;
-      preset.node.visible = true;
+      preset.node.visible = !interiors?.current && hiddenInteriorWindows.size===0;
       if (preset.glowLight) {
+        preset.glowLight.visible = active && enabled && !interiors?.current && hiddenInteriorWindows.size===0;
         preset.glowLight.color.copy(lightColor);
         preset.glowLight.intensity = active
           ? THREE.MathUtils.lerp(
@@ -1786,7 +2373,7 @@ function daylightProfile() {
     };
   }
 
-  const minute = localTimeMinutes();
+  const minute = presetTimeMinutes();
   let fromIndex = frames.length - 1;
   for (let index = 0; index < frames.length; index++) {
     if (frames[index].minute <= minute) fromIndex = index;
@@ -2062,6 +2649,9 @@ function applyIsolatedDaylightPhases(base, minute, phases) {
 }
 
 function applyDaylightProfile() {
+  if (featurePanelEnabled) { applyTestFeatureProfile(); return; }
+  if (geometryOnly || rawModeEnabled) return;
+  const morningLook = effectiveMorningLook();
   if (
     !ambientLight ||
     !hemisphereLight ||
@@ -2069,6 +2659,10 @@ function applyDaylightProfile() {
     !fillLight ||
     !lightingFrame
   ) return;
+  if (activeColorTemperature() !== 0 && !effectComposer) {
+    installPostProcessing();
+    resize();
+  }
   const profile = daylightProfileWithPreview(daylightProfile());
   const night = nightSkyAmount();
   profile.exposure = THREE.MathUtils.lerp(profile.exposure, nightLook.exposure ?? 0.56, night);
@@ -2089,7 +2683,7 @@ function applyDaylightProfile() {
 
   renderer.toneMappingExposure = profile.exposure;
   const shadowContrast = lightingTuning.shadowContrast ?? {};
-  const contrastAmount = shadowContrast.enabled === false
+  const contrastAmount = shadowContrast.enabled === false || isMidday()
     ? 0
     : THREE.MathUtils.smoothstep(
         profile.key.intensity,
@@ -2102,7 +2696,8 @@ function applyDaylightProfile() {
     shadowContrast.ambientScale ?? 0.62,
     contrastAmount,
   );
-  ambientLight.intensity = ambientIntensity;
+  ambientLight.intensity = ambientIntensity +
+    (rendererTuning.visibilityLift?.ambient ?? 0);
   hemisphereLight.color.copy(profile.hemisphere.skyColor);
   hemisphereLight.groundColor.copy(profile.hemisphere.groundColor);
   const hemisphereIntensity = profile.hemisphere.intensity *
@@ -2111,7 +2706,8 @@ function applyDaylightProfile() {
       shadowContrast.hemisphereScale ?? 0.62,
       contrastAmount,
     );
-  hemisphereLight.intensity = hemisphereIntensity;
+  hemisphereLight.intensity = hemisphereIntensity +
+    (rendererTuning.visibilityLift?.hemisphere ?? 0);
   keyLight.color.copy(profile.key.color);
   keyLight.intensity = profile.key.intensity;
   fillLight.color.copy(profile.fill.color);
@@ -2134,6 +2730,7 @@ function applyDaylightProfile() {
     uniforms.neutralWarmResponse.value = profile.grading.neutralWarmResponse;
     uniforms.contrast.value = profile.grading.contrast;
     uniforms.saturation.value = profile.grading.saturation;
+    uniforms.temperature.value = activeColorTemperature();
   }
   updateReflectionEnvironment(profile);
 
@@ -2170,24 +2767,47 @@ function applyDaylightProfile() {
     refreshDirectionalShadow({ recreate: model !== null });
   }
   applyWindowPresetLighting();
-  nightCinema?.update(night, texturesEnabled, keyLight, lightingFrame);
+  nightCinema?.update(night, isDayCustomization() ? morningLook.textures !== false : texturesEnabled,
+    keyLight, lightingFrame,
+  isDayCustomization() ? 1 : phaseEnvelope(presetTimeMinutes(), rendererTuning.dawnSurface ?? {}),
+  isDayCustomization() ? morningLook.textureDetail ?? 1.65 : undefined,
+  isDayCustomization() ? morningLook.sunHighlights ?? 1 : 1,
+  isDayCustomization() ? (morningLook.reflections ?? 8) / 8 : 1,
+  morningLook.foliageStrength ?? 0);
 }
 
 function focusNode(node, options = {}) {
   const box = new THREE.Box3().setFromObject(node);
   if (box.isEmpty()) return;
 
-  // Clear any damped orbit delta before capturing the focus route.
-  clearControlsMomentum();
+  // Keep the actual top-view pose and projection until the transition starts.
+  const source = mapViewMode === '2d' || viewTransition
+    ? { camera: camera.clone(), target: controls.target.clone() }
+    : null;
 
-  const requestedTarget = box.getCenter(new THREE.Vector3());
+  // Clear any damped orbit delta before capturing the focus route.
+  const visiblePosition = camera.position.clone();
+  const visibleTarget = controls.target.clone();
+  clearControlsMomentum();
+  camera.position.copy(visiblePosition);
+  controls.target.copy(visibleTarget);
+  camera.lookAt(visibleTarget);
+
+  const hasFixedView =
+    Array.isArray(options.position) && options.position.length === 3 &&
+    Array.isArray(options.target) && options.target.length === 3;
+  const requestedTarget = hasFixedView
+    ? new THREE.Vector3().fromArray(options.target)
+    : box.getCenter(new THREE.Vector3());
   if (Array.isArray(options.targetOffset) && options.targetOffset.length === 3) {
     requestedTarget.add(new THREE.Vector3().fromArray(options.targetOffset));
   }
   if (!options.useVisualCenter && navigationTargetHeight !== null) {
     requestedTarget.y = navigationTargetHeight;
   }
-  const direction = Array.isArray(options.direction) &&
+  const direction = hasFixedView
+    ? new THREE.Vector3().fromArray(options.position).sub(requestedTarget).normalize()
+    : Array.isArray(options.direction) &&
       options.direction.length === 3
     ? new THREE.Vector3().fromArray(options.direction).normalize()
     : camera.position.clone().sub(controls.target).normalize();
@@ -2204,14 +2824,22 @@ function focusNode(node, options = {}) {
     baseMinDistance,
     baseMaxDistance,
   );
-  const target = options.constrainToNavigation === false
+  const target = interiors?.current
+    ? constrainNavigationPoint(requestedTarget)
+    : hasFixedView || options.constrainToNavigation === false
     ? requestedTarget.clone()
     : constrainedFocusTarget(requestedTarget, direction, distance);
-  const destination = target.clone().addScaledVector(direction, distance);
+  const destination = hasFixedView
+    ? new THREE.Vector3().fromArray(options.position)
+    : target.clone().addScaledVector(direction, distance);
   const finalMinDistance = baseMinDistance;
   const finalMaxDistance = baseMaxDistance;
 
-  if (options.immediate === true) {
+  if (options.immediate === true || !selectionOptions.cameraAnimation) {
+    if (source) {
+      viewTransition = null;
+      activateMapCamera('3d');
+    }
     navigationSpring = null;
     cameraFocus = null;
     navigationConstraintSuspended = false;
@@ -2225,13 +2853,24 @@ function focusNode(node, options = {}) {
     return;
   }
 
+  if (source) {
+    const destinationCamera = perspectiveCamera.clone();
+    destinationCamera.position.copy(destination);
+    destinationCamera.lookAt(target);
+    updatePerspectiveProjection(destinationCamera);
+    navigationConstraintSuspended = false;
+    beginViewTransition('3d', destinationCamera, target, source);
+    return;
+  }
+
   navigationSpring = null;
   navigationConstraintSuspended = false;
   controls.minDistance = baseMinDistance;
   controls.maxDistance = baseMaxDistance;
   cameraFocus = {
+    interiorTravel: !!interiors?.current || options.interiorTravel === true,
     startedAt: performance.now(),
-    duration: selectionTuning.focusDuration ?? 620,
+    duration: selectionTuning.focusDuration ?? 650,
     fromPosition: camera.position.clone(),
     fromTarget: controls.target.clone(),
     toPosition: destination,
@@ -2244,6 +2883,7 @@ function focusNode(node, options = {}) {
 }
 
 function focusZone(zoneId, overrides = {}) {
+  if (interiors?.current) exitInterior({ focus: false });
   if (!config) return false;
   const zone = config.zones.find((entry) => entry.id === zoneId);
   const node = zone ? zoneNodes.get(zone.nodeName) : null;
@@ -2364,7 +3004,8 @@ function frameModel(object) {
   initialCameraPosition = camera.position.clone();
   initialTarget = controls.target.clone();
   const initialOffset = initialCameraPosition.clone().sub(initialTarget);
-  const configuredZeroBearing = Number(cameraTuning.zeroBearingDegrees);
+  const configuredZeroBearing = cameraTuning.zeroBearingDegrees == null
+    ? NaN : Number(cameraTuning.zeroBearingDegrees);
   initialAzimuth = Number.isFinite(configuredZeroBearing)
     ? THREE.MathUtils.degToRad(configuredZeroBearing)
     : Math.atan2(initialOffset.x, initialOffset.z);
@@ -2563,6 +3204,18 @@ function refreshDirectionalShadow({ recreate = false } = {}) {
 }
 
 function installLighting() {
+  if (geometryOnly) {
+    if (basicLightingTest || featurePanelEnabled) {
+      // Fixed diffuse-only test. Do not install the normal environment,
+      // climate shaders, shadow maps, extra fills or atmosphere resources.
+      hemisphereLight = new THREE.HemisphereLight('#ffffff', '#60666f', 1);
+      keyLight = new THREE.DirectionalLight('#ffffff', 2);
+      keyLight.position.set(120, 240, -120);
+      keyLight.castShadow = false;
+      scene.add(hemisphereLight, keyLight, keyLight.target);
+    }
+    return;
+  }
   const hemisphere = lightingTuning.hemisphere ?? {};
   ambientLight = new THREE.AmbientLight(
     hemisphere.skyColor ?? '#ffffff',
@@ -2861,22 +3514,13 @@ function installAtmosphericBackground() {
 
 function nightSkyAmount() {
   if (nightSkyTuning.enabled === false) return 0;
-  const minute = localTimeMinutes();
-  const fadeInStart = nightSkyTuning.fadeInStartMinute ?? 1140;
-  const fullAt = nightSkyTuning.fullAtMinute ?? 1200;
-  const fadeOutStart = nightSkyTuning.fadeOutStartMinute ?? 300;
-  const hiddenAt = nightSkyTuning.hiddenAtMinute ?? 360;
-  if (minute >= fullAt || minute < fadeOutStart) return 1;
-  if (minute >= fadeInStart && minute < fullAt) {
-    return THREE.MathUtils.smoothstep(minute, fadeInStart, fullAt);
-  }
-  if (minute >= fadeOutStart && minute < hiddenAt) {
-    return 1 - THREE.MathUtils.smoothstep(minute, fadeOutStart, hiddenAt);
-  }
-  return 0;
+  return isDayCustomization() ? 0 : 1;
 }
 
 function updateNightSky() {
+  if (middaySkyMesh) middaySkyMesh.visible = isMidday();
+  if (sunsetSkyMesh) sunsetSkyMesh.visible = isSunset();
+  if (morningSkyMesh) morningSkyMesh.visible = isMorning();
   if (!nightSkyPoints || !nightSkyMaterial) return;
   const amount = nightSkyAmount();
   nightSkyPoints.visible = amount > 0.001;
@@ -3111,6 +3755,201 @@ function paintAtmosphericRay(context, source, angle, width, length, color) {
   context.fill();
 }
 
+function installMiddaySky({ sunset = false, morning = false } = {}) {
+  if (morning ? morningSkyMesh : sunset ? sunsetSkyMesh : middaySkyMesh) return;
+  const warm = sunset || morning;
+  const settings = (morning ? rendererTuning.morningSky : sunset ? rendererTuning.sunsetSky : rendererTuning.middaySky) ?? {};
+  const canvas = document.createElement('canvas');
+  canvas.width = settings.resolution ?? 1024;
+  canvas.height = Math.round(canvas.width / 2);
+  const context = canvas.getContext('2d');
+  if (!context) return;
+  const { width, height } = canvas;
+  // Panorama gerado uma vez; a orientacao permanece fixa, como as estrelas.
+  const zenith = new THREE.Color(settings.zenithColor ?? '#2e7ccb');
+  const horizon = new THREE.Color(settings.horizonColor ?? '#83bee6');
+  // O mapa e visto de cima: o fundo tambem precisa preencher os raios que
+  // apontam abaixo do horizonte. Como as estrelas, cobre a esfera inteira.
+  // Espelha o degrade para nao deixar essa metade como uma cor lisa.
+  for (let row = 0; row < height; row++) {
+    const elevation = Math.abs(Math.cos(row / (height - 1) * Math.PI));
+    const blend = Math.exp(-elevation * (settings.horizonHaze ?? 5));
+    context.fillStyle = `#${zenith.clone().lerp(horizon, blend).getHexString()}`;
+    context.fillRect(0, row, width, 1);
+  }
+
+  let seed = settings.seed ?? 260926;
+  const random = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  // Manchas de cor largas e suaves, independentes das nuvens. A repeticao
+  // lateral fecha o panorama sem costura; nao ha ruido recalculado por frame.
+  const patchColors = warm
+    ? ['67,61,111', '131,103,155', '222,137,139', '241,182,149']
+    : ['49,105,186', '113,174,218', '192,211,225', '222,231,236'];
+  for (let index = 0; index < 48; index++) {
+    const x = random() * width;
+    const y = random() * height;
+    const radius = width * (0.07 + random() * 0.11);
+    const stretch = 0.7 + random() * 0.8;
+    const color = patchColors[index % patchColors.length];
+    const alpha = (0.22 + random() * 0.28) * (settings.patchStrength ?? 1);
+    for (const wrap of [-width, 0, width]) {
+      context.save();
+      context.translate(x + wrap, y);
+      context.scale(stretch, 0.65);
+      const gradient = context.createRadialGradient(0, 0, 0, 0, 0, radius);
+      gradient.addColorStop(0, `rgba(${color},${alpha})`);
+      gradient.addColorStop(0.45, `rgba(${color},${alpha * 0.6})`);
+      gradient.addColorStop(1, `rgba(${color},0)`);
+      context.fillStyle = gradient;
+      context.fillRect(-radius, -radius, radius * 2, radius * 2);
+      context.restore();
+    }
+  }
+  const sunDirection = new THREE.Vector3().fromArray(
+    settings.sunDirection ?? [-0.78, 0.17, 0.62],
+  ).normalize();
+  if (warm) {
+    const sunX = ((Math.atan2(sunDirection.z, -sunDirection.x) / (Math.PI * 2)) + 1) % 1;
+    const sunY = Math.acos(sunDirection.y) / Math.PI;
+    for (const wrap of [-width, 0, width]) {
+      context.save();
+      context.translate(sunX * width + wrap, sunY * height);
+      context.scale(1, 0.55);
+      const radius = width * (settings.glowSize ?? 0.22);
+      context.globalAlpha = Math.min(settings.glowStrength ?? 1, 1);
+      const glow = context.createRadialGradient(0, 0, 0, 0, 0, radius);
+      glow.addColorStop(0, 'rgba(255,223,158,0.96)');
+      glow.addColorStop(0.18, 'rgba(255,182,101,0.87)');
+      glow.addColorStop(0.48, 'rgba(243,135,99,0.62)');
+      glow.addColorStop(1, 'rgba(243,135,99,0)');
+      context.fillStyle = glow;
+      context.fillRect(-radius, -radius, radius * 2, radius * 2);
+      context.restore();
+    }
+  }
+  const cloudDirections = [];
+  const cloudSizes = [];
+  const cloudCount = settings.cloudCount ?? 96;
+  const sectors = Math.ceil(cloudCount / 3);
+  for (let index = 0; index < cloudCount; index++) {
+    // Distribuicao estratificada: cada faixa cobre todos os lados, com
+    // deslocamentos aleatorios para nao formar fileiras regulares.
+    const x = (Math.floor(index / 3) + 0.15 + random() * 0.7) / sectors;
+    // Massas acima, perto e abaixo do horizonte: a camera inclinada tambem
+    // revela nuvens, sem mudar seu angulo aprovado nem prender o ceu a tela.
+    const band = index % 3;
+    const y = band === 0 ? 0.18 + random() * 0.28
+      : band === 1 ? 0.55 + random() * 0.29
+        : 0.49 + random() * 0.055;
+    const widthMin = settings.cloudWidthMin ?? 0.075;
+    const widthMax = Math.max(widthMin, settings.cloudWidthMax ?? 0.155);
+    const cloudWidth = width * THREE.MathUtils.lerp(widthMin, widthMax, random());
+    const cloudHeight = cloudWidth * THREE.MathUtils.lerp(
+      settings.cloudHeightMin ?? 0.14, settings.cloudHeightMax ?? 0.26, random(),
+    );
+    const opacity = (0.42 + random() * 0.22) * (settings.cloudOpacity ?? 1);
+    const slope = (random() - 0.5) * 0.45;
+    const puffs = Array.from({ length: 16 + Math.floor(random() * 13) }, () => {
+      const along = random() - 0.5;
+      const fullness = Math.sqrt(Math.max(0, 1 - 4 * along * along));
+      return {
+        x: along * cloudWidth,
+        y: ((random() - 0.5) * fullness + along * slope) * cloudHeight,
+        radius: cloudHeight * (0.22 + random() * 0.52),
+        stretch: 0.80 + random() * 0.80,
+      };
+    });
+    cloudSizes.push([cloudWidth / width, cloudHeight / height]);
+    const direction = new THREE.Vector3(
+      -Math.cos(x * Math.PI * 2) * Math.sin(y * Math.PI),
+      Math.cos(y * Math.PI),
+      Math.sin(x * Math.PI * 2) * Math.sin(y * Math.PI),
+    );
+    cloudDirections.push(direction);
+    const sunFacing = THREE.MathUtils.smoothstep(direction.dot(sunDirection), -0.1, 0.95);
+    const cloudLight = new THREE.Color('#d897ad').lerp(new THREE.Color('#ffdaa3'), sunFacing);
+    const cloudShade = new THREE.Color('#665b80').lerp(new THREE.Color('#b77881'), sunFacing);
+    // Uma cor coesa por volume evita aneis escuros na sobreposicao dos puffs.
+    const cloudBody = cloudLight.clone().lerp(cloudShade, 0.26);
+    const rgba = (color, alpha) => {
+      const hex = color.getHexString();
+      return `rgba(${[0, 2, 4].map(offset => parseInt(hex.slice(offset, offset + 2), 16)).join(',')},${alpha})`;
+    };
+    // Repete somente a borda do panorama para fechar a volta sem emenda.
+    for (const wrap of [-width, 0, width]) {
+      for (const puff of puffs) {
+        const px = x * width + puff.x + wrap;
+        const py = y * height + puff.y;
+        context.save();
+        context.translate(px, py);
+        context.scale(puff.stretch, 1);
+        const gradient = context.createRadialGradient(
+          0, -puff.radius * 0.22, 0, 0, 0, puff.radius,
+        );
+        gradient.addColorStop(0, warm ? rgba(cloudBody, opacity) : `rgba(255,255,255,${opacity})`);
+        gradient.addColorStop(0.62, warm ? rgba(cloudBody, opacity * 0.88) : `rgba(251,253,255,${opacity * 0.96})`);
+        gradient.addColorStop(0.84, warm ? rgba(cloudBody, opacity * 0.42) : `rgba(227,237,248,${opacity * 0.74})`);
+        gradient.addColorStop(0.94, warm ? rgba(cloudBody, opacity * 0.12) : `rgba(227,237,248,${opacity * 0.26})`);
+        gradient.addColorStop(1, warm ? rgba(cloudBody, 0) : 'rgba(227,237,248,0)');
+        context.fillStyle = gradient;
+        context.fillRect(-puff.radius, -puff.radius, puff.radius * 2, puff.radius * 2);
+        context.restore();
+      }
+    }
+  }
+  // O enquadramento do mapa aponta para baixo: ilumina a regiao solar do
+  // horizonte, inclusive sua continuacao inferior, e nao um ponto fora da tela.
+  // Desenha depois das nuvens para o reforco nao desaparecer sob os puffs.
+  const coreStrength = settings.sunCoreStrength ?? 0;
+  if (warm && coreStrength > 0) {
+    const sunX = ((Math.atan2(sunDirection.z, -sunDirection.x) / (Math.PI * 2)) + 1) % 1;
+    const alpha = 1 - Math.exp(-coreStrength * 0.85);
+    const radius = width * 0.12;
+    for (const wrap of [-width, 0, width]) {
+      context.save();
+      context.globalCompositeOperation = 'screen';
+      context.translate(sunX * width + wrap, height * 0.5);
+      context.scale(1, 0.9);
+      const core = context.createRadialGradient(0, 0, 0, 0, 0, radius);
+      core.addColorStop(0, `rgba(255,248,218,${alpha})`);
+      core.addColorStop(0.3, `rgba(255,232,174,${alpha * 0.9})`);
+      core.addColorStop(0.65, `rgba(255,206,143,${alpha * 0.45})`);
+      core.addColorStop(1, 'rgba(255,206,143,0)');
+      context.fillStyle = core;
+      context.fillRect(-radius, -radius, radius * 2, radius * 2);
+      context.restore();
+    }
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.generateMipmaps = false;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.wrapS = THREE.RepeatWrapping;
+  const skyMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1900, 40, 24),
+    new THREE.MeshBasicMaterial({
+      map: texture, side: THREE.BackSide, depthWrite: false,
+      toneMapped: false, fog: false,
+    }),
+  );
+  skyMesh.name = morning ? 'MorningSky' : sunset ? 'SunsetSky' : 'MiddaySky';
+  skyMesh.material.color.setScalar(settings.brightness ?? 1);
+  skyMesh.renderOrder = -1000;
+  skyMesh.frustumCulled = false;
+  skyMesh.visible = morning ? isMorning() : sunset ? isSunset() : isMidday();
+  skyMesh.position.copy(camera.position);
+  skyMesh.userData.cloudDirections = cloudDirections;
+  skyMesh.userData.cloudSizes = cloudSizes;
+  scene.add(skyMesh);
+  if (morning) morningSkyMesh = skyMesh;
+  else if (sunset) sunsetSkyMesh = skyMesh;
+  else middaySkyMesh = skyMesh;
+}
+
 function updateAtmosphericBackground(profile, { force = false } = {}) {
   if (!atmosphereCanvas || !atmosphereContext || !atmosphereTexture) return;
   if (
@@ -3131,10 +3970,10 @@ function updateAtmosphericBackground(profile, { force = false } = {}) {
   const signature = [
     atmosphereCanvas.width,
     atmosphereCanvas.height,
-    source?.x.toFixed(3) ?? 'none',
-    source?.y.toFixed(3) ?? 'none',
-    directViewAmount.toFixed(3),
-    intensity.toFixed(3),
+    isMidday() ? 'midday' : source?.x.toFixed(3) ?? 'none',
+    isMidday() ? 'fixed' : source?.y.toFixed(3) ?? 'none',
+    isMidday() ? 'fixed' : directViewAmount.toFixed(3),
+    isMidday() ? 'fixed' : intensity.toFixed(3),
     profile?.rays?.color.getHexString() ?? 'none',
     config?.backgroundColor ?? 'none',
   ].join(':');
@@ -3147,6 +3986,13 @@ function updateAtmosphericBackground(profile, { force = false } = {}) {
   context.save();
   context.filter = 'none';
   context.globalCompositeOperation = 'source-over';
+  if (isMidday()) {
+    context.fillStyle = rendererTuning.middaySky?.horizonColor ?? '#d2e4ef';
+    context.fillRect(0, 0, width, height);
+    context.restore();
+    atmosphereTexture.needsUpdate = true;
+    return;
+  }
   context.fillStyle = cssColor(config?.backgroundColor, '#090a0d');
   context.fillRect(0, 0, width, height);
 
@@ -3227,6 +4073,13 @@ function updateAtmosphericBackground(profile, { force = false } = {}) {
 }
 
 function applyConfiguredBackground() {
+  if (geometryOnly) {
+    document.body.style.background = '#303030';
+    scene.background = rawBackground;
+    scene.environment = null;
+    scene.fog = null;
+    return;
+  }
   const backgroundColor = cssColor(config?.backgroundColor, '#090a0d');
   document.body.style.background = backgroundColor;
   if (atmosphereTexture) {
@@ -3251,7 +4104,7 @@ function updateAtmosphericPostProcessing(profile) {
     0,
     1,
   );
-  uniforms.surfaceRayStrength.value = settings.enabled === false
+  uniforms.surfaceRayStrength.value = settings.enabled === false || isMidday()
     ? 0
     : daylightAmount * (settings.surfaceRayStrength ?? 0);
 }
@@ -3327,6 +4180,7 @@ function updateReflectionEnvironment(profile) {
 }
 
 function updateMaterialEnvironmentResponse(profile) {
+  const morningLook = effectiveMorningLook();
   if (!model || !profile) return;
   const nightAmount = nightSkyAmount();
   const nightScale = (rendererTuning.nightEnvironmentScale ?? 2.4) *
@@ -3336,9 +4190,11 @@ function updateMaterialEnvironmentResponse(profile) {
     0.025,
     0.09,
   );
+  const dawnAmount = isDayCustomization() ? 1 : phaseEnvelope(presetTimeMinutes(), rendererTuning.dawnSurface ?? {});
   const sunsetScale = THREE.MathUtils.lerp(
     1,
-    rendererTuning.sunsetEnvironmentScale ?? 2.2,
+    THREE.MathUtils.lerp(rendererTuning.sunsetEnvironmentScale ?? 2.2,
+      morningLook.reflections ?? rendererTuning.dawnSurface?.environmentScale ?? 8, dawnAmount),
     sunsetAmount,
   );
   const visited = new Set();
@@ -3368,6 +4224,8 @@ function updateMaterialEnvironmentResponse(profile) {
         });
       }
       const baseFinish = materialNightFinishes.get(material);
+      // Sempre parte da cor original, para o ajuste diurno nao vazar a noite.
+      if (baseFinish.color && material.color?.isColor) material.color.copy(baseFinish.color);
       const isGroundSurface =
         name.includes('grass') ||
         name.includes('street') ||
@@ -3389,13 +4247,17 @@ function updateMaterialEnvironmentResponse(profile) {
       material.envMapIntensity = isGrass
         ? materialEnvironmentIntensities.get(material) * (1 - nightAmount * 0.99)
         : isGroundSurface
-          ? THREE.MathUtils.lerp(materialEnvironmentIntensities.get(material),
+          ? THREE.MathUtils.lerp(THREE.MathUtils.lerp(materialEnvironmentIntensities.get(material),
+              materialEnvironmentIntensities.get(material) * sunsetScale, dawnAmount),
               (nightLook.floorReflection ?? 1.6) * (nightLook.reflections ?? 3), nightAmount)
           : materialEnvironmentIntensities.get(material) * THREE.MathUtils.lerp(sunsetScale, nightScale, nightAmount);
       const nightFinish = finishType
         ? rendererTuning.nightReflectionFinish?.[finishType]
         : null;
-      const sunsetFinish = finishType
+      const sunsetFinish = finishType === 'pavement' && dawnAmount > 0
+        ? { ...rendererTuning.dawnSurface?.pavement,
+            roughness: morningLook.floorRoughness ?? rendererTuning.dawnSurface?.pavement?.roughness,
+            clearcoat: morningLook.wetness ?? rendererTuning.dawnSurface?.pavement?.clearcoat } : finishType
         ? rendererTuning.sunsetReflectionFinish?.[finishType]
         : null;
       const finishAmount = THREE.MathUtils.smoothstep(nightAmount, 0.10, 0.92) *
@@ -3422,7 +4284,7 @@ function updateMaterialEnvironmentResponse(profile) {
           ? THREE.MathUtils.lerp(
               baseFinish.roughness,
               sunsetFinish.roughness,
-              sunsetAmount,
+              finishType === 'pavement' ? dawnAmount : sunsetAmount,
             )
           : baseFinish.roughness;
         material.roughness = Number.isFinite(nightFinish?.roughness)
@@ -3438,7 +4300,7 @@ function updateMaterialEnvironmentResponse(profile) {
           ? THREE.MathUtils.lerp(
               baseFinish.clearcoat,
               sunsetFinish.clearcoat,
-              sunsetAmount,
+              finishType === 'pavement' ? dawnAmount : sunsetAmount,
             )
           : baseFinish.clearcoat;
         material.clearcoat = Number.isFinite(nightFinish?.clearcoat)
@@ -3456,7 +4318,7 @@ function updateMaterialEnvironmentResponse(profile) {
           ? THREE.MathUtils.lerp(
               baseFinish.clearcoatRoughness,
               sunsetFinish.clearcoatRoughness,
-              sunsetAmount,
+              finishType === 'pavement' ? dawnAmount : sunsetAmount,
             )
           : baseFinish.clearcoatRoughness;
         material.clearcoatRoughness = Number.isFinite(
@@ -3469,13 +4331,39 @@ function updateMaterialEnvironmentResponse(profile) {
             )
           : sunsetClearcoatRoughness;
       }
-      if (finishType === 'pavement') {
-        material.roughness = THREE.MathUtils.lerp(baseFinish.roughness,
+      if (finishType === 'pavement' && nightAmount > 0) {
+        material.roughness = THREE.MathUtils.lerp(material.roughness,
           (nightLook.floorRoughness ?? 0.24) * (1 - (nightLook.wetness ?? 0) * 0.6), nightAmount);
         if ('clearcoat' in material) {
-          material.clearcoat = THREE.MathUtils.lerp(baseFinish.clearcoat ?? 0,
+          material.clearcoat = THREE.MathUtils.lerp(material.clearcoat ?? 0,
             0.35 + (nightLook.wetness ?? 0) * 0.6, nightAmount);
-          material.clearcoatRoughness = THREE.MathUtils.lerp(baseFinish.clearcoatRoughness ?? 0.15, 0.13, nightAmount);
+          material.clearcoatRoughness = THREE.MathUtils.lerp(material.clearcoatRoughness ?? 0.15, 0.13, nightAmount);
+        }
+      }
+      if (isMidday()) {
+        const finish = rendererTuning.middayMaterials ?? {};
+        const isFoliage = (rendererTuning.foliageMaterials ?? []).includes(material.name);
+        const isTrunk = material.name === 'Material.002';
+        if (material.color?.isColor) {
+          if (isFoliage) {
+            material.color.lerp(new THREE.Color(finish.foliageColor ?? '#6b9637'), finish.foliageBlend ?? 0.20);
+          } else if (isGrass) {
+            material.color.lerp(new THREE.Color(finish.grassColor ?? '#5c9638'), finish.grassBlend ?? 0.30);
+          } else if (finishType === 'concrete') {
+            material.color.multiplyScalar(finish.concreteBrightness ?? 1.16);
+          } else if (/street|asphalt|rua/.test(name)) {
+            material.color.multiplyScalar(finish.roadBrightness ?? 1.45);
+          }
+        }
+        // Superficies secas; conserva os controles de reflexo/molhado do piso.
+        if (isFoliage || isTrunk || isGrass) {
+          material.roughness = 0.95;
+          material.envMapIntensity = 0.025;
+          if ('clearcoat' in material) material.clearcoat = 0;
+        } else if (finishType !== 'pavement') {
+          material.roughness = 0.62;
+          material.envMapIntensity = (materialEnvironmentIntensities.get(material) ?? 0.05) * (morningLook.reflections ?? 1);
+          if ('clearcoat' in material) material.clearcoat = 0.04;
         }
       }
       material.needsUpdate = true;
@@ -3605,7 +4493,7 @@ function balancedMaterialFor(material) {
   return simplified;
 }
 
-function prepareModelMaterials(object) {
+async function prepareModelMaterials(object) {
   const receiverNodes = lightingTuning.shadows?.receiverNodes;
   const casterExclusions = lightingTuning.shadows?.casterExclusions;
   const receivesEverywhere = !Array.isArray(receiverNodes);
@@ -3625,8 +4513,17 @@ function prepareModelMaterials(object) {
     return false;
   }
 
-  object.traverse((child) => {
-    if (!child.isMesh) return;
+  const meshes = [];
+  object.traverse(child => { if (child.isMesh) meshes.push(child); });
+  const preparedMaterials = new Set();
+  const preparedTextures = new Set();
+  let sliceStarted = performance.now();
+  for (const child of meshes) {
+    if (viewerDisposed) return;
+    if (performance.now() - sliceStarted > 6) {
+      await yieldLoadingWork();
+      sliceStarted = performance.now();
+    }
 
     if (graphicsProfile === 'basic' || graphicsProfile === 'balanced') {
       child.material = Array.isArray(child.material)
@@ -3641,7 +4538,8 @@ function prepareModelMaterials(object) {
       ? child.material
       : [child.material];
     for (const material of materials) {
-      if (!material) continue;
+      if (!material || preparedMaterials.has(material)) continue;
+      preparedMaterials.add(material);
       material.side = THREE.DoubleSide;
       applyMaterialFinish(material);
       for (const texture of [
@@ -3651,28 +4549,186 @@ function prepareModelMaterials(object) {
         material.metalnessMap,
         material.aoMap,
       ]) {
-        if (!texture) continue;
+        if (!texture || preparedTextures.has(texture)) continue;
+        preparedTextures.add(texture);
         texture.anisotropy = maxAnisotropy;
         texture.needsUpdate = true;
       }
       material.needsUpdate = true;
     }
+  }
+}
+
+function yieldLoadingWork() {
+  return new Promise(resolve => setTimeout(resolve, 16));
+}
+
+async function prepareGpuTextures(root) {
+  const textures = new Set();
+  root.traverse(node => {
+    for (const material of (Array.isArray(node.material) ? node.material : [node.material])) {
+      if (!material) continue;
+      for (const value of Object.values(material)) if (value?.isTexture) textures.add(value);
+    }
   });
+  for (const texture of textures) {
+    if (viewerDisposed) return;
+    renderer.initTexture(texture);
+    await yieldLoadingWork();
+  }
+}
+
+async function waitForGpu() {
+  const gl = renderer.getContext();
+  const fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+  if (!fence) return;
+  gl.flush();
+  const started = performance.now();
+  try {
+    while (!viewerDisposed && !gl.isContextLost()) {
+      const status = gl.clientWaitSync(fence, 0, 0);
+      if (status === gl.ALREADY_SIGNALED || status === gl.CONDITION_SATISFIED) return;
+      if (status === gl.WAIT_FAILED || performance.now() - started > 20000) {
+        throw new Error('A GPU não concluiu a preparação do mapa. Tente abrir novamente.');
+      }
+      await yieldLoadingWork();
+    }
+  } finally {
+    if (!gl.isContextLost()) gl.deleteSync(fence);
+  }
+}
+
+let geometryWarmupTarget = null;
+async function prepareGpuGeometry(root, renderScene = scene, { isolate = false } = {}) {
+  const meshes = [];
+  root.traverse(node => {
+    if (node.isMesh) meshes.push({ node, visible: node.visible, culled: node.frustumCulled });
+  });
+  // Upload-only work does not need HDR or a new framebuffer for each floor.
+  const target = geometryWarmupTarget ??= new THREE.WebGLRenderTarget(64, 64);
+  const oldTarget = renderer.getRenderTarget();
+  const shadowUpdate = renderer.shadowMap.needsUpdate;
+  const hiddenChildren = [];
+  if (isolate) {
+    for (const child of renderScene.children) {
+      if (child !== root && !child.isLight && child.visible) {
+        hiddenChildren.push(child);
+        child.visible = false;
+      }
+    }
+  }
+  renderer.shadowMap.needsUpdate = false;
+  for (const { node } of meshes) node.visible = false;
+  try {
+    // Upload a few meshes at a time, before the first full-resolution image.
+    // No geometry is simplified or removed; this only spreads GPU allocation.
+    for (let i = 0; i < meshes.length; i += 4) {
+      if (viewerDisposed) return;
+      const batch = meshes.slice(i, i + 4);
+      for (const state of batch) {
+        state.node.visible = state.visible;
+        state.node.frustumCulled = false;
+      }
+      renderer.setRenderTarget(target);
+      const started = performance.now();
+      renderer.render(renderScene, camera);
+      diagnosticsRenderMaxMs = Math.max(diagnosticsRenderMaxMs, performance.now() - started);
+      for (const { node } of batch) node.visible = false;
+      await yieldLoadingWork();
+    }
+  } finally {
+    for (const state of meshes) {
+      state.node.visible = state.visible;
+      state.node.frustumCulled = state.culled;
+    }
+    for (const child of hiddenChildren) child.visible = true;
+    renderer.shadowMap.needsUpdate = shadowUpdate;
+    if (!viewerDisposed) renderer.setRenderTarget(oldTarget);
+  }
+}
+
+let modelTransfer = null;
+let modelLoading = false;
+let modelGpuReady = false;
+
+function beginModelTransfer(compression, expectedLength) {
+  if (viewerDisposed) return;
+  if (!['gzip', 'glb'].includes(compression) ||
+      !Number.isSafeInteger(expectedLength) || expectedLength <= 0 || expectedLength > 128 * 1024 * 1024) {
+    throw new Error('Invalid map transfer.');
+  }
+  recordLoadingStage('Transferindo mapa');
+  modelTransfer = { compression, expectedLength, received: 0, chunks: [] };
+}
+
+function appendModelChunk(encoded) {
+  if (viewerDisposed) return;
+  if (!modelTransfer) throw new Error('Map transfer was not initialized.');
+  if (typeof encoded !== 'string' || encoded.length > 64 * 1024 ||
+      modelTransfer.received + encoded.length > modelTransfer.expectedLength) {
+    modelTransfer = null;
+    throw new Error('Invalid map transfer chunk.');
+  }
+  let binary;
+  try { binary = atob(encoded); }
+  catch (error) { modelTransfer = null; throw error; }
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  modelTransfer.chunks.push(bytes);
+  modelTransfer.received += encoded.length;
 }
 
 async function loadConfiguredModel() {
-  if (!config || model) return;
+  if (!config || model || modelLoading || viewerDisposed) return;
+  modelLoading = true;
+  const modelUrl = config.modelUrl;
 
   applyConfiguredBackground();
 
   try {
-    const gltf = await new GLTFLoader().loadAsync(config.modelUrl);
+    const loader = new GLTFLoader();
+    let gltf;
+    recordLoadingStage('Descompactando mapa');
+    if (config.modelCompression === 'gzip') {
+      const response = await fetch(modelUrl);
+      const stream = response.body.pipeThrough(new DecompressionStream('gzip'));
+      const bytes = await new Response(stream).arrayBuffer();
+      if (viewerDisposed) return;
+      recordLoadingStage('Lendo geometria');
+      gltf = await loader.parseAsync(bytes, '');
+      selectionCacheLoader = await loadSelectionCache(bytes, config.zones);
+    } else {
+      gltf = await loader.loadAsync(modelUrl);
+    }
+    if (viewerDisposed) return;
+    recordLoadingStage(geometryOnly ? 'Preparando GLB cru' : 'Preparando materiais');
     model = gltf.scene;
-    prepareModelMaterials(model);
-    prepareWindowPresets(model);
-    scene.add(model);
-    nightCinema = createNightCinema(model, scene, windowPresetGroups, nightLook);
-    if (graphicsProfile !== 'basic') installGroundSunRays(model);
+    selectionWindowMeshes = collectSelectionWindowMeshes(model);
+    exportedWindowPresetObjects = [];
+    const presetPrefix=lightingTuning.dayCycle?.windows?.nodePrefix??'janelas_preset_';
+    model.traverse(node=>{if(node.name?.startsWith(presetPrefix)&&!node.parent?.name?.startsWith(presetPrefix))exportedWindowPresetObjects.push(node);});
+    if (featurePanelEnabled) model.traverse(node => {
+      if (node.isMesh) testMaterialSources.set(node, node.material);
+    });
+    if (geometryOnly) {
+      // Start from the loader's materials, before any app shader/color edits.
+      // Only the tested material/light stage changes; keep the same geometry.
+      // All GLB objects, including interiors, remain in their original hierarchy.
+      scene.add(model);
+      setRawMode(true);
+    } else {
+      interiors = createInteriorNavigation(model, config.zones, findModelNode, scene, config.accentColor);
+      await yieldLoadingWork();
+      if (viewerDisposed) return;
+      await prepareModelMaterials(model);
+      if (viewerDisposed) return;
+      await yieldLoadingWork();
+      if (viewerDisposed) return;
+      prepareWindowPresets(model);
+      scene.add(model);
+      nightCinema = createNightCinema(model, scene, nightLook);
+      if (graphicsProfile !== 'basic') installGroundSunRays(model);
+    }
 
     for (const zone of config.zones) {
       const node = findModelNode(model, zone.nodeName);
@@ -3681,10 +4737,81 @@ async function loadConfiguredModel() {
       }
     }
 
+    await yieldLoadingWork();
+    if (viewerDisposed) return;
+    eventAnchorCache.clear();eventMarkers.setEvents(mapEvents);
     frameModel(model);
-    requestAnimationFrame(() => {
-      renderer.domElement.classList.add('is-ready');
-      send('ready', {
+    if (featurePanelEnabled) await applyMapTestFeatures(testFeatures, { warm: false });
+    if (viewerDisposed) return;
+    // Campus geometry is static; keep transforms without rebuilding matrices
+    // for every frame of a camera animation.
+    model.updateMatrixWorld(true);
+    model.traverse(node => { node.matrixAutoUpdate = false; });
+    recordLoadingStage('Preparando GPU e sombras');
+    // Keep Flutter's curtain up through shader preparation and the first
+    // shadow refresh, not merely until the GLB has been parsed.
+    await yieldLoadingWork();
+    if (!geometryOnly) await prepareGpuTextures(model);
+    if (viewerDisposed) return;
+    await renderer.compileAsync(scene, camera);
+    if (viewerDisposed) return;
+    if (selectionOutline.warmup && selectionOptions.outline && (!geometryOnly || testFeatures.selection)) {
+      recordLoadingStage('Preparando seleção');
+      await selectionOutline.warmup([...zoneNodes.values()],camera,yieldLoadingWork);
+      if (viewerDisposed) return;
+    }
+    recordLoadingStage('Enviando geometria à GPU');
+    // Upload geometry in small batches so the first camera movement does not
+    // suffer from large, synchronous GPU allocations.
+    if (!geometryOnly) await prepareGpuGeometry(model);
+    if (viewerDisposed) return;
+    if (initialAntialias !== 'off') await applyMapQuality({ antialias: initialAntialias });
+    await yieldLoadingWork();
+    if (viewerDisposed) return;
+    modelGpuReady = true;
+    fpsCounter.setReady();
+    requestRender();
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    if (viewerDisposed) return;
+    // ANGLE/Vulkan can initially allocate an empty depth texture.
+    if (!geometryOnly) refreshDirectionalShadow({ recreate: true });
+    requestRender();
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    await waitForGpu();
+    if (viewerDisposed) return;
+    renderer.domElement.classList.add('is-ready');
+    recordLoadingStage('Pronto');
+    if (featurePanelEnabled && !featurePanel) {
+      featurePanel = createMapFeaturePanel({
+        state: testFeatures,
+        quality: mapQuality,
+        interiorEventSize,
+        eventMarkerAutoLayout,
+        selectionOptions,
+        interfaceBlurEnabled,
+        navBlurEnabled,
+        onInterfaceBlurChange: enabled => setInterfaceBlur(enabled),
+        onNavBlurChange: enabled => setNavBlur(enabled),
+        onSelectionChange: settings => setSelectionOptions(settings),
+        onQualityChange: settings => setMapQuality(settings),
+        onInteriorEventSizeChange: percent => setInteriorEventSize(percent),
+        onEventMarkerAutoLayoutChange: enabled => setEventMarkerAutoLayout(enabled),
+        onChange: (name, enabled) => setMapTestFeature(name, enabled),
+        onPreset: preset => setMapTestFeatures(preset === 'all'
+          ? Object.fromEntries(mapFeatureTopics.map(([key]) => [key, true]))
+          : preset === 'basic' ? { lighting: true } : {}),
+        onClimate: async minutes => {
+          setPreviewTimeMinutes(minutes);
+          return setMapTestFeatures(testFeatures);
+        },
+      });
+    }
+    send('selectionOptions', { options: { ...selectionOptions } });
+    send('interfaceBlur', { enabled: interfaceBlurEnabled });
+    send('navBlur', { enabled: navBlurEnabled });
+    persistRenderPreferences();
+    send('performanceMode', { enabled: performanceModeEnabled, source:'initial' });
+    send('ready', {
         resolvedZones: zoneNodes.size,
         graphicsProfile,
         graphicsProfilePreference: savedGraphicsProfile,
@@ -3696,24 +4823,48 @@ async function loadConfiguredModel() {
         atmosphereResolution: lightingTuning.atmosphere?.enabled === false
           ? 0
           : lightingTuning.atmosphere?.resolution ?? 0,
-      });
-      // ANGLE/Vulkan can create an empty depth texture while the model shaders
-      // are still compiling. Recreate it after the first complete scene frame.
-      requestAnimationFrame(() => {
-        refreshDirectionalShadow({ recreate: true });
-        requestRender();
-      });
     });
   } catch (error) {
     send('error', {
       message: error instanceof Error ? error.message : String(error),
     });
+  } finally {
+    modelLoading = false;
+    if (modelUrl?.startsWith('blob:')) URL.revokeObjectURL(modelUrl);
   }
 }
 
 function configure(nextConfig) {
+  if (viewerDisposed) return;
+  configureDiagnostics(nextConfig.diagnosticsEnabled === true);
+  if (modelTransfer) {
+    if (modelTransfer.received !== modelTransfer.expectedLength) {
+      send('error', { message: 'Incomplete map transfer.' });
+      return;
+    }
+    const blob = new Blob(modelTransfer.chunks, { type: 'application/octet-stream' });
+    nextConfig = { ...nextConfig, modelUrl: URL.createObjectURL(blob),
+      modelCompression: modelTransfer.compression };
+    modelTransfer = null;
+  }
   config = nextConfig;
-  installNightSky();
+  if(typeof nextConfig.performanceMode==='boolean'&&nextConfig.performanceMode!==performanceModeEnabled) {
+    if(!model&&!modelLoading) {
+      const preset=renderPresetForMode(nextConfig.performanceMode);
+      performanceModeEnabled=nextConfig.performanceMode;
+      testFeatures=normalizedMapFeatures(preset.features);
+      selectionOptions=normalizedSelectionOptions(preset.selectionOptions);
+      mapQuality=normalizedMapQuality(preset.quality);
+      initialAntialias=mapQuality.antialias;mapQuality.antialias='off';
+      interfaceBlurEnabled=preset.interfaceBlurEnabled;navBlurEnabled=preset.navBlurEnabled;
+    }else setMapPerformanceMode(nextConfig.performanceMode).catch(error=>send('error',{message:String(error.message??error)}));
+  }
+  if (!geometryOnly) {
+    installMiddaySky();
+    installMiddaySky({ sunset: true });
+    installMiddaySky({ morning: true });
+    installNightSky();
+  }
   if (model) {
     applyConfiguredBackground();
     applyDaylightProfile();
@@ -3723,8 +4874,629 @@ function configure(nextConfig) {
   loadConfiguredModel();
 }
 
+function restoreRawMaterials() {
+  for (const { mesh, material } of rawMaterialStates) mesh.material = material;
+  rawMaterialStates.length = 0;
+  for (const material of rawMaterials) material.dispose();
+  rawMaterials.clear();
+}
+
+function disposeTestComposer() {
+  mobileBloom?.dispose(); mobileBloom = null;
+  for (const pass of effectComposer?.passes ?? []) pass.dispose?.();
+  effectComposer?.dispose();
+  effectComposer = null; sceneRenderPass = null; bloomPass = null; cinematicGradePass = null;
+}
+
+function removeTestSky() {
+  for (const object of [middaySkyMesh, sunsetSkyMesh, morningSkyMesh, nightSkyPoints]) {
+    if (!object) continue;
+    object.removeFromParent(); object.geometry.dispose();
+    object.material.map?.dispose(); object.material.dispose();
+  }
+  middaySkyMesh = null; sunsetSkyMesh = null; morningSkyMesh = null;
+  nightSkyPoints = null; nightSkyMaterial = null;
+  scene.background = rawBackground;
+}
+
+function configureTestInteriors(enabled) {
+  if (!interiors && enabled) {
+    for (const zone of config.zones) for (const floor of zone.floors ?? []) {
+      for (const name of [...floor.nodeNames, ...floor.spaces.map(space => space.nodeName)]) {
+        const node = findModelNode(model, name);
+        if (node) testInteriorParents.set(node, node.parent);
+      }
+    }
+    interiors = createInteriorNavigation(model, config.zones, findModelNode, scene, config.accentColor);
+    for (const floor of interiors.floors.values()) testInteriorNodes.set(floor.id, [...floor.group.children]);
+  }
+  if (!interiors) return;
+  if (interiors.current) exitInterior({ focus: false });
+  interiors.leave();
+  for (const floor of interiors.floors.values()) {
+    for (const node of testInteriorNodes.get(floor.id) ?? []) {
+      const parent = enabled ? floor.group : testInteriorParents.get(node);
+      parent?.attach(node);
+    }
+    floor.group.updateMatrixWorld(true);
+  }
+}
+
+function applyTestFeatureProfile() {
+  if (!featurePanelEnabled || !model || !lightingFrame) return;
+  const profile = daylightProfileWithPreview(daylightProfile());
+  activeDaylightProfile = profile;
+  // Same two diffuse lights for every material test: no hidden extra fills.
+  keyLight.visible = testFeatures.lighting;
+  hemisphereLight.visible = testFeatures.lighting;
+  keyLight.intensity = 2; hemisphereLight.intensity = 1;
+  keyLight.color.copy(profile.key.color);
+  configureDirectionalLight(keyLight, profile.key, lightingFrame.center, lightingFrame.dimension);
+  keyLight.castShadow = testFeatures.shadows;
+  renderer.shadowMap.enabled = testFeatures.shadows;
+  renderer.shadowMap.autoUpdate = false;
+  if (testFeatures.shadows) {
+    keyLight.shadow.mapSize.setScalar(renderBudget.shadowSize);
+    fitShadowCameraToBounds(keyLight, lightingFrame.bounds, lightingFrame.dimension);
+    keyLight.shadow.bias = lightingTuning.shadows?.bias ?? -0.00035;
+    keyLight.shadow.normalBias = lightingTuning.shadows?.normalBias ?? 0.025;
+    keyLight.shadow.intensity = profile.shadowIntensity;
+    refreshDirectionalShadow();
+  } else {
+    keyLight.shadow.map?.dispose(); keyLight.shadow.map = null;
+    keyLight.shadow.mapPass?.dispose(); keyLight.shadow.mapPass = null;
+  }
+  renderer.toneMapping = testFeatures.grading
+    ? toneMappings[defaultToneMapping] ?? THREE.ACESFilmicToneMapping : THREE.NoToneMapping;
+  renderer.toneMappingExposure = testFeatures.grading ? profile.exposure : 1;
+  scene.fog = null;
+  if (testFeatures.reflections) {
+    if (!reflectionEnvironment) installReflectionEnvironment();
+    scene.environment = reflectionEnvironment;
+    updateReflectionEnvironment(profile);
+    // Fog is not part of the reflection test.
+    scene.fog = null;
+  } else {
+    scene.environment = null;
+    reflectionEnvironment?.dispose(); reflectionEnvironment = null; reflectionEnvironmentFaces = [];
+  }
+  if (testFeatures.sky) {
+    if (isMorning()) installMiddaySky({ morning: true });
+    else if (isSunset()) installMiddaySky({ sunset: true });
+    else if (isMidday()) installMiddaySky();
+    else installNightSky();
+    updateNightSky();
+  } else removeTestSky();
+  if (cinematicGradePass) {
+    const uniforms = cinematicGradePass.uniforms;
+    uniforms.warmColor.value.copy(profile.grading.warmColor);
+    uniforms.warmStrength.value = profile.grading.warmStrength;
+    uniforms.warmStart.value = profile.grading.warmStart;
+    uniforms.warmEnd.value = Math.max(profile.grading.warmStart + 0.001, profile.grading.warmEnd);
+    uniforms.neutralWarmResponse.value = profile.grading.neutralWarmResponse;
+    uniforms.contrast.value = profile.grading.contrast;
+    uniforms.saturation.value = profile.grading.saturation;
+    uniforms.temperature.value = activeColorTemperature();
+    uniforms.surfaceRayStrength.value = 0;
+  }
+  if (bloomPass) { updateDaylightBloom(profile); bloomPass.enabled = testFeatures.bloom; }
+  mobileBloom?.invalidate();
+  const look = effectiveMorningLook();
+  const shaderGain = isMorning() ? approvedFeatureAppearance.morningShaderGain ?? 1
+    : isSunset() ? approvedFeatureAppearance.sunsetShaderGain ?? 1 : 1;
+  const grassBrightness = testFeatures.shaders && nightSkyAmount() > 0.5
+    ? approvedFeatureAppearance.nightGrassBrightness ?? 1 : 1;
+  // Always start from the captured material color: repeated clock updates and
+  // returning from night must not progressively darken the campus.
+  for (const [material, color] of testGrassColors) {
+    material.color.copy(color).multiplyScalar(grassBrightness);
+  }
+  nightCinema?.update(nightSkyAmount(), testFeatures.textures, keyLight, lightingFrame,
+    isDayCustomization() ? 1 : 0, look.textureDetail,
+    testFeatures.shaders ? (look.sunHighlights ?? 1) * shaderGain : 1,
+    testFeatures.shaders ? (look.reflections ?? 8) / 8 : 1,
+    testFeatures.shaders ? look.foliageStrength ?? 0 : 0);
+  applyWindowPresetLighting();
+}
+
+async function applyMapTestFeatures(requested, { warm = true } = {}) {
+  if (!featurePanelEnabled || !model || viewerDisposed) return { ...testFeatures };
+  if (interiorLoading) throw new Error('Aguarde a troca de piso terminar.');
+  featureBusy = true;
+  try {
+    for (const fade of [...objectFades]) fade.cleanup();
+    clearSelection({ animate: false }); send('selected');
+    disposeSelectionVariants();
+    clearWindowPresets();
+    testFeatures = normalizedMapFeatures(requested);
+    if (testFeatures.selection && selectionCacheLoader && !selectionPreparedCache) {
+      selectionPreparedCache = await selectionCacheLoader();
+      if (viewerDisposed) return { ...testFeatures };
+    }
+    if (!testFeatures.selection) {
+      pickingTarget.setSize(1, 1); selectionOutline.clear({ release: true });
+    }
+    basicLightingTest = testFeatures.lighting;
+    configureTestInteriors(testFeatures.selection);
+    restoreRawMaterials();
+    nightCinema?.dispose(); nightCinema = null;
+    for (const material of testOwnedMaterials) material.dispose();
+    testOwnedMaterials.clear();
+    testGrassColors.clear();
+    const cache = new Map();
+    const materialFor = source => {
+      if (cache.has(source)) return cache.get(source);
+      let material;
+      if (testFeatures.pbr) {
+        material = source.clone();
+        if (testFeatures.textures || testFeatures.shaders) applyMaterialFinish(material);
+      } else {
+        const Type = testFeatures.lighting ? THREE.MeshLambertMaterial : THREE.MeshBasicMaterial;
+        material = new Type({ name: source.name, color: source.color?.clone() ?? new THREE.Color('white'),
+          map: source.map ?? null, vertexColors: source.vertexColors === true,
+          transparent: source.transparent === true, opacity: source.opacity ?? 1,
+          alphaTest: source.alphaTest ?? 0, side: source.side,
+          depthTest: source.depthTest !== false, depthWrite: source.depthWrite !== false });
+      }
+      material.toneMapped = testFeatures.grading; material.fog = false;
+      if (/grass|grama/i.test(material.name)) testGrassColors.set(material, material.color.clone());
+      cache.set(source, material); testOwnedMaterials.add(material); return material;
+    };
+    const excluded = lightingTuning.shadows?.casterExclusions ?? [];
+    for (const [mesh, source] of testMaterialSources) {
+      mesh.material = Array.isArray(source) ? source.map(materialFor) : materialFor(source);
+      let parent = mesh; let casts = true;
+      while (parent) { if (excluded.includes(parent.name)) casts = false; parent = parent.parent; }
+      mesh.castShadow = testFeatures.shadows && casts;
+      mesh.receiveShadow = testFeatures.shadows;
+    }
+    if (testFeatures.textures || testFeatures.shaders) {
+      nightCinema = createNightCinema(model, scene, nightLook,
+        { textures: testFeatures.textures, shaders: testFeatures.shaders });
+    }
+    if (testFeatures.windows) prepareWindowPresets(model,
+      { glowEnabled: testFeatures.windowLighting, glowMaxLights: 4, preserveSurface: true });
+    if(testFeatures.selection)interiors?.restorePreparedMaterials();
+    disposeTestComposer();
+    if (testFeatures.grading || testFeatures.bloom) { installPostProcessing({ debug: true }); resize(); }
+    applyTestFeatureProfile();
+    model.updateMatrixWorld(true);
+    rawModeEnabled = true; // Diagnostic scene; never re-enable the normal pipeline implicitly.
+    if (warm) {
+      await yieldLoadingWork();
+      if (viewerDisposed) return { ...testFeatures };
+      await renderer.compileAsync(scene, camera);
+      if (viewerDisposed) return { ...testFeatures };
+      await mobileBloom?.warmup(scene, camera);
+      if (viewerDisposed) return { ...testFeatures };
+      requestRender();
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    }
+    featurePanel?.update(testFeatures);
+    if (warm) persistRenderPreferences();
+    requestRender();
+    return { ...testFeatures };
+  } finally { featureBusy = false; }
+}
+
+function setMapTestFeatures(requested) {
+  const next = { ...requested };
+  const run = featureApplyQueue.catch(() => {}).then(() => applyMapTestFeatures(next));
+  featureApplyQueue = run;
+  return run;
+}
+
+function setMapTestFeature(name, enabled) {
+  try { return setMapTestFeatures(toggledMapFeatures(testFeatures, name, enabled)); }
+  catch (error) { return Promise.reject(error); }
+}
+
+function setSelectionOptions(settings) {
+  if (interiorLoading || featureBusy) throw new Error('Aguarde a troca de piso / efeitos terminar.');
+  const next = normalizedSelectionOptions(settings, selectionOptions);
+  const effectChanged = ['outline', 'outlineAnimation', 'pulse', 'roomGlow']
+    .some(key => next[key] !== selectionOptions[key]);
+  const state = selectionState;
+  const zoneId = selectedZoneId;
+  selectionOptions = next;
+  persistRenderPreferences();
+  // Do not rebuild the lighting/material pipeline, change floors, or refocus
+  // the camera just to change one piece of selection decoration.
+  if (effectChanged && state) {
+    if (state.leavingAt !== null) clearSelection({ animate: false });
+    else {
+      startSelectionEffect(state.node, { lit: state.room });
+      selectedZoneId = zoneId;
+    }
+  }
+  featurePanel?.updateSelection(selectionOptions);
+  send('selectionOptions', { options: { ...selectionOptions } });
+  requestRender();
+  return { ...selectionOptions };
+}
+
+function setInterfaceBlur(enabled) {
+  if (typeof enabled !== 'boolean') throw new Error('Valor de blur inválido.');
+  interfaceBlurEnabled = enabled;
+  persistRenderPreferences();
+  featurePanel?.updateInterfaceBlur(enabled);
+  send('interfaceBlur', { enabled });
+  return enabled;
+}
+
+function setNavBlur(enabled) {
+  if (typeof enabled !== 'boolean') throw new Error('Valor de blur inválido.');
+  navBlurEnabled = enabled;
+  persistRenderPreferences();
+  featurePanel?.updateNavBlur(enabled);
+  send('navBlur', { enabled });
+  return enabled;
+}
+
+function sendInteriorState(message = null) {
+  send('interior', { zoneId: interiors?.current?.zoneId ?? null,
+    floorId: interiors?.current?.id ?? null, spaceLabel: interiors?.selected?.label ?? null,
+    busy: interiorLoading, message });
+}
+
+let hiddenInteriorExterior = null;
+let exportedWindowPresetObjects = [];
+const hiddenInteriorWindows = new Map();
+
+function hideInteriorWindows() {
+  const nodes=new Set([...exportedWindowPresetObjects,...interiorWindowObjects()]);
+  for(const node of nodes) {
+    if(!hiddenInteriorWindows.has(node))hiddenInteriorWindows.set(node,node.visible);
+    node.visible=false;
+  }
+  for(const group of windowPresetGroups.values())for(const preset of group)
+    if(preset.glowLight)preset.glowLight.visible=false;
+  requestRender();
+}
+
+function showInteriorExterior() {
+  if (hiddenInteriorExterior) {
+    hiddenInteriorExterior.node.visible = hiddenInteriorExterior.visible;
+    hiddenInteriorExterior = null;
+  }
+  for(const [node,visible] of hiddenInteriorWindows)node.visible=visible;
+  hiddenInteriorWindows.clear();
+  for (const group of windowPresetGroups.values()) {
+    for (const preset of group) {
+      if (preset.glowLight) preset.glowLight.visible = preset.glowLight.intensity > 0;
+    }
+  }
+}
+
+function interiorWindowObjects() {
+  return [...windowPresetGroups.values()].flatMap(group => group.map(preset => preset.node));
+}
+
+function hideInteriorExterior(zoneId) {
+  if (hiddenInteriorExterior?.zoneId !== zoneId) {
+    showInteriorExterior();
+    const zone = config?.zones.find((entry) => entry.id === zoneId);
+    const node = zoneNodes.get(zone?.nodeName);
+    if (node) {
+      hiddenInteriorExterior = { zoneId, node, visible: node.visible };
+      node.visible = false;
+    }
+  }
+  hideInteriorWindows();
+}
+
+function exitInterior({ focus = true } = {}) {
+  ++interiorRequest;
+  const zoneId = interiors?.current?.zoneId;
+  for (const fade of [...objectFades]) fade.cleanup();
+  interiors?.leave();
+  showInteriorExterior();
+  interiorLoading = false;
+  controls.enabled = true;
+  if (exteriorNavigation) {
+    ({ navigationBounds, navigationHull, navigationEdges, navigationInset,
+      navigationTargetHeight, baseMinDistance, baseMaxDistance } = exteriorNavigation);
+    controls.minPolarAngle = exteriorNavigation.minPolarAngle;
+    controls.maxPolarAngle = exteriorNavigation.maxPolarAngle;
+    exteriorNavigation = null;
+  }
+  controls.minDistance = baseMinDistance;
+  controls.maxDistance = baseMaxDistance;
+  cameraFocus = null;
+  viewTransition = null;
+  navigationSpring = null;
+  navigationConstraintSuspended = false;
+  clearSelection({ animate: false });
+  send('selected');
+  sendInteriorState();
+  if (focus && zoneId) focusZone(zoneId, { interiorTravel: true });
+  requestRender();
+}
+
+async function exitInteriorWithFade({ focus = true } = {}) {
+  if (!interiors?.current || interiorLoading || viewerDisposed) return;
+  let request = ++interiorRequest;
+  const zone = config.zones.find(entry => entry.id === interiors.current.zoneId);
+  const exterior = zoneNodes.get(zone?.nodeName);
+  let fade;
+  interiorLoading = true;
+  controls.enabled = false;
+  clearSelection({ animate: false });
+  sendInteriorState();
+  try {
+    fade = prepareObjectFade(interiors.activeFloors.map(entry => entry.group), 1);
+    await fade.start(0);
+    if (viewerDisposed || request !== interiorRequest) return;
+    exitInterior({ focus });
+    request = interiorRequest;
+    interiorLoading = true;
+    controls.enabled = false;
+    if (exterior) {
+      fade = prepareObjectFade([exterior], 0);
+      await fade.start(1);
+    }
+  } finally {
+    fade?.cleanup();
+    if (!viewerDisposed && request === interiorRequest) {
+      interiorLoading = false;
+      controls.enabled = true;
+      sendInteriorState();
+      requestRender();
+    }
+  }
+}
+
+async function setInteriorFloor(zoneId, floorId) {
+  if (featureBusy) return;
+  if (geometryOnly && !(featurePanelEnabled && testFeatures.selection)) return;
+  if (!floorId) { await exitInteriorWithFade(); return; }
+  const floor = interiors?.floors.get(floorId);
+  if (!floor || floor.zoneId !== zoneId || interiorLoading || viewerDisposed) return;
+  hideInteriorWindows();
+  const request = ++interiorRequest;
+  if (rawModeEnabled && !featurePanelEnabled) { setRawMode(false); send('rawMode', { enabled: false }); }
+  if (!exteriorNavigation) exteriorNavigation = {
+    navigationBounds, navigationHull, navigationEdges, navigationInset,
+    navigationTargetHeight, baseMinDistance, baseMaxDistance,
+    // Interior travel always ends in 3D. Do not save the temporary top-view
+    // polar lock (0..0.0001) as the exterior's orbit limits.
+    minPolarAngle: controlsTuning.minPolarAngle ?? 0.2,
+    maxPolarAngle: controlsTuning.maxPolarAngle ?? Math.PI * 0.48,
+  };
+  clearSelection({ animate: false });
+  interiorLoading = true;
+  controls.enabled = false;
+  const previousFloors = interiors.activeFloors;
+  const baseFloor = [...interiors.floors.values()].find(entry => entry.zoneId === zoneId);
+  const desiredFloors = new Set([baseFloor, floor]);
+  const outgoingObjects = previousFloors.filter(entry => !desiredFloors.has(entry))
+    .map(entry => entry.group);
+  if (!interiors.current) {
+    const zone = config.zones.find(entry => entry.id === zoneId);
+    const exterior = zoneNodes.get(zone?.nodeName);
+    if (exterior) outgoingObjects.push(exterior);
+  }
+  let outgoingFade;
+  let incomingFade;
+  sendInteriorState();
+  try {
+    if (outgoingObjects.length) {
+      outgoingFade = prepareObjectFade(outgoingObjects, 1);
+      await outgoingFade.start(0);
+      if (viewerDisposed || request !== interiorRequest) return;
+    }
+    interiors.enter(floorId);
+    hideInteriorExterior(zoneId);
+    outgoingFade?.cleanup();
+    const incomingObjects = interiors.activeFloors.filter(entry => !previousFloors.includes(entry))
+      .map(entry => entry.group);
+    sendInteriorState();
+    navigationBounds = floor.bounds.clone();
+    navigationHull = [];
+    navigationEdges = [];
+    navigationInset = 0;
+    navigationTargetHeight = floor.floorY + 0.6;
+    const size = floor.bounds.getSize(new THREE.Vector3());
+    const span = Math.max(size.x, size.z);
+    navigationBounds.expandByScalar(span * 0.035);
+    baseMinDistance = Math.max(5, span * (cameraTuning.minDistanceMultiplier ?? 0.22));
+    const floorDirection = interiorDirection(zoneId);
+    baseMaxDistance = span * 6;
+    const fittedDistance = focusDistanceForPoints(focusPointsForNode(floor.group),
+      floor.bounds.getCenter(new THREE.Vector3()), floorDirection, {}) * 1.1;
+    baseMaxDistance = Math.max(span * (cameraTuning.maxDistanceMultiplier ?? 0.42),
+      fittedDistance * 1.2);
+    controls.minPolarAngle = 0.05;
+    controls.maxPolarAngle = Math.PI * 0.43;
+    resettingCamera = null;
+    navigationSpring = null;
+    focusNode(floor.group, { useVisualCenter: true, direction: floorDirection.toArray(),
+      distanceScale: 1.1, constrainToNavigation: false });
+    const pendingFloors = interiors.activeFloors.filter(entry => !entry.gpuReady);
+    if (pendingFloors.length > 0) {
+      await yieldLoadingWork();
+      for (const entry of pendingFloors) {
+        // Compile the actual opaque interior too: previously only the fade
+        // copies were warmed, and restoring the real material caused a hitch.
+        await renderer.compileAsync(entry.group, camera, scene);
+        if (viewerDisposed || request !== interiorRequest) return;
+        startSelectionEffect(entry.group);
+        await renderer.compileAsync(entry.group, camera, scene);
+        clearSelection({ animate: false });
+        if (viewerDisposed || request !== interiorRequest) return;
+      }
+    }
+    if (incomingObjects.length) {
+      incomingFade = prepareObjectFade(incomingObjects, 0);
+      for (const object of incomingObjects) await renderer.compileAsync(object, camera, scene);
+      if (viewerDisposed || request !== interiorRequest) return;
+    }
+    if (pendingFloors.length > 0) {
+      for (const entry of pendingFloors) {
+        await prepareGpuGeometry(entry.group, scene, { isolate: true });
+        if (viewerDisposed || request !== interiorRequest) return;
+      }
+      await waitForGpu();
+      if (viewerDisposed || request !== interiorRequest) return;
+      for (const entry of pendingFloors) entry.gpuReady = true;
+    }
+    if (cameraFocus) cameraFocus.startedAt = performance.now();
+    if (viewTransition) viewTransition.startedAt = performance.now();
+    if (incomingFade) {
+      await incomingFade.start(1);
+      if (viewerDisposed || request !== interiorRequest) return;
+      incomingFade.cleanup();
+    }
+    startSelectionEffect(floor.group);
+  } catch (error) {
+    if (request !== interiorRequest || viewerDisposed) return;
+    exitInterior();
+    sendInteriorState(String(error.message ?? error));
+  } finally {
+    outgoingFade?.cleanup();
+    incomingFade?.cleanup();
+    if (request === interiorRequest && !viewerDisposed) {
+      interiorLoading = false;
+      controls.enabled = true;
+      sendInteriorState();
+      requestRender();
+    }
+  }
+}
+
+function setRawMode(enabled) {
+  if (geometryOnly && enabled !== true) return rawModeEnabled;
+  if (interiors?.current) exitInterior();
+  const next = enabled === true;
+  if (rawModeEnabled === next || !model) return rawModeEnabled;
+  clearSelection({ animate: false });
+  send('selected');
+  if (next) {
+    const cache = new Map();
+    const basicFor = (source) => {
+      if (cache.has(source)) return cache.get(source);
+      const Material = basicLightingTest ? THREE.MeshLambertMaterial : THREE.MeshBasicMaterial;
+      const basic = new Material({
+        color: source.color?.clone() ?? new THREE.Color('#ffffff'),
+        map: source.map ?? null,
+        vertexColors: source.vertexColors === true,
+        transparent: source.transparent === true,
+        opacity: source.opacity ?? 1,
+        alphaTest: source.alphaTest ?? 0,
+        side: source.side ?? THREE.FrontSide,
+        depthTest: source.depthTest !== false,
+        depthWrite: source.depthWrite !== false,
+        toneMapped: false,
+        fog: false,
+      });
+      cache.set(source, basic);
+      rawMaterials.add(basic);
+      return basic;
+    };
+    model.traverse((node) => {
+      if (!node.isMesh || !node.material) return;
+      rawMaterialStates.push({ mesh: node, material: node.material });
+      node.material = Array.isArray(node.material)
+        ? node.material.map(basicFor)
+        : basicFor(node.material);
+    });
+    rawModeEnabled = true;
+  } else {
+    restoreRawMaterials();
+    rawModeEnabled = false;
+    applyDaylightProfile();
+  }
+  requestRender();
+  if (diagnosticsEnabled) send('diagnostics', diagnosticsSnapshot());
+  return rawModeEnabled;
+}
+
+function disposeViewer() {
+  if (viewerDisposed) return;
+  viewerDisposed = true;
+  viewerEvents.abort();
+  mapEventNavigationRequest++;
+  eventMarkers.dispose();eventAnchorCache.clear();
+  fpsCounter.dispose();
+  featurePanel?.dispose();
+  nightCinema?.dispose();
+  clearWindowPresets();
+  for (const material of testOwnedMaterials) material.dispose();
+  testOwnedMaterials.clear(); testMaterialSources.clear(); testGrassColors.clear();
+  for (const fade of [...objectFades]) fade.cleanup();
+  releaseSelectedMeshes();
+  disposeSelectionVariants();
+  geometryWarmupTarget?.dispose(); geometryWarmupTarget = null;
+  if (diagnosticsTimer !== null) clearInterval(diagnosticsTimer);
+  if (diagnosticsGpuQuery) renderer.getContext().deleteQuery(diagnosticsGpuQuery);
+  if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+  if (bearingResetFrame !== null) cancelAnimationFrame(bearingResetFrame);
+  bearingResetFrame = null;
+  animationFrame = null;
+  cancelRestingResolutionRestore();
+  controls.dispose();
+  interiors?.dispose();
+  restoreRawMaterials();
+  modelTransfer = null;
+  mobileBloom?.dispose(); mobileBloom = null;
+  mapAntialias?.dispose(); mapAntialias = null;
+  for (const pass of effectComposer?.passes ?? []) pass.dispose?.();
+  effectComposer?.dispose();
+  selectionOutline.dispose();
+  pickingTarget.dispose();
+  const resources = new Set();
+  for (const texture of [scene.background, scene.environment, atmosphereTexture, reflectionEnvironment]) {
+    if (texture?.isTexture) resources.add(texture);
+  }
+  scene.traverse(node => {
+    if (node.geometry) resources.add(node.geometry);
+    for (const material of (Array.isArray(node.material) ? node.material : [node.material])) {
+      if (!material) continue;
+      resources.add(material);
+      for (const value of Object.values(material)) if (value?.isTexture) resources.add(value);
+    }
+    node.shadow?.dispose();
+  });
+  for (const resource of resources) resource.dispose();
+  scene.clear();
+  scene.background = null;
+  scene.environment = null;
+  atmosphereTexture = null;
+  atmosphereCanvas = null;
+  atmosphereContext = null;
+  reflectionEnvironment = null;
+  reflectionEnvironmentFaces = [];
+  model = null;
+  selectionWindowMeshes = [];
+  exportedWindowPresetObjects = [];hiddenInteriorWindows.clear();
+  zoneNodes.clear();
+  renderer.dispose();
+  renderer.forceContextLoss();
+}
+
+function setVisible(visible) {
+  if (viewerDisposed) return;
+  viewerSuspended = !visible;
+  if (viewerSuspended) {
+    cameraPointerIds.clear();pointerStart=null;multiTouchGesture=false;pendingMarkerPointer=null;
+    eventMarkers.setCameraGestureActive(false);
+    if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+    animationFrame = null;
+    cancelRestingResolutionRestore();
+  } else requestRender();
+}
+
 function resetCamera() {
+  if (interiors?.current) exitInterior({ focus: false });
   if (!initialCameraPosition || !initialTarget) return;
+  if (mapViewMode === '2d' || viewTransition) {
+    const destination = perspectiveCamera.clone();
+    destination.position.copy(initialCameraPosition);
+    destination.lookAt(initialTarget);
+    beginViewTransition('3d', destination, initialTarget);
+    return;
+  }
+  activateMapCamera('3d');
   cameraFocus = null;
   navigationSpring = null;
   navigationConstraintSuspended = false;
@@ -3732,7 +5504,7 @@ function resetCamera() {
   controls.maxDistance = baseMaxDistance;
   resettingCamera = {
     startedAt: performance.now(),
-    duration: 320,
+    duration: 650,
     fromPosition: camera.position.clone(),
     fromTarget: controls.target.clone(),
   };
@@ -3742,8 +5514,9 @@ function resetCamera() {
 
 function setLocalTimeMinutes(minutes) {
   if (!config || !Number.isFinite(minutes)) return;
+  const previousPeriod = presetTimeMinutes();
   config.localTimeMinutes = ((minutes % 1440) + 1440) % 1440;
-  if (model) {
+  if (model && previousPeriod !== presetTimeMinutes()) {
     applyDaylightProfile();
     requestRender();
   }
@@ -3824,6 +5597,7 @@ function setPreviewCamera(view = {}) {
 }
 
 function rotateCameraBy(degrees) {
+  if (viewTransition) return;
   if (!Number.isFinite(degrees) || Math.abs(degrees) < 0.001) return;
   resettingCamera = null;
   cameraFocus = null;
@@ -3845,6 +5619,7 @@ let externalRotationActive = false;
 let bearingResetFrame = null;
 
 function beginExternalRotation() {
+  if (viewTransition) return;
   if (bearingResetFrame !== null) {
     cancelAnimationFrame(bearingResetFrame);
     bearingResetFrame = null;
@@ -3864,33 +5639,127 @@ function beginExternalRotation() {
 }
 
 function resetBearing() {
-  const zeroZoneId = cameraTuning.zeroZoneId;
-  if (typeof zeroZoneId === 'string' && focusZone(zeroZoneId)) {
-    lastFocusedZoneId = zeroZoneId;
-    cameraMovedSinceFocus = false;
-    return;
-  }
-  const totalRotation = currentBearingDegrees();
-  if (Math.abs(totalRotation) < 0.05) return;
-  beginExternalRotation();
-  const startedAt = performance.now();
-  const duration = 360;
-  let appliedRotation = 0;
+  resetCamera();
+}
 
-  const animate = (now) => {
-    const progress = THREE.MathUtils.clamp((now - startedAt) / duration, 0, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
-    const targetRotation = totalRotation * eased;
-    rotateCameraBy(targetRotation - appliedRotation);
-    appliedRotation = targetRotation;
-    if (progress < 1) {
-      bearingResetFrame = requestAnimationFrame(animate);
-      return;
-    }
-    bearingResetFrame = null;
-    endExternalRotation();
+function topViewZoomLimits() {
+  const settings = cameraTuning.topView ?? {};
+  const baseline = Math.max(0.01, Number(settings.zoom) || 1);
+  const closer = Math.max(0, Math.min(0.5, settings.zoomInLimit ?? 0.20));
+  const farther = Math.max(0, Math.min(0.5, settings.zoomOutLimit ?? 0.18));
+  // Orthographic zoom is inverse to the visible width/height.
+  return { min: baseline / (1 + farther), max: baseline * (1 + closer) };
+}
+
+function activateMapCamera(mode) {
+  const topView = mode === '2d';
+  mapViewMode = topView ? '2d' : '3d';
+  camera = topView ? topCamera : perspectiveCamera;
+  controls.object = camera;
+  controls.enabled = true;
+  controls.enableRotate = !topView;
+  controls.minPolarAngle = topView ? 0 : interiors?.current ? 0.05 : controlsTuning.minPolarAngle ?? 0.2;
+  controls.maxPolarAngle = topView ? 0.0001 : interiors?.current ? Math.PI * 0.43 : controlsTuning.maxPolarAngle ?? Math.PI * 0.48;
+  controls.mouseButtons.LEFT = topView ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+  controls.touches.ONE = topView || controlsTuning.oneFingerAction === 'pan'
+    ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE;
+  controls.touches.TWO = !topView && controlsTuning.twoFingerAction === 'rotate'
+    ? THREE.TOUCH.DOLLY_ROTATE : THREE.TOUCH.DOLLY_PAN;
+  const zoomLimits = topViewZoomLimits();
+  controls.minZoom = topView ? zoomLimits.min : 0;
+  controls.maxZoom = topView ? zoomLimits.max : Infinity;
+  controls.minDistance = baseMinDistance;
+  controls.maxDistance = topView ? Infinity : baseMaxDistance;
+  if (sceneRenderPass) sceneRenderPass.camera = camera;
+  resize();
+  send('viewMode', { mode: mapViewMode });
+}
+
+function setMapViewMode(mode) {
+  if (interiors?.current) exitInterior({ focus: false });
+  if (!model || !lightingFrame || !initialTarget) return false;
+  if (mode !== '2d') {
+    resetCamera();
+    return true;
+  }
+  const source = { camera: camera.clone(), target: controls.target.clone() };
+  clearSelection({ animate: false });
+  send('selected');
+  resettingCamera = null;
+  cameraFocus = null;
+  navigationSpring = null;
+  navigationConstraintSuspended = false;
+  const bounds = navigationBounds ?? lightingFrame.bounds;
+  const size = bounds.getSize(new THREE.Vector3());
+  const settings = cameraTuning.topView ?? {};
+  const hasSavedView = Array.isArray(settings.initialPosition) &&
+    settings.initialPosition.length === 3 && Array.isArray(settings.initialTarget) &&
+    settings.initialTarget.length === 3;
+  const target = hasSavedView
+    ? new THREE.Vector3().fromArray(settings.initialTarget)
+    : bounds.getCenter(new THREE.Vector3());
+  if (!hasSavedView) target.y = navigationTargetHeight ?? initialTarget.y;
+  const aspect = Math.max(1, document.documentElement.clientWidth) /
+    Math.max(1, document.documentElement.clientHeight);
+  topViewHalfHeight = Math.max(size.z / 2, size.x / (2 * aspect)) * 1.08;
+  const height = Math.max(size.x, size.z, 100) * 2;
+  const azimuth = initialAzimuth ?? 0;
+  const zoomLimits = topViewZoomLimits();
+  topCamera.zoom = THREE.MathUtils.clamp(settings.zoom ?? 1,
+    zoomLimits.min, zoomLimits.max);
+  if (hasSavedView) {
+    topCamera.position.fromArray(settings.initialPosition);
+  } else {
+    topCamera.position.copy(target).add(new THREE.Vector3(
+      Math.sin(azimuth) * height * 0.00001, height,
+      Math.cos(azimuth) * height * 0.00001,
+    ));
+  }
+  topCamera.lookAt(target);
+  topCamera.left = -topViewHalfHeight * aspect;
+  topCamera.right = topViewHalfHeight * aspect;
+  topCamera.top = topViewHalfHeight;
+  topCamera.bottom = -topViewHalfHeight;
+  topCamera.updateProjectionMatrix();
+  beginViewTransition('2d', topCamera, target, source);
+  cameraMovedSinceFocus = true;
+  sendCameraState({ force: true });
+  requestRender();
+  return true;
+}
+
+function beginViewTransition(mode, destination, target, source = null) {
+  const start = source?.camera ?? camera.clone();
+  const startTarget = source?.target ?? controls.target.clone();
+  const fromProjection = start.projectionMatrix.clone();
+  // Homogeneous normalization preserves the first frame while letting the
+  // vanishing point move continuously toward an orthographic projection.
+  if (start.isPerspectiveCamera && !viewTransition) {
+    fromProjection.multiplyScalar(1 / Math.max(1, start.position.distanceTo(startTarget)));
+  }
+  const toProjection = destination.projectionMatrix.clone();
+  if (destination.isPerspectiveCamera) {
+    toProjection.multiplyScalar(1 / Math.max(1, destination.position.distanceTo(target)));
+  }
+  viewTransition = {
+    startedAt: performance.now(), duration: 650, mode,
+    fromPosition: start.position.clone(), toPosition: destination.position.clone(),
+    fromQuaternion: start.quaternion.clone(), toQuaternion: destination.quaternion.clone(),
+    fromTarget: startTarget, toTarget: target.clone(),
+    fromProjection, toProjection, zoom: destination.zoom,
   };
-  bearingResetFrame = requestAnimationFrame(animate);
+  resettingCamera = null;
+  cameraFocus = null;
+  navigationSpring = null;
+  camera = start;
+  controls.object = camera;
+  controls.enabled = false;
+  if (sceneRenderPass) sceneRenderPass.camera = camera;
+  beginCameraTransitionResolution();
+  camera.projectionMatrix.copy(fromProjection);
+  camera.projectionMatrixInverse.copy(fromProjection).invert();
+  send('viewMode', { mode });
+  requestRender();
 }
 
 function endExternalRotation() {
@@ -3910,7 +5779,7 @@ function endExternalRotation() {
 }
 
 function refreshMaterialFinish() {
-  if (!model) return;
+  if (!model || geometryOnly) return;
   model.traverse((object) => {
     if (!object.isMesh || object.userData.isGroundSunRay) return;
     const materials = Array.isArray(object.material)
@@ -3926,8 +5795,12 @@ function debugSnapshot() {
   const materials = [];
   const zones = [];
   const seenMaterials = new Set();
+  let modelMeshes = 0;
+  let modelTriangles = 0;
   model?.traverse((object) => {
     if (!object.isMesh) return;
+    modelMeshes++;
+    modelTriangles += (object.geometry?.index?.count ?? object.geometry?.attributes.position?.count ?? 0) / 3;
     const objectMaterials = Array.isArray(object.material)
       ? object.material
       : [object.material];
@@ -3936,6 +5809,7 @@ function debugSnapshot() {
       seenMaterials.add(material.uuid);
       materials.push({
         name: material.name,
+        type: material.type,
         color: material.color?.getHexString(),
         roughness: material.roughness,
         clearcoat: material.clearcoat,
@@ -3959,6 +5833,31 @@ function debugSnapshot() {
     });
   }
   return {
+    geometryOnly,
+    features: featurePanelEnabled ? { ...testFeatures } : null,
+    featureBusy,
+    quality: { ...mapQuality, pixelRatio: renderer.getPixelRatio(),
+      drawingBufferSize: [renderer.domElement.width, renderer.domElement.height],
+      antialiasPass: mapAntialias?.snapshot() ?? null },
+    windows: {
+      mode: windowPresetGroups.size === 0 ? 'off'
+        : windowGlowLights.length > 0 ? 'full' : 'basic',
+      groups: windowPresetGroups.size,
+      presets: [...windowPresetGroups.values()].reduce((sum, group) => sum + group.length, 0),
+      litPresets: [...windowPresetGroups.values()].flat().filter(preset => preset.node.visible &&
+        preset.materialStates.some(state => state.supportsEmission &&
+          state.material.emissiveIntensity > 0 && state.material.emissive.getHex() !== 0)).length,
+      pointLights: windowGlowLights.length,
+      activePointLights: windowGlowLights.filter(light => light.visible && light.intensity > 0).length,
+      pointLightShadows: windowGlowLights.filter(light => light.castShadow).length,
+    },
+    reflectionEnvironmentInstalled: reflectionEnvironment !== null,
+    shadowsAllocated: keyLight?.shadow.map != null,
+    basicLightingTest,
+    testStage: geometryOnly ? (basicLightingTest ? 'basic-lighting' : 'raw') : 'full',
+    modelMeshes,
+    modelTriangles,
+    postProcessingAllocated: effectComposer !== null || mobileBloom !== null,
     localTimeMinutes: config?.localTimeMinutes,
     effectiveLocalTimeMinutes: localTimeMinutes(),
     previewLocalTimeMinutes,
@@ -3977,6 +5876,36 @@ function debugSnapshot() {
       amount: nightSkyAmount(),
       visible: nightSkyPoints?.visible ?? false,
     },
+    middaySky: middaySkyMesh ? {
+      visible: middaySkyMesh.visible,
+      position: middaySkyMesh.position.toArray(),
+      rotation: middaySkyMesh.rotation.toArray(),
+      textureSize: [middaySkyMesh.material.map.image.width, middaySkyMesh.material.map.image.height],
+      textureId: middaySkyMesh.material.map.uuid,
+      triangles: middaySkyMesh.geometry.index.count / 3,
+      cloudCount: middaySkyMesh.userData.cloudDirections.length,
+      cloudSizes: middaySkyMesh.userData.cloudSizes,
+      cloudProjections: middaySkyMesh.userData.cloudDirections.map(direction =>
+        camera.position.clone().addScaledVector(direction, 1900).project(camera).toArray()),
+    } : null,
+    sunsetSky: sunsetSkyMesh ? {
+      visible: sunsetSkyMesh.visible,
+      position: sunsetSkyMesh.position.toArray(),
+      rotation: sunsetSkyMesh.rotation.toArray(),
+      textureId: sunsetSkyMesh.material.map.uuid,
+      cloudCount: sunsetSkyMesh.userData.cloudDirections.length,
+      cloudProjections: sunsetSkyMesh.userData.cloudDirections.map(direction =>
+        camera.position.clone().addScaledVector(direction, 1900).project(camera).toArray()),
+    } : null,
+    morningSky: morningSkyMesh ? {
+      visible: morningSkyMesh.visible,
+      textureId: morningSkyMesh.material.map.uuid,
+      cloudCount: morningSkyMesh.userData.cloudDirections.length,
+      position: morningSkyMesh.position.toArray(),
+      rotation: morningSkyMesh.rotation.toArray(),
+      cloudProjections: morningSkyMesh.userData.cloudDirections.map(direction =>
+        camera.position.clone().addScaledVector(direction, 1900).project(camera).toArray()),
+    } : null,
     nightCinema: nightCinema?.stats(),
     toneMapping: rendererTuning.toneMapping,
     exposure: renderer.toneMappingExposure,
@@ -3986,17 +5915,67 @@ function debugSnapshot() {
           strength: bloomPass.strength,
           radius: bloomPass.radius,
           threshold: bloomPass.threshold,
+          ...mobileBloom?.snapshot(),
         }
       : null,
     cameraPosition: camera.position.toArray(),
+    viewMode: mapViewMode,
+    cameraProjection: camera.isOrthographicCamera ? 'orthographic' : 'perspective',
+    cameraProjectionMatrix: camera.projectionMatrix.toArray(),
+    cameraMatrixWorld: camera.matrixWorld.toArray(),
+    polarLimits: [controls.minPolarAngle, controls.maxPolarAngle],
+    cameraZoom: camera.zoom,
+    viewTransition: viewTransition ? { mode: viewTransition.mode } : null,
+    navigationReturning: navigationSpring !== null,
+    cameraAnimating: cameraTransitionActive(),
+    navigationError: navigationBounds && !viewTransition
+      ? constrainedNavigationTarget().distanceTo(controls.target) : 0,
+    zoomLimits: [controls.minZoom, controls.maxZoom],
     cameraTarget: controls.target.toArray(),
+    selection: {
+      active: selectionState !== null,
+      options: { ...selectionOptions },
+      zoneId: selectedZoneId,
+      objectFades: objectFades.size,
+      outline: selectionOutline.snapshot(),
+      outlineWidth: outlineMaterial.uniforms.outlineWidth.value,
+      selectedMeshes: selectedMeshes.length,
+      animatedMaterials: selectedMaterialStates.reduce(
+        (count, state) => count + state.materials.filter(
+          (entry) => entry.effectUniforms !== null,
+        ).length,
+        0,
+      ),
+      excludedWindowMaterials: selectedMaterialStates.reduce(
+        (count, state) => count + state.materials.filter(
+          (entry) => entry.effectUniforms === null,
+        ).length,
+        0,
+      ),
+    },
+    shadow: keyLight?.shadow
+      ? {
+          dynamicFit: lightingTuning.shadows?.dynamicFit === true,
+          camera: [
+            keyLight.shadow.camera.left,
+            keyLight.shadow.camera.right,
+            keyLight.shadow.camera.top,
+            keyLight.shadow.camera.bottom,
+            keyLight.shadow.camera.near,
+            keyLight.shadow.camera.far,
+          ],
+        }
+      : null,
     keyLight: keyLight
       ? {
           color: keyLight.color.getHexString(),
           intensity: keyLight.intensity,
+          castShadow: keyLight.castShadow,
           position: keyLight.position.toArray(),
         }
       : null,
+    ambientIntensity: ambientLight?.intensity ?? null,
+    hemisphereIntensity: hemisphereLight?.intensity ?? null,
     fillLight: fillLight
       ? {
           color: fillLight.color.getHexString(),
@@ -4014,9 +5993,7 @@ function debugAtmosphereDataUrl() {
 }
 
 function normalizedGraphicsProfile(value) {
-  return value === 'basic' || value === 'balanced' || value === 'cinematic'
-    ? value
-    : 'auto';
+  return 'basic';
 }
 
 function ensureGraphicsProfile(value) {
@@ -4071,7 +6048,8 @@ function configureNightLook(settings = {}) {
     hemisphere: [0, 0.6], fill: [0, 1], windows: [0, 4],
     reflections: [0, 3], wetness: [0, 1], textureDetail: [0, 2],
     grassBrightness: [0, 0.3], floorRoughness: [0.07, 1],
-    floorReflection: [0, 4], moonShafts: [0, 2], windowSpill: [0, 3],
+    floorReflection: [0, 4], moonShafts: [0, 2],
+    temperature: [-1, 1],
   };
   for (const [key, [min, max]] of Object.entries(limits)) {
     if (Number.isFinite(settings[key])) nightLook[key] = THREE.MathUtils.clamp(settings[key], min, max);
@@ -4083,8 +6061,27 @@ function configureNightLook(settings = {}) {
 }
 
 function visualTestSettings() {
+  const morningLook = effectiveMorningLook();
+  const profile = daylightProfileWithPreview(daylightProfile());
   return {
     ...nightLook, textures: texturesEnabled,
+    ...(isDayCustomization() ? {
+      exposure: profile.exposure, key: profile.key.intensity,
+      ambient: profile.ambient.intensity, hemisphere: profile.hemisphere.intensity,
+      fill: profile.fill.intensity, rays: profile.rays.opacity,
+      contrast: profile.grading.contrast, saturation: profile.grading.saturation,
+      shadowRadius: profile.shadowRadius, textures: morningLook.textures !== false,
+      sunHighlights: morningLook.sunHighlights ?? 1,
+      foliageStrength: morningLook.foliageStrength ?? 0,
+      textureDetail: morningLook.textureDetail ?? 1.65,
+      reflections: morningLook.reflections ?? rendererTuning.dawnSurface?.environmentScale ?? 8,
+      floorRoughness: morningLook.floorRoughness ?? rendererTuning.dawnSurface?.pavement?.roughness ?? 0.27,
+      wetness: morningLook.wetness ?? rendererTuning.dawnSurface?.pavement?.clearcoat ?? 0.65,
+    } : {}),
+    morning: isMorning(),
+    midday: isMidday(),
+    sunset: isSunset(),
+    temperature: activeColorTemperature(),
     resting: rendererTuning.maxPixelRatio,
     moving: rendererTuning.interactionPixelRatio,
     shadows: renderer.shadowMap.enabled ? keyLight?.shadow.mapSize.x ?? 0 : 0,
@@ -4097,14 +6094,123 @@ function visualTestSettings() {
 
 function resetNightLook() {
   Object.assign(nightLook, defaultNightLook);
-  texturesEnabled = true;
+  texturesEnabled = defaultNightLook.textures !== false;
   configureNightLook();
   setToneMapping(defaultToneMapping);
   configureBloom(defaultBloom);
   return visualTestSettings();
 }
 
+function configureSky(settings = {}, phase = isMorning() ? 'morning' : isSunset() ? 'sunset' : 'midday') {
+    // Preview de calibracao: gera de novo apenas quando os ajustes mudam,
+    // nunca nos gestos da camera. Libera a textura anterior antes de trocar.
+    const sunset = phase === 'sunset';
+    const morning = phase === 'morning';
+    const sky = rendererTuning[`${phase}Sky`] ??= {};
+    for (const key of ['zenithColor', 'horizonColor']) {
+      if (settings[key] !== undefined) sky[key] = cssColor(settings[key], sky[key]);
+    }
+    for (const [key, min, max] of [
+      ['resolution', 512, 1536], ['cloudCount', 0, 144],
+      ['cloudWidthMin', 0.015, 0.20], ['cloudWidthMax', 0.015, 0.20],
+      ['cloudHeightMin', 0.08, 0.50], ['cloudHeightMax', 0.08, 0.50],
+      ['horizonHaze', 1, 8],
+      ['patchStrength', 0, 2], ['cloudOpacity', 0, 1.5],
+      ['brightness', 0.3, 1.8], ['glowStrength', 0, 1.5], ['glowSize', 0.05, 0.4],
+      ['sunCoreStrength', 0, 4],
+    ]) {
+      if (Number.isFinite(settings[key])) {
+        const value = THREE.MathUtils.clamp(settings[key], min, max);
+        sky[key] = key === 'resolution' || key === 'cloudCount' ? Math.round(value) : value;
+      }
+    }
+    if (Number.isFinite(settings.seed)) sky.seed = settings.seed >>> 0;
+    const mesh = morning ? morningSkyMesh : sunset ? sunsetSkyMesh : middaySkyMesh;
+    if (mesh) {
+      scene.remove(mesh);
+      mesh.material.map.dispose();
+      mesh.material.dispose();
+      mesh.geometry.dispose();
+      if (morning) morningSkyMesh = null;
+      else if (sunset) sunsetSkyMesh = null;
+      else middaySkyMesh = null;
+    }
+    installMiddaySky({ sunset, morning });
+    updateAtmosphericBackground(activeDaylightProfile, { force: true });
+    updateNightSky();
+    requestRender();
+}
+
+function skySettings() {
+  const sunset = isSunset();
+  const morning = isMorning();
+  return {
+    brightness: 1, patchStrength: 1, cloudOpacity: 1, glowStrength: 1, glowSize: 0.22, sunCoreStrength: 0,
+    ...rendererTuning[morning ? 'morningSky' : sunset ? 'sunsetSky' : 'middaySky'],
+    morning, sunset, supported: morning || sunset || isMidday(), minutes: localTimeMinutes(),
+  };
+}
+
 window.whereIfMap = {
+  setEventMarkers,
+  navigateToMapLocation,
+  cancelEventNavigation(){mapEventNavigationRequest++;},
+  eventMarkersSnapshot:()=>eventMarkers.snapshot(),
+  skyPixelSamples() {
+    const mesh = isMorning() ? morningSkyMesh : isSunset() ? sunsetSkyMesh : middaySkyMesh;
+    if (!mesh) return null;
+    const canvas = mesh.material.map.image;
+    const context = canvas.getContext('2d');
+    const direction = new THREE.Vector3().fromArray(skySettings().sunDirection ?? [-0.78, 0.17, 0.62]);
+    const sunX = ((Math.atan2(direction.z, -direction.x) / (Math.PI * 2)) + 1) % 1;
+    const sample = (offset, y) => Array.from(context.getImageData(
+      Math.floor(((sunX + offset + 1) % 1) * canvas.width), Math.floor(y * canvas.height), 1, 1).data);
+    return { solar: sample(0, 0.52), solarLower: sample(0, 0.60), opposite: sample(0.5, 0.52) };
+  },
+  skySettings,
+  configureSky(settings = {}) {
+    if (!isDayCustomization()) return;
+    configureSky(settings);
+  },
+  resetSky() {
+    if (!isDayCustomization()) return;
+    const phase = isMorning() ? 'morning' : isSunset() ? 'sunset' : 'midday';
+    rendererTuning[`${phase}Sky`] = { ...savedSkySettings[phase] };
+    configureSky({}, phase);
+  },
+  configureMiddaySky(settings = {}) {
+    configureSky(settings, 'midday');
+  },
+  configureSunsetLook(settings = {}) {
+    Object.assign(sunsetLook, settings);
+    applyDaylightProfile();
+    requestRender();
+  },
+  resetSunsetLook() {
+    sunsetLook = { ...defaultSunsetLook };
+    applyDaylightProfile();
+    requestRender();
+  },
+  configureMiddayLook(settings = {}) {
+    Object.assign(middayLook, settings);
+    applyDaylightProfile();
+    requestRender();
+  },
+  resetMiddayLook() {
+    middayLook = { ...defaultMiddayLook };
+    applyDaylightProfile();
+    requestRender();
+  },
+  configureMorningLook(settings = {}) {
+    Object.assign(morningLook, settings);
+    applyDaylightProfile();
+    requestRender();
+  },
+  resetMorningLook() {
+    morningLook = {};
+    applyDaylightProfile();
+    requestRender();
+  },
   configureNightLook,
   visualTestSettings,
   resetNightLook,
@@ -4112,6 +6218,60 @@ window.whereIfMap = {
   clearDaylightPreview,
   clearPreviewTime,
   configure,
+  disposeViewer,
+  setVisible,
+  setRawMode,
+  setInteriorFloor,
+  interiorSnapshot() {
+    return { floorId: interiors?.current?.id ?? null, busy: interiorLoading,
+      exportedWindowPresetsVisible: exportedWindowPresetObjects.some(node=>node.visible),
+      spaceColors: interiors?.current?.spaces.map(space=>{
+        const colors=new Set();space.node.traverse(node=>{
+          if(!node.isMesh||node.userData.interiorSpace?.marker===node)return;
+          for(const material of Array.isArray(node.material)?node.material:[node.material])if(material.color)colors.add(material.color.getHexString());
+        });return {nodeName:space.nodeName,colors:[...colors]};
+      })??[],
+      activeFloorIds: interiors?.activeFloors.map(floor => floor.id) ?? [],
+      activeFloorBounds: interiors?.activeFloors.map(floor => ({
+        min: floor.bounds.min.toArray(), max: floor.bounds.max.toArray(),
+      })) ?? [],
+      campusVisible: model?.visible ?? false,
+      exteriorVisible: zoneNodes.get(config?.zones.find(
+        zone => zone.id === 'bloco-didatico')?.nodeName)?.visible ?? false,
+      windowPresetsVisible: [...windowPresetGroups.values()].some(group =>
+        group.some(preset => preset.node.visible)),
+      distance: camera.position.distanceTo(controls.target),
+      distanceLimits: [baseMinDistance, baseMaxDistance],
+      visibleSpaces: interiors?.current?.spaces.map(s => {
+        const center = s.bounds.getCenter(new THREE.Vector3());
+        center.y = s.bounds.min.y + 0.15;
+        const point = center.project(camera);
+        return { nodeName: s.nodeName, bounds: [s.bounds.min.toArray(), s.bounds.max.toArray()], x: (point.x + 1) * renderer.domElement.clientWidth / 2,
+          y: (1 - point.y) * renderer.domElement.clientHeight / 2 };
+      }) ?? [],
+      floors: [...(interiors?.floors.values() ?? [])].map(f => ({ id: f.id,
+        spaces: f.spaces.map(s => s.nodeName), gpuReady: f.gpuReady })),
+      selectedSpace: interiors?.selected?.nodeName ?? null };
+  },
+  setMapTestFeature,
+  setMapTestFeatures,
+  setMapQuality,
+  setInteriorEventSize,
+  setEventMarkerAutoLayout,
+  setMapPerformanceMode,
+  setSelectionOptions,
+  setInterfaceBlur,
+  setNavBlur,
+  mapTestSnapshot: () => ({ features: { ...testFeatures }, busy: featureBusy,
+    gesturePointers: cameraPointerIds.size, multiTouchGesture,
+    performanceModeEnabled,
+    selectionOptions: { ...selectionOptions },
+    interfaceBlurEnabled,
+    navBlurEnabled,
+    fps: document.getElementById('map-fps-counter')?.textContent }),
+  diagnosticsSnapshot,
+  beginModelTransfer,
+  appendModelChunk,
   configureAtmosphere,
   configureGroundRays,
   focusZone,
@@ -4133,7 +6293,9 @@ window.whereIfMap = {
   setLocalTimeMinutes,
   setPreviewCamera,
   setPreviewTimeMinutes,
+  setMapViewMode,
   rotateCameraBy,
+  selectZone,
 };
 if (window.__whereIfPendingConfig) {
   configure(window.__whereIfPendingConfig);
@@ -4142,23 +6304,37 @@ if (window.__whereIfPendingConfig) {
 renderer.domElement.addEventListener(
   'pointerdown',
   (event) => {
-    if (!event.isPrimary) {
+    if (viewTransition) return;
+    if(pendingMarkerPointer&&pendingMarkerPointer.event.pointerId!==event.pointerId)forwardPendingMarkerPointer();
+    cameraPointerIds.add(event.pointerId);
+    eventMarkers.setCameraGestureActive(true);
+    if (!event.isPrimary || cameraPointerIds.size > 1) {
       multiTouchGesture = true;
+      pointerStart = null;
       beginManualCameraGesture();
       return;
     }
     multiTouchGesture = false;
+    // Dismiss the open event fan now, but remember it for this gesture's up:
+    // the document listener otherwise closes it before selection can check.
+    const dismissedEventStack = eventMarkers.dismissOutsideTap(event.mapMarkerTarget??event.target);
+    // Pick the position the user actually touched, even between rapid room
+    // changes. No interior camera flight may move the target under that tap.
+    if (interiors?.current) {
+      beginManualCameraGesture();
+    }
     pointerStart = {
       pointerId: event.pointerId,
       x: event.clientX,
       y: event.clientY,
       at: performance.now(),
+      dismissedEventStack,
       maxDistance: 0,
       cameraPosition: camera.position.clone(),
       cameraTarget: controls.target.clone(),
     };
   },
-  { capture: true },
+  { capture: true, signal: viewerEvents.signal },
 );
 
 renderer.domElement.addEventListener(
@@ -4176,14 +6352,19 @@ renderer.domElement.addEventListener(
       beginManualCameraGesture();
     }
   },
-  { capture: true },
+  { capture: true, signal: viewerEvents.signal },
 );
 
 renderer.domElement.addEventListener(
   'pointerup',
   (event) => {
+    cameraPointerIds.delete(event.pointerId);
+    const gestureEnded = cameraPointerIds.size === 0;
     const start = pointerStart;
-    if (!start || event.pointerId !== start.pointerId) return;
+    if (!start || event.pointerId !== start.pointerId) {
+      if(gestureEnded){multiTouchGesture=false;eventMarkers.setCameraGestureActive(false);}
+      return;
+    }
     pointerStart = null;
 
     const distance = Math.max(
@@ -4192,7 +6373,7 @@ renderer.domElement.addEventListener(
     );
     const elapsed = performance.now() - start.at;
     if (
-      !multiTouchGesture &&
+      !multiTouchGesture && gestureEnded &&
       distance <= (selectionTuning.tapTolerance ?? 18) &&
       elapsed <= 600
     ) {
@@ -4202,7 +6383,8 @@ renderer.domElement.addEventListener(
       queueMicrotask(() => {
         suppressNextControlsEnd = false;
       });
-      const shouldPreserveCamera = selectAt(event.clientX, event.clientY);
+      const shouldPreserveCamera = start.dismissedEventStack ||
+        selectAt(event.clientX, event.clientY);
       if (shouldPreserveCamera) {
         preserveCameraAfterTap({
           position: start.cameraPosition,
@@ -4210,43 +6392,50 @@ renderer.domElement.addEventListener(
         });
       }
     }
-    multiTouchGesture = false;
+    if(gestureEnded){multiTouchGesture=false;eventMarkers.setCameraGestureActive(false);}
   },
-  { capture: true },
+  { capture: true, signal: viewerEvents.signal },
 );
 
 renderer.domElement.addEventListener(
   'pointercancel',
-  () => {
+  (event) => {
+    cameraPointerIds.delete(event.pointerId);
     pointerStart = null;
-    multiTouchGesture = false;
+    if(cameraPointerIds.size===0){multiTouchGesture=false;eventMarkers.setCameraGestureActive(false);}
   },
-  { capture: true },
+  { capture: true, signal: viewerEvents.signal },
 );
 
 function resize() {
+  if (viewerDisposed) return;
   const width = Math.max(1, document.documentElement.clientWidth);
   const height = Math.max(1, document.documentElement.clientHeight);
+  const ratio = budgetPixelRatio();
+  rendererTuning.maxPixelRatio = ratio;
+  rendererTuning.interactionPixelRatio = ratio;
+  if (Math.abs(renderer.getPixelRatio() - ratio) > 0.01) renderer.setPixelRatio(ratio);
   renderer.setSize(width, height, false);
   effectComposer?.setPixelRatio(renderer.getPixelRatio());
   effectComposer?.setSize(width, height);
+  mobileBloom?.setSize(width * renderer.getPixelRatio(), height * renderer.getPixelRatio());
+  mapAntialias?.resize();
   resizeAtmosphericBackground(width, height);
-  const drawingSize = renderer.getDrawingBufferSize(new THREE.Vector2());
-  selectionMaskTarget.setSize(drawingSize.x, drawingSize.y);
-  outlineMaterial.uniforms.texelSize.value.set(
-    1 / drawingSize.x,
-    1 / drawingSize.y,
-  );
   updateNightSkyRenderScale();
+  if (viewTransition) { requestRender(); return; }
   camera.aspect = width / height;
+  if (camera.isOrthographicCamera) {
+    camera.left = -topViewHalfHeight * camera.aspect;
+    camera.right = topViewHalfHeight * camera.aspect;
+    camera.top = topViewHalfHeight;
+    camera.bottom = -topViewHalfHeight;
+  }
   updatePerspectiveProjection(camera);
   requestRender();
 }
 
 function useInteractionResolution(active) {
-  const ratioLimit = active
-    ? rendererTuning.interactionPixelRatio ?? rendererTuning.maxPixelRatio
-    : rendererTuning.maxPixelRatio;
+  const ratioLimit = budgetPixelRatio();
   const ratio = THREE.MathUtils.clamp(
     Number(ratioLimit) || window.devicePixelRatio || 1,
     0.5,
@@ -4258,7 +6447,7 @@ function useInteractionResolution(active) {
 }
 
 function cameraTransitionActive() {
-  return resettingCamera !== null ||
+  return viewTransition !== null || resettingCamera !== null ||
     cameraFocus !== null ||
     navigationSpring !== null;
 }
@@ -4277,6 +6466,7 @@ function beginCameraTransitionResolution() {
 function scheduleRestingResolutionRestore(delay = 100) {
   cancelRestingResolutionRestore();
   if (controlsInteractionActive || cameraTransitionActive()) return;
+  if (Math.abs(renderer.getPixelRatio() - budgetPixelRatio()) < 0.01) return;
   resolutionRestoreTimer = setTimeout(() => {
     resolutionRestoreTimer = null;
     if (controlsInteractionActive || cameraTransitionActive()) return;
@@ -4327,6 +6517,106 @@ function setRestingRenderScale(value) {
   }
 }
 
+function setMapQuality(settings) {
+  const run = qualityApplyQueue.catch(() => {}).then(() => applyMapQuality(settings));
+  qualityApplyQueue = run;
+  return run;
+}
+
+function setInteriorEventSize(percent) {
+  if (viewerDisposed) return interiorEventSize;
+  interiorEventSize = eventMarkers.setInteriorSize(percent);
+  featurePanel?.updateInteriorEventSize(interiorEventSize);
+  persistRenderPreferences();
+  // Only DOM layout changed: do not redraw the 3D campus for slider input.
+  eventMarkers.update(camera, interiors?.current);
+  return interiorEventSize;
+}
+
+function setEventMarkerAutoLayout(enabled) {
+  if (viewerDisposed) return eventMarkerAutoLayout;
+  eventMarkerAutoLayout = eventMarkers.setAutoLayout(enabled);
+  featurePanel?.updateEventMarkerAutoLayout(eventMarkerAutoLayout);
+  persistRenderPreferences();
+  return eventMarkerAutoLayout;
+}
+
+function renderSettingsSnapshot() {
+  return { features: { ...testFeatures }, quality: { ...mapQuality },
+    selectionOptions: { ...selectionOptions }, interfaceBlurEnabled, navBlurEnabled };
+}
+
+function renderPresetForMode(enabled) {
+  const normal={features:normalizedMapFeatures(rendererTuning.approvedMapFeatures??{}),
+    quality:normalizedMapQuality(rendererTuning.approvedMapQuality),
+    selectionOptions:{...optimizedSelectionOptions},
+    interfaceBlurEnabled:rendererTuning.approvedInterfaceBlur??false,
+    navBlurEnabled:rendererTuning.approvedNavBlur??false};
+  if(!enabled) {
+    try {
+      const saved=readNormalRenderPreferences(normal);
+      if(typeof saved.interfaceBlurEnabled!=='boolean'||typeof saved.navBlurEnabled!=='boolean')return normal;
+      return {...saved,features:normalizedMapFeatures(saved.features),quality:normalizedMapQuality(saved.quality),
+        selectionOptions:normalizedSelectionOptions(saved.selectionOptions)};
+    }catch{return normal;}
+  }
+  const current=renderSettingsSnapshot();
+  if(!performanceModeEnabled&&!matchesPerformancePreset(current))saveNormalRenderPreferences(current);
+  return performanceMapPreset;
+}
+
+function setMapPerformanceMode(enabled) {
+  if(typeof enabled!=='boolean')return Promise.reject(new Error('Modo desempenho inválido.'));
+  const run=performanceModeQueue.catch(()=>{}).then(async()=>{
+    while(!viewerDisposed&&(modelLoading||interiorLoading))await yieldLoadingWork();
+    if(viewerDisposed||performanceModeEnabled===enabled)return performanceModeEnabled;
+    const preset=renderPresetForMode(enabled);
+    performanceModeApplying=true;
+    try {
+      await setMapTestFeatures(preset.features);
+      setSelectionOptions(preset.selectionOptions);
+      await setMapQuality(preset.quality);
+      setInterfaceBlur(preset.interfaceBlurEnabled);setNavBlur(preset.navBlurEnabled);
+      performanceModeEnabled=enabled;
+      persistRenderPreferences();
+      send('performanceMode',{enabled,source:'request'});
+      return enabled;
+    }finally{performanceModeApplying=false;}
+  });
+  performanceModeQueue=run;
+  return run;
+}
+
+function persistRenderPreferences() {
+  if (!featurePanelEnabled) return;
+  const settings=renderSettingsSnapshot();
+  if(performanceModeEnabled&&!performanceModeApplying&&!matchesPerformancePreset(settings)) {
+    performanceModeEnabled=false;
+    send('performanceMode',{enabled:false,source:'customization'});
+  }
+  saveRenderPreferences({ ...settings, performanceModeEnabled, interiorEventSize, eventMarkerAutoLayout });
+}
+
+async function applyMapQuality(settings) {
+  if (viewerDisposed) return { ...mapQuality };
+  const next = normalizedMapQuality(settings, mapQuality);
+  if (next.antialias !== mapQuality.antialias) {
+    if (next.antialias === 'off') { mapAntialias?.dispose(); mapAntialias = null; }
+    else {
+      mapAntialias ??= createMapAntialias(renderer, next.antialias);
+      mapAntialias.setLevel(next.antialias);
+      await mapAntialias.warmup();
+      if (viewerDisposed) return { ...mapQuality };
+    }
+  }
+  mapQuality = next;
+  persistRenderPreferences();
+  resize();
+  featurePanel?.updateQuality(mapQuality);
+  requestRender();
+  return { ...mapQuality };
+}
+
 function setInteractionRenderScale(value) {
   const scale = THREE.MathUtils.clamp(Number(value) || 1, 0.5, 4);
   rendererTuning.interactionPixelRatio = scale;
@@ -4371,20 +6661,53 @@ function setAtmosphereResolution(value) {
 }
 
 function requestRender() {
+  if (viewerDisposed || viewerSuspended || document.hidden) return;
   if (animationFrame !== null) return;
   animationFrame = requestAnimationFrame(renderFrame);
 }
 
 function renderFrame(time) {
+  try {
+    renderMapFrame(time);
+  } catch (error) {
+    setVisible(false);
+    send('error', { message: error instanceof Error ? error.message : String(error) });
+  }
+}
+
+function renderMapFrame(time) {
   animationFrame = null;
+  if (viewerDisposed || viewerSuspended || document.hidden || (modelLoading && !modelGpuReady)) return;
+  if (interiorLoading && ![...objectFades].some(fade =>
+      Number.isFinite(fade.startedAt))) return;
+  const diagnosticsStartedAt = performance.now();
   let keepAnimating = false;
   let cameraIsTransitioning = false;
 
-  if (resettingCamera) {
+  if (viewTransition) {
+    cameraIsTransitioning = true;
+    const transition = viewTransition;
+    const progress = THREE.MathUtils.clamp((time - transition.startedAt) / transition.duration, 0, 1);
+    const eased = progress * progress * progress * (progress * (progress * 6 - 15) + 10);
+    camera.position.lerpVectors(transition.fromPosition, transition.toPosition, eased);
+    camera.quaternion.slerpQuaternions(transition.fromQuaternion, transition.toQuaternion, eased);
+    controls.target.lerpVectors(transition.fromTarget, transition.toTarget, eased);
+    for (let i = 0; i < 16; i++) camera.projectionMatrix.elements[i] =
+      THREE.MathUtils.lerp(transition.fromProjection.elements[i], transition.toProjection.elements[i], eased);
+    camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+    if (progress >= 1) {
+      viewTransition = null;
+      activateMapCamera(transition.mode);
+      camera.zoom = transition.zoom;
+      camera.updateProjectionMatrix();
+      finishCameraTransition(transition.toPosition, transition.toTarget);
+      startNavigationReturn();
+    } else keepAnimating = true;
+  } else if (resettingCamera) {
     cameraIsTransitioning = true;
     const elapsed = (time - resettingCamera.startedAt) / resettingCamera.duration;
     const progress = Math.min(1, Math.max(0, elapsed));
-    const eased = 1 - Math.pow(1 - progress, 3);
+    const eased = progress * progress * progress * (progress * (progress * 6 - 15) + 10);
     camera.position.lerpVectors(
       resettingCamera.fromPosition,
       initialCameraPosition,
@@ -4409,9 +6732,7 @@ function renderFrame(time) {
       0,
       1,
     );
-    const eased = progress < 0.5
-      ? 4 * progress * progress * progress
-      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+    const eased = progress * progress * progress * (progress * (progress * 6 - 15) + 10);
     camera.position.lerpVectors(
       cameraFocus.fromPosition,
       cameraFocus.toPosition,
@@ -4450,6 +6771,10 @@ function renderFrame(time) {
     const bounce = navigationSpring.bounce ?? 0;
     const eased = 1 + (bounce + 1) * shifted * shifted * shifted +
       bounce * shifted * shifted;
+    if (navigationSpring.fromZoom !== undefined) {
+      camera.zoom = THREE.MathUtils.lerp(navigationSpring.fromZoom, navigationSpring.toZoom, eased);
+      camera.updateProjectionMatrix();
+    }
     camera.position.lerpVectors(
       navigationSpring.fromPosition,
       navigationSpring.toPosition,
@@ -4462,6 +6787,13 @@ function renderFrame(time) {
     );
     if (progress >= 1) {
       const completedSpring = navigationSpring;
+      if (completedSpring.toZoom !== undefined) {
+        camera.zoom = completedSpring.toZoom;
+        camera.updateProjectionMatrix();
+        const limits = topViewZoomLimits();
+        controls.minZoom = limits.min;
+        controls.maxZoom = limits.max;
+      }
       finishCameraTransition(
         completedSpring.toPosition,
         completedSpring.toTarget,
@@ -4475,9 +6807,11 @@ function renderFrame(time) {
   }
 
   const selectionAnimating = updateSelectionEffects(time);
-  keepAnimating = selectionAnimating || keepAnimating;
+  keepAnimating = updateObjectFades(time) || selectionAnimating || keepAnimating;
 
-  if (cameraIsTransitioning) {
+  if (viewTransition) {
+    camera.updateMatrixWorld();
+  } else if (cameraIsTransitioning) {
     camera.lookAt(controls.target);
   } else {
     controls.update();
@@ -4488,16 +6822,42 @@ function renderFrame(time) {
     });
     applyDistanceConstraint({ elastic: controlsInteractionActive });
   }
-  updateAtmosphericBackground(activeDaylightProfile);
+  if (!geometryOnly && !rawModeEnabled && !interiors?.current) updateAtmosphericBackground(activeDaylightProfile);
   if (nightSkyPoints) nightSkyPoints.position.copy(camera.position);
-  updateDaylightBloom(activeDaylightProfile);
-  updateDirectSunExposure(activeDaylightProfile);
-  if (!cameraIsTransitioning) {
-    updateDirectionalShadowForView();
-  } else if (!keepAnimating) {
-    updateDirectionalShadowForView({ force: true });
+  if (middaySkyMesh) middaySkyMesh.position.copy(camera.position);
+  if (sunsetSkyMesh) sunsetSkyMesh.position.copy(camera.position);
+  if (morningSkyMesh) morningSkyMesh.position.copy(camera.position);
+  if (!geometryOnly && !rawModeEnabled && !interiors?.current) {
+    updateDaylightBloom(activeDaylightProfile);
+    updateDirectSunExposure(activeDaylightProfile);
+    if (!cameraIsTransitioning) {
+      updateDirectionalShadowForView();
+    } else if (!keepAnimating) {
+      updateDirectionalShadowForView({ force: true });
+    }
   }
-  renderSceneWithSelection();
+  if (featurePanelEnabled && testFeatures.bloom) {
+    updateDaylightBloom(activeDaylightProfile);
+    if (bloomPass) bloomPass.enabled = true;
+  }
+  const measureGpu = diagnosticsEnabled && model && diagnosticsGpuExtension && !diagnosticsGpuQuery;
+  const gl = renderer.getContext();
+  if (measureGpu) {
+    diagnosticsGpuQuery = gl.createQuery();
+    gl.beginQuery(diagnosticsGpuExtension.TIME_ELAPSED_EXT, diagnosticsGpuQuery);
+  }
+  if (diagnosticsEnabled) renderer.info.reset();
+  try {
+    renderSceneWithSelection();
+    eventMarkers.update(camera,interiors?.current,{moving:cameraIsTransitioning||controlsInteractionActive});
+    fpsCounter.recordFrame();
+  } finally {
+    if (measureGpu) gl.endQuery(diagnosticsGpuExtension.TIME_ELAPSED_EXT);
+  }
+  if (diagnosticsEnabled) diagnosticsRenderMaxMs = Math.max(
+    diagnosticsRenderMaxMs, performance.now() - diagnosticsStartedAt);
+  // A slow CPU submission does not establish a GPU fill-rate bottleneck.
+  // Reducing DPR on that signal made the image blurry without fixing stalls.
   if (controlsInteractionActive) {
     interactionFrameCount += 1;
     sendPerformanceSample(time);
@@ -4513,6 +6873,7 @@ function renderFrame(time) {
 
 function updateSelectionEffects(time) {
   if (!selectionState) return false;
+  if (selectionState.effectsSettled && selectionState.leavingAt === null) return false;
   const entranceDuration = selectionTuning.entranceDuration ?? 360;
   const exitDuration = selectionTuning.exitDuration ?? 190;
   const targetOpacity = selectionTuning.restingOpacity ?? 0.92;
@@ -4525,7 +6886,7 @@ function updateSelectionEffects(time) {
     );
     const remaining = 1 - progress * progress;
     outlineMaterial.uniforms.outlineOpacity.value = targetOpacity * remaining;
-    updateSelectedMaterialGradient(0, 0);
+    updateSelectedMaterialGradient(0, 0, (selectionState.restingLight ?? 0) * remaining);
     if (progress >= 1) {
       releaseSelectedMeshes();
       selectionState = null;
@@ -4534,11 +6895,13 @@ function updateSelectionEffects(time) {
     return true;
   }
 
-  const progress = THREE.MathUtils.clamp(
+  const animated = selectionOptions.pulse ||
+    (selectionOptions.outline && selectionOptions.outlineAnimation);
+  const progress = animated ? THREE.MathUtils.clamp(
     (time - selectionState.startedAt) / entranceDuration,
     0,
     1,
-  );
+  ) : 1;
   const eased = 1 - Math.pow(1 - progress, 3);
   const pulse = Math.sin(progress * Math.PI);
   const colorPhase = 0.5 - 0.5 * Math.cos(progress * Math.PI * 2);
@@ -4548,33 +6911,79 @@ function updateSelectionEffects(time) {
     colorPhase,
   );
   updateSelectedMaterialGradient(
-    (selectionTuning.flashIntensity ?? 0.48) * Math.pow(pulse, 0.82),
+    selectionOptions.pulse ? (selectionTuning.flashIntensity ?? 0.48) * Math.pow(pulse, 0.82) : 0,
     progress * Math.PI * 2 * (selectionTuning.flashCycles ?? 1.15),
+    (selectionState.restingLight ?? 0) * eased,
   );
+  const outlineEase = selectionOptions.outlineAnimation ? eased : 1;
   outlineMaterial.uniforms.outlineOpacity.value = THREE.MathUtils.clamp(
-    targetOpacity * eased + pulse * 0.12,
+    targetOpacity * outlineEase + (selectionOptions.outlineAnimation ? pulse * 0.12 : 0),
     0,
     1,
   );
   outlineMaterial.uniforms.outlineWidth.value = THREE.MathUtils.lerp(
-    selectionTuning.initialOutlineWidth ?? 7,
-    selectionTuning.outlineWidth ?? 3.5,
-    eased,
+    selectionState.room ? 4.5 : selectionTuning.initialOutlineWidth ?? 7,
+    selectionState.room ? 2.8 : selectionTuning.outlineWidth ?? 3.5,
+    outlineEase,
   );
   outlineMaterial.uniforms.outlineColor.value.lerpColors(
     selectionState.startColor,
-    selectionState.effectColor,
-    eased,
+    selectionOptions.outlineAnimation ? selectionState.effectColor : selectionState.accentColor,
+    outlineEase,
   );
+  if (progress >= 1) {
+    selectionState.effectsSettled = true;
+    // Exterior blocks need the gradient only during the pulse, not forever.
+    // Rooms retain their steady colored light, with the pulse branch disabled.
+    if (!selectionState.room || !selectionOptions.roomGlow) releaseSelectedMaterials();
+  }
   return progress < 1;
 }
 
 function renderSceneWithSelection() {
+  const useComposer = effectComposer &&
+    (featurePanelEnabled ? testFeatures.bloom || testFeatures.grading
+      : bloomPass?.enabled || isDayCustomization() || activeColorTemperature() !== 0);
+  interiors?.setExposure(useComposer ? renderer.toneMappingExposure : 1);
   const originalLayerMask = camera.layers.mask;
   camera.layers.set(0);
   renderer.setRenderTarget(null);
   renderer.autoClear = true;
-  if (effectComposer && bloomPass?.enabled) {
+  if (rawModeEnabled && !featurePanelEnabled) {
+    const hidden = [];
+    for (const child of scene.children) {
+      if (child !== model && child.visible && !(basicLightingTest && child.isLight)) {
+        hidden.push(child);
+        child.visible = false;
+      }
+    }
+    const background = scene.background;
+    const fog = scene.fog;
+    const shadows = renderer.shadowMap.enabled;
+    const toneMapping = renderer.toneMapping;
+    const exposure = renderer.toneMappingExposure;
+    try {
+      scene.background = rawBackground;
+      scene.fog = null;
+      renderer.shadowMap.enabled = false;
+      renderer.toneMapping = THREE.NoToneMapping;
+      renderer.toneMappingExposure = 1;
+      renderer.render(scene, camera);
+    } finally {
+      scene.background = background;
+      scene.fog = fog;
+      renderer.shadowMap.enabled = shadows;
+      renderer.toneMapping = toneMapping;
+      renderer.toneMappingExposure = exposure;
+      for (const child of hidden) child.visible = true;
+      camera.layers.mask = originalLayerMask;
+    }
+    return;
+  }
+  if (mobileBloom && testFeatures.bloom && mobileBloom.enabled) {
+    mobileBloom.render(scene, camera, objectFades.size > 0 ||
+      Boolean(selectionState && !selectionState.effectsSettled));
+  } else if (useComposer) {
     effectComposer.render();
   } else {
     renderer.render(scene, camera);
@@ -4583,36 +6992,25 @@ function renderSceneWithSelection() {
   if (model && renderer.shadowMap.autoUpdate) {
     renderer.shadowMap.autoUpdate = false;
   }
-  if (!selectionState || selectedMeshes.length === 0) {
-    camera.layers.mask = originalLayerMask;
-    return;
-  }
-
-  const originalBackground = scene.background;
-  const originalOverrideMaterial = scene.overrideMaterial;
-  scene.background = null;
-  scene.overrideMaterial = selectionMaskMaterial;
-  camera.layers.set(1);
-
-  renderer.setRenderTarget(selectionMaskTarget);
-  renderer.setClearColor(0x000000, 1);
-  renderer.clear(true, true, true);
-  renderer.render(scene, camera);
-
-  scene.background = originalBackground;
-  scene.overrideMaterial = originalOverrideMaterial;
   camera.layers.mask = originalLayerMask;
-  renderer.setRenderTarget(null);
-  renderer.autoClear = false;
-  renderer.render(outlineScene, outlineCamera);
-  renderer.autoClear = true;
+  if (selectionOptions.outline && selectionState && selectedMeshes.length) selectionOutline.draw(camera);
+  mapAntialias?.draw();
 }
 
 installLighting();
 installPostProcessing();
 resize();
-window.addEventListener('resize', resize);
+window.addEventListener('resize', resize, { signal: viewerEvents.signal });
+document.addEventListener('visibilitychange', () => setVisible(!document.hidden), { signal: viewerEvents.signal });
+renderer.domElement.addEventListener('webglcontextlost', event => {
+  event.preventDefault();
+  if (viewerDisposed) return;
+  setVisible(false);
+  send('error', { message: 'A GPU interrompeu o mapa. Abra a aba novamente para tentar recuperar.' });
+}, { signal: viewerEvents.signal });
 controls.addEventListener('start', () => {
+  if (viewTransition) return;
+  enableElasticDistanceBounds();
   controlsInteractionActive = true;
   interactionStartedAt = performance.now();
   interactionFrameCount = 0;
@@ -4629,7 +7027,7 @@ controls.addEventListener('change', () => {
 controls.addEventListener('end', () => {
   sendPerformanceSample(performance.now(), { force: true });
   controlsInteractionActive = false;
-  if (graphicsProfile === 'basic' || graphicsProfile === 'balanced') {
+  if (!geometryOnly && !interiors?.current && (graphicsProfile === 'basic' || graphicsProfile === 'balanced')) {
     updateAtmosphericBackground(activeDaylightProfile, { force: true });
   }
   shadowUpdateResumeAt = performance.now() + 140;

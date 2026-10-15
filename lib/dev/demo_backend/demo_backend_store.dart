@@ -14,10 +14,6 @@ import 'package:autth_injustice_app/institution/domain/institution_package.dart'
 import 'package:autth_injustice_app/user_management/domain/models/user_directory_entry.dart';
 import 'package:autth_injustice_app/user_management/domain/models/managed_user_details.dart';
 
-/// Backend local compartilhado pelas features durante o desenvolvimento.
-///
-/// Ele concentra somente estado e regras de integração. As telas continuam
-/// acessando seus próprios serviços, repositórios, use cases e viewmodels.
 class DemoBackendStore {
   final InstitutionPackage _institutionPackage;
 
@@ -26,10 +22,11 @@ class DemoBackendStore {
   }) : _institutionPackage = institutionPackage;
 
   final Account currentUser = DemoBackendSeed.studentAccount;
-  final List<DemoEvent> _featuredEvents =
-      List.of(DemoBackendSeed.featuredEvents);
+  late final List<DemoEvent> _featuredEvents =
+      DemoBackendSeed.buildFeaturedEvents(_institutionPackage);
 
-  final List<DemoEvent> _futureEvents = List.of(DemoBackendSeed.futureEvents);
+  late final List<DemoEvent> _futureEvents =
+      DemoBackendSeed.buildFutureEvents(_institutionPackage);
   final Set<String> _eventsInPersonalHistory = {};
 
   List<ComplementaryHoursRecord> _records =

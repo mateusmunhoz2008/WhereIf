@@ -1,67 +1,97 @@
 import 'package:autth_injustice_app/authorization/domain/models/account_role.dart';
+import 'package:autth_injustice_app/core/failure/failure.dart';
+import 'package:autth_injustice_app/user_management/domain/facades/i_user_management_use_case_facade.dart';
 import 'package:autth_injustice_app/user_management/presentation/commands/user_management_commands.dart';
 
 import 'user_details_state_viewmodel.dart';
 
 class UserDetailsCommands {
   final UserDetailsState state;
-  final LoadManagedUserDetailsCommand _loadDetailsCommand;
-  final UpdateManagedUserRoleCommand _updateRoleCommand;
+  final IUserManagementUseCaseFacade _facade;
+  int _generation = 0;
+  bool _disposed = false;
+  String? _userId;
 
-  const UserDetailsCommands({
+  UserDetailsCommands({
     required this.state,
-    required LoadManagedUserDetailsCommand loadDetailsCommand,
-    required UpdateManagedUserRoleCommand updateRoleCommand,
-  })  : _loadDetailsCommand = loadDetailsCommand,
-        _updateRoleCommand = updateRoleCommand;
+    required IUserManagementUseCaseFacade facade,
+  }) : _facade = facade;
+
+  void resetForSession() {
+    _generation++;
+    _userId = null;
+    state.reset();
+  }
+
+  void dispose() {
+    _disposed = true;
+    resetForSession();
+  }
+
+  bool _isCurrent(int generation) => !_disposed && generation == _generation;
+
+  void _showFailure(Failure failure) {
+    if (failure is ForbiddenFailure || failure is UnauthenticatedFailure) {
+      resetForSession();
+    }
+    state.showError(failure.msg);
+  }
 
   Future<void> load(String userId) async {
-    if (state.loading.value) return;
+    if (_disposed || state.loading.value && _userId == userId) return;
+
+    resetForSession();
+    _userId = userId;
+    final generation = _generation;
 
     state
       ..setLoading(true)
       ..clearError();
     try {
-      final result = await _loadDetailsCommand.executeWith((userId: userId));
+      final result = await LoadManagedUserDetailsCommand(_facade)
+          .executeWith((userId: userId));
+      if (!_isCurrent(generation)) return;
       result.fold(
         onSuccess: state.setDetails,
-        onFailure: (failure) => state.showError(failure.msg),
+        onFailure: _showFailure,
       );
     } catch (_) {
-      state.showError('userDetailsLoadError');
+      if (_isCurrent(generation)) state.showError('userDetailsLoadError');
     } finally {
-      state.setLoading(false);
+      if (_isCurrent(generation)) state.setLoading(false);
     }
   }
 
   Future<bool> updateRole(AccountRole role) async {
     final details = state.details.value;
-    if (details == null || state.updatingRole.value) return false;
+    if (_disposed || details == null || state.updatingRole.value) return false;
     if (details.user.account.role == role) return true;
 
     state
       ..setUpdatingRole(role)
       ..clearError();
+    final generation = _generation;
     try {
-      final result = await _updateRoleCommand.executeWith((
+      final result = await UpdateManagedUserRoleCommand(_facade).executeWith((
         userId: details.user.id,
         role: role,
       ));
+      if (!_isCurrent(generation)) return false;
       return result.fold(
         onSuccess: (user) {
           state.updateUser(user);
           return true;
         },
         onFailure: (failure) {
-          state.showError(failure.msg);
+          _showFailure(failure);
           return false;
         },
       );
     } catch (_) {
-      state.showError('userDetailsRoleChangeError');
+      if (_isCurrent(generation)) state.showError('userDetailsRoleChangeError');
       return false;
     } finally {
-      state.setUpdatingRole(null);
+      if (_isCurrent(generation)) state.setUpdatingRole(null);
     }
   }
 }

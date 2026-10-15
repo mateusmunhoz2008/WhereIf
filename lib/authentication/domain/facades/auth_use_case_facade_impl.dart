@@ -13,10 +13,10 @@ class AuthUseCaseFacadeImpl implements IAuthUseCaseFacade {
     required ISignInWithGoogleUseCase signInWithGoogleUseCase,
     required ISignOutUseCase signOutUseCase,
     required ISignUpUseCase signUpUseCase,
-  }) : _signInUseCase = signInUseCase,
-       _signInWithGoogleUseCase = signInWithGoogleUseCase,
-       _signOutUseCase = signOutUseCase,
-       _signUpUseCase = signUpUseCase;
+  })  : _signInUseCase = signInUseCase,
+        _signInWithGoogleUseCase = signInWithGoogleUseCase,
+        _signOutUseCase = signOutUseCase,
+        _signUpUseCase = signUpUseCase;
 
   @override
   Future<AuthSessionResult> signInUseCase(SignInParams params) {

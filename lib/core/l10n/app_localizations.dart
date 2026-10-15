@@ -352,6 +352,18 @@ abstract class AppLocalizations {
   /// **'Enter'**
   String get loginButton;
 
+  /// No description provided for @loginCreateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get loginCreateAccount;
+
+  /// No description provided for @loginTogglePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Show or hide password'**
+  String get loginTogglePassword;
+
   /// No description provided for @dontHaveAccount.
   ///
   /// In en, this message translates to:
@@ -2362,6 +2374,24 @@ abstract class AppLocalizations {
   /// **'Search the map'**
   String get mapSearch;
 
+  /// No description provided for @mapSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Events and places'**
+  String get mapSearchHint;
+
+  /// No description provided for @mapSearchClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close search'**
+  String get mapSearchClose;
+
+  /// No description provided for @mapSearchEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found.'**
+  String get mapSearchEmpty;
+
   /// No description provided for @mapSearchComingSoon.
   ///
   /// In en, this message translates to:
@@ -2374,23 +2404,287 @@ abstract class AppLocalizations {
   /// **'Drag to rotate the map'**
   String get mapRotate;
 
-  /// No description provided for @settingsMapGraphics.
+  /// No description provided for @mapRawMode.
   ///
   /// In en, this message translates to:
-  /// **'Map graphics'**
-  String get settingsMapGraphics;
+  /// **'Judgment Day'**
+  String get mapRawMode;
 
-  /// No description provided for @settingsMapGraphicsLight.
+  /// No description provided for @mapRawModeOn.
   ///
   /// In en, this message translates to:
-  /// **'Light'**
-  String get settingsMapGraphicsLight;
+  /// **'Show the raw map without lighting or effects'**
+  String get mapRawModeOn;
 
-  /// No description provided for @settingsMapGraphicsComplete.
+  /// No description provided for @mapRawModeOff.
   ///
   /// In en, this message translates to:
-  /// **'Complete'**
-  String get settingsMapGraphicsComplete;
+  /// **'Restore the normal map appearance'**
+  String get mapRawModeOff;
+
+  /// No description provided for @settingsMapClimate.
+  ///
+  /// In en, this message translates to:
+  /// **'Climate'**
+  String get settingsMapClimate;
+
+  /// No description provided for @settingsMapPerformanceMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance mode'**
+  String get settingsMapPerformanceMode;
+
+  /// No description provided for @settingsMapClimateAutomatic.
+  ///
+  /// In en, this message translates to:
+  /// **'Dynamic'**
+  String get settingsMapClimateAutomatic;
+
+  /// No description provided for @settingsMapClimateMorning.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning'**
+  String get settingsMapClimateMorning;
+
+  /// No description provided for @settingsMapClimateMidday.
+  ///
+  /// In en, this message translates to:
+  /// **'Afternoon'**
+  String get settingsMapClimateMidday;
+
+  /// No description provided for @settingsMapClimateSunset.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunset'**
+  String get settingsMapClimateSunset;
+
+  /// No description provided for @settingsMapClimateNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Night'**
+  String get settingsMapClimateNight;
+
+  /// No description provided for @eventDetailsReadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Read more'**
+  String get eventDetailsReadMore;
+
+  /// No description provided for @connectionUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection unavailable or unstable. Showing saved data. Swipe to dismiss.'**
+  String get connectionUnavailable;
+
+  /// No description provided for @networkWritePendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this device'**
+  String get networkWritePendingTitle;
+
+  /// No description provided for @networkWritePending.
+  ///
+  /// In en, this message translates to:
+  /// **'The upload has not been confirmed yet. Your data is saved on this device and will sync when connectivity returns and your account is authorized. You do not need to submit again.'**
+  String get networkWritePending;
+
+  /// No description provided for @networkWriteUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'The upload could not be confirmed. Check the list after reconnecting before trying again.'**
+  String get networkWriteUnconfirmed;
+
+  /// No description provided for @networkSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'A pending change could not be synced. Check your events and permissions.'**
+  String get networkSyncFailed;
+
+  /// No description provided for @connectionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm connectivity. Try again when your internet connection is working.'**
+  String get connectionRequired;
+
+  /// No description provided for @onboardingSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboardingSkip;
+
+  /// No description provided for @onboardingNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboardingNext;
+
+  /// No description provided for @onboardingFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s go'**
+  String get onboardingFinish;
+
+  /// No description provided for @onboardingMapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Right this way.'**
+  String get onboardingMapTitle;
+
+  /// No description provided for @onboardingMapBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Find buildings, rooms and your next event. Whether you study here or are just visiting.'**
+  String get onboardingMapBody;
+
+  /// No description provided for @onboardingAgendaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Good to know ahead.'**
+  String get onboardingAgendaTitle;
+
+  /// No description provided for @onboardingAgendaBody.
+  ///
+  /// In en, this message translates to:
+  /// **'See what\'s coming up on campus and follow announcements. A little help planning your day.'**
+  String get onboardingAgendaBody;
+
+  /// No description provided for @onboardingHoursTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The hours add up.'**
+  String get onboardingHoursTitle;
+
+  /// No description provided for @onboardingHoursBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Log your activities and get an estimate of the complementary hours you\'ve already completed.'**
+  String get onboardingHoursBody;
+
+  /// No description provided for @onboardingHoursDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'A personal tracker, not an official certificate.'**
+  String get onboardingHoursDisclaimer;
+
+  /// No description provided for @onboardingExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample event'**
+  String get onboardingExample;
+
+  /// No description provided for @onboardingExampleEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Project fair'**
+  String get onboardingExampleEvent;
+
+  /// No description provided for @onboardingExampleLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Teaching Building'**
+  String get onboardingExampleLocation;
+
+  /// No description provided for @onboardingNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Something\'s coming up.'**
+  String get onboardingNotice;
+
+  /// No description provided for @onboardingHoursExample.
+  ///
+  /// In en, this message translates to:
+  /// **'An estimate of your hours'**
+  String get onboardingHoursExample;
+
+  /// Accessible onboarding progress label
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of {total}'**
+  String onboardingProgress(int step, int total);
+
+  /// No description provided for @settingsOnboarding.
+  ///
+  /// In en, this message translates to:
+  /// **'View introduction'**
+  String get settingsOnboarding;
+
+  /// No description provided for @eventChooseMapLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose map locations'**
+  String get eventChooseMapLocations;
+
+  /// No description provided for @eventMapLocationsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a building, a floor or a room. You can choose multiple locations.'**
+  String get eventMapLocationsHint;
+
+  /// No description provided for @eventLocationOutsideMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Other location (optional, outside the map)'**
+  String get eventLocationOutsideMap;
+
+  /// No description provided for @mapSearchLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Search buildings, floors or rooms'**
+  String get mapSearchLocations;
+
+  /// No description provided for @mapLocationsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No locations found.'**
+  String get mapLocationsEmpty;
+
+  /// No description provided for @mapLocationsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load locations.'**
+  String get mapLocationsUnavailable;
+
+  /// No description provided for @mapVisitLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit location'**
+  String get mapVisitLocation;
+
+  /// No description provided for @mapEventLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Event locations'**
+  String get mapEventLocations;
+
+  /// No description provided for @mapOtherEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'Other events in this building'**
+  String get mapOtherEvents;
+
+  /// No description provided for @mapCloseEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Close event'**
+  String get mapCloseEvent;
+
+  /// No description provided for @mapEventDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View event'**
+  String get mapEventDetails;
+
+  /// No description provided for @mapLocationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This location is not available on the current map.'**
+  String get mapLocationUnavailable;
+
+  /// No description provided for @mapFloorEventCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 event} other {{count} events}}'**
+  String mapFloorEventCount(int count);
 }
 
 class _AppLocalizationsDelegate

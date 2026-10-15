@@ -1,6 +1,13 @@
 import 'package:autth_injustice_app/institution/domain/models/institution_theme_config.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+// Bundled font families: no runtime download or network-dependent fallback.
+abstract final class _Fonts {
+  static TextStyle archivoBlack({TextStyle? textStyle}) =>
+      (textStyle ?? const TextStyle()).copyWith(fontFamily: 'ArchivoBlack');
+  static TextStyle inter({TextStyle? textStyle}) =>
+      (textStyle ?? const TextStyle()).copyWith(fontFamily: 'Inter');
+}
 
 class AppDesign {
   static const double sm = 8.0;
@@ -80,35 +87,35 @@ extension ThemeContext on BuildContext {
 
 TextTheme _buildCustomTextTheme(TextTheme baseTheme) {
   return baseTheme.copyWith(
-    displayLarge: GoogleFonts.archivoBlack(
+    displayLarge: _Fonts.archivoBlack(
       textStyle: baseTheme.displayLarge?.copyWith(
         fontSize: 48,
         height: 1.0,
         letterSpacing: 0,
       ),
     ),
-    displayMedium: GoogleFonts.archivoBlack(
+    displayMedium: _Fonts.archivoBlack(
       textStyle: baseTheme.displayMedium?.copyWith(
         fontSize: 40,
         height: 1.05,
         letterSpacing: 0,
       ),
     ),
-    displaySmall: GoogleFonts.archivoBlack(
+    displaySmall: _Fonts.archivoBlack(
       textStyle: baseTheme.displaySmall?.copyWith(
         fontSize: 32,
         height: 1.08,
         letterSpacing: 0,
       ),
     ),
-    headlineLarge: GoogleFonts.archivoBlack(
+    headlineLarge: _Fonts.archivoBlack(
       textStyle: baseTheme.headlineLarge?.copyWith(
         fontSize: 36,
         height: 1.05,
         letterSpacing: 0,
       ),
     ),
-    headlineMedium: GoogleFonts.inter(
+    headlineMedium: _Fonts.inter(
       textStyle: baseTheme.headlineMedium?.copyWith(
         fontSize: 24,
         height: 1.18,
@@ -116,7 +123,7 @@ TextTheme _buildCustomTextTheme(TextTheme baseTheme) {
         letterSpacing: 0,
       ),
     ),
-    headlineSmall: GoogleFonts.inter(
+    headlineSmall: _Fonts.inter(
       textStyle: baseTheme.headlineSmall?.copyWith(
         fontSize: 20,
         height: 1.2,
@@ -124,7 +131,7 @@ TextTheme _buildCustomTextTheme(TextTheme baseTheme) {
         letterSpacing: 0,
       ),
     ),
-    titleLarge: GoogleFonts.inter(
+    titleLarge: _Fonts.inter(
       textStyle: baseTheme.titleLarge?.copyWith(
         fontSize: 18,
         height: 1.25,
@@ -132,7 +139,7 @@ TextTheme _buildCustomTextTheme(TextTheme baseTheme) {
         letterSpacing: 0,
       ),
     ),
-    bodyLarge: GoogleFonts.inter(
+    bodyLarge: _Fonts.inter(
       textStyle: baseTheme.bodyLarge?.copyWith(
         fontSize: 16,
         height: 1.45,
@@ -140,7 +147,7 @@ TextTheme _buildCustomTextTheme(TextTheme baseTheme) {
         letterSpacing: 0,
       ),
     ),
-    bodyMedium: GoogleFonts.inter(
+    bodyMedium: _Fonts.inter(
       textStyle: baseTheme.bodyMedium?.copyWith(
         fontSize: 14,
         height: 1.4,
@@ -148,7 +155,7 @@ TextTheme _buildCustomTextTheme(TextTheme baseTheme) {
         letterSpacing: 0,
       ),
     ),
-    bodySmall: GoogleFonts.inter(
+    bodySmall: _Fonts.inter(
       textStyle: baseTheme.bodySmall?.copyWith(
         fontSize: 12,
         height: 1.35,
@@ -156,7 +163,7 @@ TextTheme _buildCustomTextTheme(TextTheme baseTheme) {
         letterSpacing: 0,
       ),
     ),
-    labelLarge: GoogleFonts.inter(
+    labelLarge: _Fonts.inter(
       textStyle: baseTheme.labelLarge?.copyWith(
         fontSize: 14,
         height: 1.2,
@@ -164,7 +171,7 @@ TextTheme _buildCustomTextTheme(TextTheme baseTheme) {
         letterSpacing: 0,
       ),
     ),
-    labelMedium: GoogleFonts.inter(
+    labelMedium: _Fonts.inter(
       textStyle: baseTheme.labelMedium?.copyWith(
         fontSize: 12,
         height: 1.2,
@@ -172,7 +179,7 @@ TextTheme _buildCustomTextTheme(TextTheme baseTheme) {
         letterSpacing: 0,
       ),
     ),
-    labelSmall: GoogleFonts.inter(
+    labelSmall: _Fonts.inter(
       textStyle: baseTheme.labelSmall?.copyWith(
         fontSize: 11,
         height: 1.2,

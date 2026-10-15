@@ -73,12 +73,13 @@ class NotificationCard extends StatelessWidget {
           borderRadius: radius,
           border: Border.all(
             color: style.color.withValues(
-              alpha: context.isDarkMode ?  (notification.isRead ? 0 : 0.18) : (notification.isRead ? 0 : 0.15),
+              alpha: context.isDarkMode
+                  ? (notification.isRead ? 0 : 0.18)
+                  : (notification.isRead ? 0 : 0.15),
             ),
             width: 1,
           ),
           boxShadow: [
-          
             BoxShadow(
               color: style.color.withValues(
                 alpha: context.isDarkMode ? 0.08 : 0.09,

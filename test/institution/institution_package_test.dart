@@ -1,7 +1,8 @@
 import 'package:autth_injustice_app/core/l10n/app_localizations.dart';
 import 'package:autth_injustice_app/core/theme/app_theme.dart';
 import 'package:autth_injustice_app/dev/demo_backend/demo_backend_store.dart';
-import 'package:autth_injustice_app/events/domain/models/event_category.dart';
+import 'package:autth_injustice_app/dev/demo_backend/demo_backend_seed.dart';
+import 'package:autth_injustice_app/institution/domain/models/event_category.dart';
 import 'package:autth_injustice_app/institution/application/institution_package_registry.dart';
 import 'package:autth_injustice_app/institution/domain/institution_package.dart';
 import 'package:autth_injustice_app/institution/domain/institution_package_validator.dart';
@@ -38,6 +39,8 @@ void main() {
       );
       expect(ifpr.branding.campusId, 'pgua');
       expect(ifpr.backend.isolatedFirebaseProject, isTrue);
+      expect(ifpr.backend.runtime, InstitutionBackendRuntime.firebase);
+      expect(ifpr.backend.firestoreDatabaseId, '(default)');
       expect(ifpr.events.categories, IfprPguaEventCategories.values);
       expect(
         ifpr.events.fallbackCategory,
@@ -47,7 +50,7 @@ void main() {
       expect(ifpr.events.presetImages, hasLength(7));
       expect(
         ifpr.map.primaryResource?.location,
-        endsWith('campus_exterior_standard.glb'),
+        endsWith('campus_exterior_standard.glb.gz'),
       );
     });
 
@@ -152,6 +155,17 @@ void main() {
         robotics.customLabelFor('es', fallbackLanguageCode: 'pt'),
         'Robótica',
       );
+
+      final package = _PackageOverride(base: ifpr, events: events);
+      final demoEvents = [
+        ...DemoBackendSeed.buildFeaturedEvents(package),
+        ...DemoBackendSeed.buildFutureEvents(package),
+      ];
+      expect(demoEvents, isNotEmpty);
+      expect(
+        demoEvents.every((event) => event.preview.category == robotics),
+        isTrue,
+      );
     });
 
     test('requires category labels for every package language', () {
@@ -198,6 +212,46 @@ void main() {
       expect(
         InstitutionPackageValidator.validate(invalid),
         contains('Map feature requires a configured map manifest.'),
+      );
+    });
+
+    test('rejects bundled resources escaping the package directory', () {
+      final invalid = _PackageOverride(
+        base: ifpr,
+        map: const InstitutionMapManifest(
+          mapId: 'unsafe-map',
+          version: 1,
+          rendererKey: 'three-js-gltf',
+          format: InstitutionMapFormat.glb,
+          primaryResource: InstitutionResource.asset(
+            path: 'assets/institutions/ifpr-pgua/../other/map.glb',
+            kind: InstitutionResourceKind.mapBundle,
+          ),
+        ),
+      );
+
+      expect(
+        InstitutionPackageValidator.validate(invalid),
+        contains(contains('must belong to package')),
+      );
+    });
+
+    test('rejects a missing Firestore database id', () {
+      final invalid = _PackageOverride(
+        base: ifpr,
+        backend: InstitutionBackendConfig(
+          runtime: InstitutionBackendRuntime.firebase,
+          firebaseOptionsKey: ifpr.backend.firebaseOptionsKey,
+          firebaseProjectId: ifpr.backend.firebaseProjectId,
+          storageBucket: ifpr.backend.storageBucket,
+          firestoreDatabaseId: '',
+          schemaVersion: ifpr.backend.schemaVersion,
+        ),
+      );
+
+      expect(
+        InstitutionPackageValidator.validate(invalid),
+        contains('Backend manifest is incomplete.'),
       );
     });
 
@@ -250,6 +304,7 @@ class _PackageOverride implements InstitutionPackage {
   final InstitutionEventsConfig? overriddenEvents;
   final InstitutionFeaturesConfig? overriddenFeatures;
   final InstitutionMapManifest? overriddenMap;
+  final InstitutionBackendConfig? overriddenBackend;
 
   const _PackageOverride({
     required this.base,
@@ -257,9 +312,11 @@ class _PackageOverride implements InstitutionPackage {
     InstitutionEventsConfig? events,
     InstitutionFeaturesConfig? features,
     InstitutionMapManifest? map,
+    InstitutionBackendConfig? backend,
   })  : overriddenEvents = events,
         overriddenFeatures = features,
-        overriddenMap = map;
+        overriddenMap = map,
+        overriddenBackend = backend;
 
   @override
   String get id => base.id;
@@ -268,7 +325,7 @@ class _PackageOverride implements InstitutionPackage {
   String get version => base.version;
 
   @override
-  InstitutionBackendConfig get backend => base.backend;
+  InstitutionBackendConfig get backend => overriddenBackend ?? base.backend;
 
   @override
   InstitutionBrandingConfig get branding => base.branding;

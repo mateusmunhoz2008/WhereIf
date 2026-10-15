@@ -88,7 +88,7 @@ class EventReviewSummary extends StatelessWidget {
         _ReviewRow(
           icon: Icons.location_on_outlined,
           label: context.l10n.eventEditorLocation,
-          value: draft.location ?? context.l10n.eventEditorNotInformed,
+          value: draft.displayLocation ?? context.l10n.eventEditorNotInformed,
           onEdit: () => onEditStep(3),
         ),
         _ReviewRow(

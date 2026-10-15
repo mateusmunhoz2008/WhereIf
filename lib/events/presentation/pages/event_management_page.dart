@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:autth_injustice_app/core/network/network_status.dart';
+import 'package:autth_injustice_app/core/network/queued_write.dart';
 
 import 'package:autth_injustice_app/core/di/dependency_injection.dart';
 import 'package:autth_injustice_app/core/extensions/responsive_extensions.dart';
@@ -32,6 +34,8 @@ class _EventManagementPageState extends State<EventManagementPage> {
   late final ScrollController _scrollController;
   late final ValueNotifier<double> _scrollProgress;
   final _lifecycleRefresh = EventLifecycleRefreshScheduler();
+  StreamSubscription<void>? _networkSubscription;
+  StreamSubscription<void>? _writeSubscription;
 
   @override
   void initState() {
@@ -39,7 +43,13 @@ class _EventManagementPageState extends State<EventManagementPage> {
     _viewModel = injector.get<EventManagementViewModel>();
     _scrollController = ScrollController()..addListener(_updateScrollProgress);
     _scrollProgress = ValueNotifier(0);
-    unawaited(_viewModel.commands.loadEvents());
+    unawaited(_viewModel.commands.loadEvents(forceRefresh: true));
+    _networkSubscription = NetworkStatus.instance.restored.stream.listen((_) {
+      unawaited(_viewModel.commands.loadEvents(forceRefresh: true));
+    });
+    _writeSubscription = QueuedWrite.completed.stream.listen((_) {
+      unawaited(_viewModel.commands.loadEvents(forceRefresh: true));
+    });
   }
 
   void _updateScrollProgress() {
@@ -51,6 +61,9 @@ class _EventManagementPageState extends State<EventManagementPage> {
 
   @override
   void dispose() {
+    _viewModel.dispose();
+    _networkSubscription?.cancel();
+    _writeSubscription?.cancel();
     _scrollController
       ..removeListener(_updateScrollProgress)
       ..dispose();

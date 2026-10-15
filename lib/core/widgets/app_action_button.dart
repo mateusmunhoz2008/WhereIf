@@ -54,7 +54,9 @@ class _AppActionButtonState extends State<AppActionButton> {
       _handlingTap = false;
     });
 
-    onPressed();
+    // The page may have disabled this action during the press animation.
+    if (widget.isLoading || widget.onPressed == null) return;
+    widget.onPressed!();
   }
 
   @override

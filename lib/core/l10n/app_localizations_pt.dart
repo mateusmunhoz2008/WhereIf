@@ -142,6 +142,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get loginButton => 'Entrar';
 
   @override
+  String get loginCreateAccount => 'Criar conta';
+
+  @override
+  String get loginTogglePassword => 'Mostrar ou ocultar senha';
+
+  @override
   String get dontHaveAccount => 'Não tem uma conta?';
 
   @override
@@ -1275,6 +1281,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mapSearch => 'Pesquisar no mapa';
 
   @override
+  String get mapSearchHint => 'Eventos e lugares';
+
+  @override
+  String get mapSearchClose => 'Fechar pesquisa';
+
+  @override
+  String get mapSearchEmpty => 'Nenhum resultado encontrado.';
+
+  @override
   String get mapSearchComingSoon =>
       'A pesquisa de salas e blocos estará disponível em breve.';
 
@@ -1282,11 +1297,164 @@ class AppLocalizationsPt extends AppLocalizations {
   String get mapRotate => 'Arraste para girar o mapa';
 
   @override
-  String get settingsMapGraphics => 'Gráficos do mapa';
+  String get mapRawMode => 'Juízo Final';
 
   @override
-  String get settingsMapGraphicsLight => 'Leve';
+  String get mapRawModeOn => 'Ativar mapa cru, sem iluminação nem efeitos';
 
   @override
-  String get settingsMapGraphicsComplete => 'Completo';
+  String get mapRawModeOff => 'Voltar ao visual normal do mapa';
+
+  @override
+  String get settingsMapClimate => 'Clima';
+
+  @override
+  String get settingsMapPerformanceMode => 'Modo desempenho';
+
+  @override
+  String get settingsMapClimateAutomatic => 'Dinâmico';
+
+  @override
+  String get settingsMapClimateMorning => 'Manhã';
+
+  @override
+  String get settingsMapClimateMidday => 'Tarde';
+
+  @override
+  String get settingsMapClimateSunset => 'Entardecer';
+
+  @override
+  String get settingsMapClimateNight => 'Noite';
+
+  @override
+  String get eventDetailsReadMore => 'Ler mais';
+
+  @override
+  String get connectionUnavailable =>
+      'Conexão indisponível ou instável. Exibindo dados salvos. Deslize para ocultar.';
+
+  @override
+  String get networkWritePendingTitle => 'Salvo no aparelho';
+
+  @override
+  String get networkWritePending =>
+      'O envio ainda não foi confirmado. Os dados ficaram salvos neste aparelho e serão sincronizados quando a conexão voltar e sua conta estiver autorizada. Não é necessário enviar novamente.';
+
+  @override
+  String get networkWriteUnconfirmed =>
+      'Não foi possível confirmar o envio. Confira a lista ao reconectar antes de tentar novamente.';
+
+  @override
+  String get networkSyncFailed =>
+      'Uma alteração pendente não pôde ser sincronizada. Confira seus eventos e suas permissões.';
+
+  @override
+  String get connectionRequired =>
+      'Não foi possível confirmar a conexão. Tente novamente quando a internet estiver funcionando.';
+
+  @override
+  String get onboardingSkip => 'Pular';
+
+  @override
+  String get onboardingNext => 'Próximo';
+
+  @override
+  String get onboardingFinish => 'Vamos lá';
+
+  @override
+  String get onboardingMapTitle => 'É por aqui.';
+
+  @override
+  String get onboardingMapBody =>
+      'Encontre blocos, salas e o local dos eventos. Para estudantes e visitantes.';
+
+  @override
+  String get onboardingAgendaTitle => 'Bom saber antes.';
+
+  @override
+  String get onboardingAgendaBody =>
+      'Veja os próximos eventos e acompanhe os avisos do campus.';
+
+  @override
+  String get onboardingHoursTitle => 'As horas vão somando.';
+
+  @override
+  String get onboardingHoursBody =>
+      'Registre suas atividades e acompanhe uma estimativa das horas complementares.';
+
+  @override
+  String get onboardingHoursDisclaimer =>
+      'É um controle pessoal, não um comprovante oficial.';
+
+  @override
+  String get onboardingExample => 'Exemplo de evento';
+
+  @override
+  String get onboardingExampleEvent => 'Feira de projetos';
+
+  @override
+  String get onboardingExampleLocation => 'Bloco Didático';
+
+  @override
+  String get onboardingNotice => 'Novos eventos e avisos.';
+
+  @override
+  String get onboardingHoursExample => 'Uma base das suas horas';
+
+  @override
+  String onboardingProgress(int step, int total) {
+    return 'Etapa $step de $total';
+  }
+
+  @override
+  String get settingsOnboarding => 'Ver apresentação';
+
+  @override
+  String get eventChooseMapLocations => 'Escolher locais no mapa';
+
+  @override
+  String get eventMapLocationsHint =>
+      'Selecione um bloco, um piso ou uma sala. Você pode escolher vários locais.';
+
+  @override
+  String get eventLocationOutsideMap => 'Outro local (opcional, fora do mapa)';
+
+  @override
+  String get mapSearchLocations => 'Buscar bloco, piso ou sala';
+
+  @override
+  String get mapLocationsEmpty => 'Nenhum local encontrado.';
+
+  @override
+  String get mapLocationsUnavailable => 'Não foi possível carregar os locais.';
+
+  @override
+  String get mapVisitLocation => 'Visitar local';
+
+  @override
+  String get mapEventLocations => 'Locais do evento';
+
+  @override
+  String get mapOtherEvents => 'Outros eventos neste bloco';
+
+  @override
+  String get mapCloseEvent => 'Fechar evento';
+
+  @override
+  String get mapEventDetails => 'Ver evento';
+
+  @override
+  String get mapLocationUnavailable =>
+      'Esse local não está disponível no mapa atual.';
+
+  @override
+  String mapFloorEventCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count eventos',
+      one: '1 evento',
+    );
+    return '$_temp0';
+  }
 }

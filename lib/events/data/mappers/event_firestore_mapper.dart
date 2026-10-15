@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:autth_injustice_app/events/domain/models/event_preview.dart';
 import 'package:autth_injustice_app/events/domain/models/event_timing.dart';
 import 'package:autth_injustice_app/institution/domain/institution_package.dart';
+import 'package:autth_injustice_app/map/domain/models/map_location.dart';
 
 class EventFirestoreMapper {
   static Map<String, dynamic> toMap(
@@ -14,15 +15,18 @@ class EventFirestoreMapper {
       'startsAt': Timestamp.fromDate(event.startsAt),
       'endMode': event.endMode.name,
       'endsAt': event.endsAt != null ? Timestamp.fromDate(event.endsAt!) : null,
-      'endedAt': event.endedAt != null ? Timestamp.fromDate(event.endedAt!) : null,
-      'location': event.location,
+      'endedAt':
+          event.endedAt != null ? Timestamp.fromDate(event.endedAt!) : null,
+      'location': event.displayLocation,
+      'mapLocations': [for (final place in event.mapLocations) place.toJson()],
       'description': event.description,
       'externalUrl': event.externalUrl,
       'imageUrl': event.imageUrl,
       'publishAt':
           event.publishAt != null ? Timestamp.fromDate(event.publishAt!) : null,
-      'cancelledAt':
-          event.cancelledAt != null ? Timestamp.fromDate(event.cancelledAt!) : null,
+      'cancelledAt': event.cancelledAt != null
+          ? Timestamp.fromDate(event.cancelledAt!)
+          : null,
       'cancellationReason': event.cancellationReason,
       'cancelledByUid': event.cancelledByUid,
       'complementaryMinutes': complementaryMinutes,
@@ -33,10 +37,14 @@ class EventFirestoreMapper {
     DocumentSnapshot<Map<String, dynamic>> snapshot,
     InstitutionPackage institutionPackage,
   ) {
-    final data = snapshot.data() ?? const {};
+    return previewFromMap(
+        snapshot.id, snapshot.data() ?? const {}, institutionPackage);
+  }
 
+  static EventPreview previewFromMap(String id, Map<String, dynamic> data,
+      InstitutionPackage institutionPackage) {
     return EventPreview(
-      id: snapshot.id,
+      id: id,
       title: data['title'] as String? ?? '',
       category: institutionPackage.events
           .resolveCategory(data['category'] as String? ?? ''),
@@ -48,6 +56,7 @@ class EventFirestoreMapper {
       endsAt: _optionalTimestamp(data['endsAt']),
       endedAt: _optionalTimestamp(data['endedAt']),
       location: data['location'] as String? ?? '',
+      mapLocations: MapLocation.readList(data['mapLocations']),
       description: data['description'] as String? ?? '',
       externalUrl: data['externalUrl'] as String?,
       imageUrl: data['imageUrl'] as String? ?? '',

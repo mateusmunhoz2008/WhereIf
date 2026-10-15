@@ -1,4 +1,4 @@
-import 'package:autth_injustice_app/firebase_options.dart';
+import 'package:autth_injustice_app/institution/packages/ifpr_pgua/firebase_options.dart';
 import 'package:autth_injustice_app/institution/domain/models/institution_backend_config.dart';
 import 'package:firebase_core/firebase_core.dart';
 

@@ -7,11 +7,13 @@ import 'package:autth_injustice_app/authentication/presentation/pages/register_p
 import 'package:autth_injustice_app/authentication/presentation/pages/reset_password_page.dart';
 import 'package:autth_injustice_app/authentication/presentation/pages/splash_page.dart';
 import 'package:autth_injustice_app/core/navigation/app_transitions.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class AuthRouteNames {
   static const splash = 'splash';
   static const initial = 'initial';
+  static const onboardingPreview = 'onboarding-preview';
   static const login = 'login';
   static const register = 'register';
   static const checkEmail = 'check-email';
@@ -21,6 +23,7 @@ class AuthRouteNames {
 class AuthPaths {
   static const splash = '/';
   static const initial = '/initial';
+  static const onboardingPreview = '/onboarding-preview';
   static const login = '/login';
   static const register = '/register';
   static const checkEmail = '/check-email';
@@ -35,6 +38,18 @@ class AuthPaths {
 }
 
 final List<RouteBase> rootAuthRoutes = [
+  GoRoute(
+    path: AuthPaths.onboardingPreview,
+    name: AuthRouteNames.onboardingPreview,
+    pageBuilder: (context, state) => CustomTransitionPage(
+      key: state.pageKey,
+      transitionDuration: const Duration(milliseconds: 300),
+      reverseTransitionDuration: const Duration(milliseconds: 220),
+      child: InitialPage(preview: true, onCompleted: () => context.pop()),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+          FadeTransition(opacity: animation, child: child),
+    ),
+  ),
   GoRoute(
     path: AuthPaths.splash,
     name: AuthRouteNames.splash,

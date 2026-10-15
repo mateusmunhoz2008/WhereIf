@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
 
 enum InstitutionBackendRuntime {
-  demo,
-  hybridDemo,
   firebase,
 }
 

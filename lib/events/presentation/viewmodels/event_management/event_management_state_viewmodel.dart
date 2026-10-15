@@ -11,6 +11,16 @@ class EventManagementState with AsyncLoadState {
 
   bool get hasEvents => events.value.isNotEmpty;
 
+  void reset() {
+    events.value = const [];
+    deletingEventId.value = null;
+    endingEventId.value = null;
+    activeEventId.value = null;
+    loading.value = false;
+    loaded.value = false;
+    clearError();
+  }
+
   void setDeletingEvent(String? eventId) {
     deletingEventId.value = eventId;
   }

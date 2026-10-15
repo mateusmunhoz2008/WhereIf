@@ -28,7 +28,10 @@ class NotificationAnnouncementReview extends StatelessWidget {
               size: 20,
               color: context.primary,
             ),
-            const SizedBox(width: 12, height:40,),
+            const SizedBox(
+              width: 12,
+              height: 40,
+            ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

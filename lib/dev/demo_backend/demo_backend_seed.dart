@@ -4,8 +4,7 @@ import 'package:autth_injustice_app/dev/demo_backend/models/demo_event.dart';
 import 'package:autth_injustice_app/account/domain/models/account.dart';
 import 'package:autth_injustice_app/events/domain/models/event_preview.dart';
 import 'package:autth_injustice_app/events/domain/models/event_timing.dart';
-import 'package:autth_injustice_app/institution/packages/ifpr_pgua/ifpr_pgua_event_categories.dart';
-import 'package:autth_injustice_app/institution/packages/ifpr_pgua/ifpr_pgua_event_images.dart';
+import 'package:autth_injustice_app/institution/domain/institution_package.dart';
 import 'package:autth_injustice_app/notifications/domain/models/app_notification.dart';
 import 'package:autth_injustice_app/user_management/domain/models/user_directory_entry.dart';
 
@@ -14,8 +13,8 @@ class DemoBackendSeed {
 
   static final studentAccount = Account(
     uid: 'demo-user',
-    email: 'mateus@ifpr.edu.br',
-    displayName: 'matteus Demonio',
+    email: 'student@example.com',
+    displayName: 'Estudante de demonstração',
     createdAt: DateTime(2026, 2, 10),
     updatedAt: DateTime(2026, 7, 19),
     isProfileConfigured: true,
@@ -24,14 +23,14 @@ class DemoBackendSeed {
 
   static final eventManagerAccount = studentAccount.copyWith(
     uid: 'demo-event-manager',
-    email: 'eventos@ifpr.edu.br',
+    email: 'events@example.com',
     displayName: 'Gestor de eventos',
     role: AccountRole.eventManager,
   );
 
   static final administratorAccount = studentAccount.copyWith(
     uid: 'demo-administrator',
-    email: 'admin@ifpr.edu.br',
+    email: 'admin@example.com',
     displayName: 'Administrador',
     role: AccountRole.administrator,
   );
@@ -45,7 +44,7 @@ class DemoBackendSeed {
       UserDirectoryEntry(
         account: Account(
           uid: 'demo-student-ana',
-          email: 'ana.silva@ifpr.edu.br',
+          email: 'ana.silva@example.com',
           displayName: 'Ana Silva',
           createdAt: DateTime(2025, 3, 12),
           updatedAt: DateTime(2026, 7, 20),
@@ -57,7 +56,7 @@ class DemoBackendSeed {
       UserDirectoryEntry(
         account: Account(
           uid: 'demo-student-lucas',
-          email: 'lucas.santos@ifpr.edu.br',
+          email: 'lucas.santos@example.com',
           displayName: 'Lucas Santos',
           createdAt: DateTime(2024, 2, 19),
           updatedAt: DateTime(2026, 7, 18),
@@ -69,7 +68,7 @@ class DemoBackendSeed {
       UserDirectoryEntry(
         account: Account(
           uid: 'demo-student-mariana',
-          email: 'mariana.costa@ifpr.edu.br',
+          email: 'mariana.costa@example.com',
           displayName: 'Mariana Costa',
           createdAt: DateTime(2026, 2, 9),
           updatedAt: DateTime(2026, 7, 22),
@@ -85,7 +84,7 @@ class DemoBackendSeed {
       UserDirectoryEntry(
         account: Account(
           uid: 'demo-event-manager-2',
-          email: 'cultura@ifpr.edu.br',
+          email: 'culture@example.com',
           displayName: 'Gestão cultural',
           createdAt: DateTime(2025, 8, 4),
           updatedAt: DateTime(2026, 7, 24),
@@ -97,86 +96,87 @@ class DemoBackendSeed {
     ];
   }
 
-  static final featuredEvents = [
-    DemoEvent(
-      preview: EventPreview(
-        id: 'neon-district',
-        title: 'Festival de música',
-        category: IfprPguaEventCategories.artsAndCulture,
-        startsAt: DateTime(2026, 7, 28, 11),
-        endMode: EventEndMode.automatic,
-        endsAt: DateTime(2026, 8, 30, 12),
-        location: 'Auditório',
-        description:
-            'Uma noite de música, luz e artistas locais ocupando o campus.',
-        imageUrl: IfprPguaEventImages.artsAndCulture.location,
-      ),
-      complementaryMinutes: 4 * Duration.minutesPerHour,
-    ),
-    DemoEvent(
-      preview: EventPreview(
-        id: 'jazz-under-stars',
-        title: 'Jazz Under Stars',
-        category: IfprPguaEventCategories.artsAndCulture,
-        startsAt: DateTime(2026, 7, 24, 20, 30),
-        endMode: EventEndMode.automatic,
-        endsAt: DateTime(2026, 7, 24, 23, 30),
-        location: 'Praça das Artes',
-        description:
-            'Jazz ao vivo em uma noite aberta, com convidados e espaço para encontrar amigos.',
-        imageUrl:
-            'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=85',
-      ),
-    ),
-  ];
+  static List<DemoEvent> buildFeaturedEvents(InstitutionPackage package) => [
+        DemoEvent(
+          preview: EventPreview(
+            id: 'neon-district',
+            title: 'Festival de música',
+            category: package.events.fallbackCategory,
+            startsAt: DateTime(2026, 7, 28, 11),
+            endMode: EventEndMode.automatic,
+            endsAt: DateTime(2026, 8, 30, 12),
+            location: 'Auditório',
+            description:
+                'Uma noite de música, luz e artistas locais ocupando o campus.',
+            imageUrl: package.events.presetImages.firstOrNull?.location ?? '',
+          ),
+          complementaryMinutes: 4 * Duration.minutesPerHour,
+        ),
+        DemoEvent(
+          preview: EventPreview(
+            id: 'jazz-under-stars',
+            title: 'Jazz Under Stars',
+            category: package.events.fallbackCategory,
+            startsAt: DateTime(2026, 7, 24, 20, 30),
+            endMode: EventEndMode.automatic,
+            endsAt: DateTime(2026, 7, 24, 23, 30),
+            location: 'Praça das Artes',
+            description:
+                'Jazz ao vivo em uma noite aberta, com convidados e espaço para encontrar amigos.',
+            imageUrl:
+                'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=85',
+          ),
+        ),
+      ];
 
-  static final futureEvents = [
-    DemoEvent(
-      preview: EventPreview(
-        id: 'art-after-dark',
-        title: 'Exposição de artes visuais',
-        category: IfprPguaEventCategories.artsAndCulture,
-        startsAt: DateTime(2026, 8, 12, 18),
-        endMode: EventEndMode.automatic,
-        endsAt: DateTime(2026, 8, 12, 21),
-        location: 'Galeria Central',
-        description:
-            'Uma seleção de artistas visuais, instalações e conversas durante a noite.',
-        externalUrl: 'https://ifpr.edu.br',
-        imageUrl:
-            'https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&w=900&q=85',
-      ),
-      complementaryMinutes: 6 * Duration.minutesPerHour,
-    ),
-    DemoEvent(
-      preview: EventPreview(
-        id: 'city-run',
-        title: 'IF Zen',
-        category: IfprPguaEventCategories.healthAndWellness,
-        startsAt: DateTime(2026, 8, 15, 14),
-        endMode: EventEndMode.automatic,
-        endsAt: DateTime(2026, 8, 15, 16),
-        location: 'Sala de práticas',
-        description: 'Atividades de relaxamento e bem-estar para a comunidade.',
-        imageUrl: IfprPguaEventImages.healthAndWellness.location,
-      ),
-      complementaryMinutes: 2 * Duration.minutesPerHour,
-    ),
-    DemoEvent(
-      preview: EventPreview(
-        id: 'open-air-cinema',
-        title: 'Circo INFO23',
-        category: IfprPguaEventCategories.artsAndCulture,
-        startsAt: DateTime(2026, 8, 25, 19),
-        endMode: EventEndMode.manual,
-        location: 'Auditório',
-        description: 'Apresentação teatral e musical da turma de INFO23.',
-        imageUrl:
-            'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=900&q=85',
-      ),
-      complementaryMinutes: (4 * Duration.minutesPerHour) + 30,
-    ),
-  ];
+  static List<DemoEvent> buildFutureEvents(InstitutionPackage package) => [
+        DemoEvent(
+          preview: EventPreview(
+            id: 'art-after-dark',
+            title: 'Exposição de artes visuais',
+            category: package.events.fallbackCategory,
+            startsAt: DateTime(2026, 8, 12, 18),
+            endMode: EventEndMode.automatic,
+            endsAt: DateTime(2026, 8, 12, 21),
+            location: 'Galeria Central',
+            description:
+                'Uma seleção de artistas visuais, instalações e conversas durante a noite.',
+            externalUrl: package.branding.websiteUrl,
+            imageUrl:
+                'https://images.unsplash.com/photo-1549490349-8643362247b5?auto=format&fit=crop&w=900&q=85',
+          ),
+          complementaryMinutes: 6 * Duration.minutesPerHour,
+        ),
+        DemoEvent(
+          preview: EventPreview(
+            id: 'city-run',
+            title: 'Encontro de bem-estar',
+            category: package.events.fallbackCategory,
+            startsAt: DateTime(2026, 8, 15, 14),
+            endMode: EventEndMode.automatic,
+            endsAt: DateTime(2026, 8, 15, 16),
+            location: 'Sala de práticas',
+            description:
+                'Atividades de relaxamento e bem-estar para a comunidade.',
+            imageUrl: package.events.presetImages.firstOrNull?.location ?? '',
+          ),
+          complementaryMinutes: 2 * Duration.minutesPerHour,
+        ),
+        DemoEvent(
+          preview: EventPreview(
+            id: 'open-air-cinema',
+            title: 'Circo INFO23',
+            category: package.events.fallbackCategory,
+            startsAt: DateTime(2026, 8, 25, 19),
+            endMode: EventEndMode.manual,
+            location: 'Auditório',
+            description: 'Apresentação teatral e musical da turma de INFO23.',
+            imageUrl:
+                'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=900&q=85',
+          ),
+          complementaryMinutes: (4 * Duration.minutesPerHour) + 30,
+        ),
+      ];
 
   static List<ComplementaryHoursRecord> buildComplementaryHoursRecords() {
     return [
@@ -245,7 +245,7 @@ class DemoBackendSeed {
         id: 'new-event',
         type: AppNotificationType.event,
         title: 'Novo evento para você',
-        message: 'O IF Zen foi adicionado ao catálogo. Fique ligado.',
+        message: 'O encontro de bem-estar foi adicionado ao catálogo.',
         createdAt: now.subtract(const Duration(days: 1)),
         isRead: false,
       ),

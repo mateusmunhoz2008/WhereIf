@@ -90,6 +90,11 @@ abstract final class EventDraftValidator {
         EventDraftRules.locationMaxLength) {
       return EventDraftValidationIssue.invalidLocation;
     }
+    if (draft.mapLocations.any((place) => !place.isValid) ||
+        draft.mapLocations.map((place) => place.key).toSet().length !=
+            draft.mapLocations.length) {
+      return EventDraftValidationIssue.invalidLocation;
+    }
     return null;
   }
 

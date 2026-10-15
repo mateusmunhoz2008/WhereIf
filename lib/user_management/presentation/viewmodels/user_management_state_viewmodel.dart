@@ -16,6 +16,16 @@ class UserManagementState with AsyncLoadState {
   final searchQuery = signal('');
   final sortMode = signal(UserSortMode.nameAscending);
 
+  void reset() {
+    users.value = const [];
+    selectedRole.value = null;
+    searchQuery.value = '';
+    resetSort();
+    loading.value = false;
+    loaded.value = false;
+    clearError();
+  }
+
   bool get hasUsers => users.value.isNotEmpty;
 
   List<UserDirectoryEntry> get visibleUsers {

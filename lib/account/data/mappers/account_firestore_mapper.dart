@@ -11,11 +11,10 @@ class AccountFirestoreMapper {
       'updatedAt': Timestamp.fromDate(account.updatedAt),
       'isProfileConfigured': account.isProfileConfigured,
       'role': account.role.name,
-      'totalComplementaryMinutes': 0, 
+      'totalComplementaryMinutes': 0,
     };
   }
 
-  /// o cargo só pode ser alterado por um adm
   static Map<String, dynamic> toProfileUpdateMap(Account account) {
     return {
       'email': account.email,

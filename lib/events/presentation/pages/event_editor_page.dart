@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:autth_injustice_app/core/network/pending_sync_dialog.dart';
 
 import 'package:autth_injustice_app/core/di/dependency_injection.dart';
 import 'package:autth_injustice_app/core/l10n/l10n_extensions.dart';
@@ -16,6 +17,7 @@ import 'package:autth_injustice_app/events/domain/models/event_editor_draft.dart
 import 'package:autth_injustice_app/events/domain/models/event_timing.dart';
 import 'package:autth_injustice_app/events/presentation/viewmodels/event_editor/event_editor_viewmodel.dart';
 import 'package:autth_injustice_app/events/presentation/widgets/event_editor/event_category_selector.dart';
+import 'package:autth_injustice_app/events/presentation/widgets/event_editor/event_map_location_selector.dart';
 import 'package:autth_injustice_app/events/presentation/widgets/event_editor/event_editor_sections.dart';
 import 'package:autth_injustice_app/institution/presentation/institution_scope.dart';
 import 'package:flutter/material.dart';
@@ -62,7 +64,7 @@ class _EventEditorPageState extends State<EventEditorPage> {
   void initState() {
     super.initState();
     _viewModel = injector.get<EventEditorViewModel>();
-    _viewModel.state.reset();
+    _viewModel.commands.resetForSession();
     _currentStep = _isEditing ? _stepCount - 1 : 0;
     _pageController = PageController(initialPage: _currentStep);
     _ready = !_isEditing;
@@ -76,6 +78,7 @@ class _EventEditorPageState extends State<EventEditorPage> {
 
   @override
   void dispose() {
+    _viewModel.dispose();
     _validationErrorTimer?.cancel();
     _pageController.dispose();
     _titleController.dispose();
@@ -363,6 +366,10 @@ class _EventEditorPageState extends State<EventEditorPage> {
           ? await _viewModel.commands.updateEvent()
           : await _viewModel.commands.createEvent();
       if (!mounted || !saved) return;
+      if (_viewModel.state.errorMessage.value == 'networkWritePending') {
+        await showPendingSyncDialog(context);
+        if (!mounted) return;
+      }
       context.pop(true);
       return;
     }
@@ -458,6 +465,7 @@ class _EventEditorPageState extends State<EventEditorPage> {
       _draft.startsAt != null ||
       _draft.endMode != null ||
       _draft.location != null ||
+      _draft.mapLocations.isNotEmpty ||
       _draft.description.trim().isNotEmpty ||
       (_draft.externalUrl?.trim().isNotEmpty ?? false) ||
       _draft.complementaryMinutes != null ||
@@ -470,6 +478,8 @@ class _EventEditorPageState extends State<EventEditorPage> {
 
   String? _localizedError(BuildContext context, String? key) {
     return switch (key) {
+      'networkWriteUnconfirmed' => context.l10n.networkWriteUnconfirmed,
+      'networkWritePending' => context.l10n.networkWritePending,
       'eventEditorInvalidTitle' => context.l10n.eventEditorInvalidTitle,
       'eventEditorInvalidCategory' => context.l10n.eventEditorInvalidCategory,
       'eventEditorMissingDate' => context.l10n.eventEditorMissingDate,
@@ -665,17 +675,32 @@ class _EventEditorPageState extends State<EventEditorPage> {
                   loading: loading,
                   onBack: _previousStep,
                   onNext: _nextStep,
-                  child: AppEditorTextField(
-                    controller: _locationController,
-                    label: context.l10n.eventEditorLocation,
-                    maxLength: EventDraftRules.locationMaxLength,
-                    textInputAction: TextInputAction.done,
-                    onChanged: (value) {
-                      final location = value.trim().isEmpty ? null : value;
-                      _updateDraft(_draft.copyWith(location: location));
-                    },
-                    onSubmitted: (_) => _nextStep(),
-                  ),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        EventMapLocationSelector(
+                            selected: _draft.mapLocations,
+                            onChanged: (locations) {
+                              _locationController.clear();
+                              _updateDraft(_draft.copyWith(
+                                  mapLocations: locations, location: null));
+                            }),
+                        if (_draft.mapLocations.isEmpty) ...[
+                          const SizedBox(height: 20),
+                          AppEditorTextField(
+                            controller: _locationController,
+                            label: context.l10n.eventLocationOutsideMap,
+                            maxLength: EventDraftRules.locationMaxLength,
+                            textInputAction: TextInputAction.done,
+                            onChanged: (value) {
+                              final location =
+                                  value.trim().isEmpty ? null : value;
+                              _updateDraft(_draft.copyWith(location: location));
+                            },
+                            onSubmitted: (_) => _nextStep(),
+                          ),
+                        ],
+                      ]),
                 ),
                 AppEditorStepScaffold(
                   active: _currentStep == 4,

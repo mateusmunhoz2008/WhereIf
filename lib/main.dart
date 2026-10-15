@@ -7,16 +7,31 @@ import 'package:autth_injustice_app/core/theme/theme_controller.dart';
 import 'package:autth_injustice_app/institution/application/institution_package_registry.dart';
 import 'package:autth_injustice_app/institution/data/firebase/institution_firebase_options_registry.dart';
 import 'package:autth_injustice_app/institution/presentation/institution_scope.dart';
-import 'package:autth_injustice_app/map/presentation/viewmodels/map_graphics_controller.dart';
+import 'package:autth_injustice_app/map/presentation/viewmodels/map_climate_controller.dart';
+import 'package:autth_injustice_app/map/presentation/viewmodels/map_performance_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:autth_injustice_app/core/network/connection_banner.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  try {
+    await _startApplication();
+  } catch (_, stack) {
+    FlutterError.reportError(FlutterErrorDetails(
+      exception: StateError('Application startup failed.'),
+      stack: stack,
+      library: 'bootstrap',
+    ));
+    runApp(const _StartupFailureApp());
+  }
+}
+
+Future<void> _startApplication() async {
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -27,14 +42,22 @@ Future<void> main() async {
     institutionPackage.backend,
   );
 
-  await Firebase.initializeApp(options: firebaseOptions);
+  final firebaseApp = await Firebase.initializeApp(options: firebaseOptions);
 
-  setupDependencies(institutionPackage: institutionPackage);
+  setupDependencies(
+    institutionPackage: institutionPackage,
+    firebaseApp: firebaseApp,
+  );
 
-  await injector.get<MapGraphicsController>().initialize();
+  await injector.get<MapClimateController>().initialize();
+  await injector.get<MapPerformanceController>().initialize();
 
   final themeController = injector.get<ThemeController>();
   final localeController = injector.get<LocaleController>();
+
+  await themeController.initialize();
+  await localeController.initialize();
+
   runApp(
     Watch(
       (_) => MaterialApp.router(
@@ -53,7 +76,7 @@ Future<void> main() async {
               data: media.copyWith(
                 textScaler: TextScaler.noScaling,
               ),
-              child: child!,
+              child: ConnectionBanner(child: child!),
             ),
           );
         },
@@ -64,4 +87,31 @@ Future<void> main() async {
       ),
     ),
   );
+}
+
+class _StartupFailureApp extends StatelessWidget {
+  const _StartupFailureApp();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(brightness: Brightness.light),
+      darkTheme: ThemeData(brightness: Brightness.dark),
+      home: const Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                'Não foi possível iniciar o aplicativo.\n'
+                'Feche e abra novamente. Se continuar, entre em contato com o suporte.',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -3,15 +3,38 @@
   "mapId": "ifpr-pgua-main-campus",
   "zones": [
     {
-      "id": "bloco-central",
-      "nodeName": "bloco_central",
-      "label": "Bloco Central",
+      "id": "bloco-administrativo",
+      "nodeName": "bloco_administrativo",
+      "label": "Bloco Administrativo",
       "focus": {
         "useVisualCenter": true,
         "constrainToNavigation": true,
         "direction": [0.86, 0.3, -0.41],
-        "distanceScale": 0.92,
-        "targetOffset": [5.0, -0.8, -4.0]
+        "distanceScale": 0.92
+      },
+      "interior": null
+    },
+    {
+      "id": "bloco-central",
+      "nodeName": "bloco_central",
+      "label": "Bloco Central",
+      "floors": [
+        {
+          "id": "central-p1", "label": "Piso 1", "nodeNames": ["central_1_p1"],
+          "spaces": [
+            {"nodeName":"incubadora", "label":"Incubadora"},
+            {"nodeName":"sala_1_central", "label":"Sala 1"},
+            {"nodeName":"sala_2_central", "label":"Sala 2"},
+            {"nodeName":"sala_3_central", "label":"Sala 3"},
+            {"nodeName":"sala_4_central", "label":"Sala 4"},
+            {"nodeName":"sala_5_central", "label":"Sala 5"},
+            {"nodeName":"sala_descanco", "label":"Sala de descanso"}
+          ]
+        }
+      ],
+      "focus": {
+        "position": [110.1050598497244, 97.01235293461743, -162.51930957390653],
+        "target": [-0.9462204478877029, 4.583362102508545, -103.20022151001797]
       },
       "interior": null
     },
@@ -19,12 +42,75 @@
       "id": "bloco-didatico",
       "nodeName": "bloco_didatico",
       "label": "Bloco Didático",
+      "floors": [
+        {
+          "id": "didatico-p1", "label": "Piso 1", "nodeNames": ["bloco_didatico_p1", "wc_fem_didatico_p1.2", "wc_masc_didatico_p1.2"],
+          "spaces": [
+            {"nodeName":"sala_9_did", "label":"Sala 9"},
+            {"nodeName":"sala_10_did", "label":"Sala 10"},
+            {"nodeName":"sala_11_did", "label":"Sala 11"},
+            {"nodeName":"sala_12_did", "label":"Sala 12"},
+            {"nodeName":"sala_13_did", "label":"Sala 13"},
+            {"nodeName":"sala_14_did", "label":"Sala 14"},
+            {"nodeName":"lab_biologia_did", "label":"Laboratório de Biologia"},
+            {"nodeName":"lab_fisica_did", "label":"Laboratório de Física"},
+            {"nodeName":"lab_quimica_did", "label":"Laboratório de Química"},
+            {"nodeName":"wc_fem_didatico_p1", "label":"Banheiro feminino"},
+            {"nodeName":"wc_masc_didatico_p1", "label":"Banheiro masculino"},
+            {"nodeName":"wc_pcd_didatico_p1", "label":"Banheiro acessível"},
+            {"nodeName":"assistencia", "label":"Assistência estudantil"},
+            {"nodeName":"cantina_PNAE", "label":"Cantina PNAE"},
+            {"nodeName":"dispensa", "label":"Despensa"},
+            {"nodeName":"secretaria", "label":"Secretaria"}
+          ]
+        },
+        {
+          "id": "didatico-p2", "label": "Piso 2", "nodeNames": ["bloco_didatico_p2"],
+          "spaces": [
+            {"nodeName":"sala_1_did", "label":"Sala 1"},
+            {"nodeName":"sala_2_did", "label":"Sala 2"},
+            {"nodeName":"sala_3_did", "label":"Sala 3"},
+            {"nodeName":"sala_4_did", "label":"Sala 4"},
+            {"nodeName":"sala_5_did", "label":"Sala 5"},
+            {"nodeName":"sala_6_did", "label":"Sala 6"},
+            {"nodeName":"sala_7_did", "label":"Sala 7"},
+            {"nodeName":"lab_0_did", "label":"Laboratório 0"},
+            {"nodeName":"lab_1_did", "label":"Laboratório 1"},
+            {"nodeName":"lab_2_did", "label":"Laboratório 2"},
+            {"nodeName":"lab_3_did", "label":"Laboratório 3"},
+            {"nodeName":"lab_4_did", "label":"Laboratório 4"},
+            {"nodeName":"lab_5_did", "label":"Laboratório 5"},
+            {"nodeName":"wc_fem_didatico_p2", "label":"Banheiro feminino"},
+            {"nodeName":"wc_masc_didatico_p2", "label":"Banheiro masculino"}
+          ]
+        }
+      ],
+      "focus": {
+        "position": [-13.941413803818108, 97.01235293461743, -145.37896594564262],
+        "target": [106.42343069352081, 2.5806938409805324, -108.45410611379482]
+      },
+      "interior": null
+    },
+    {
+      "id": "bloco-tecnologico",
+      "nodeName": "bloco_tecnologico",
+      "label": "Bloco Tecnológico",
       "focus": {
         "useVisualCenter": true,
         "constrainToNavigation": true,
-        "direction": [-0.97, 0.3, -0.22],
-        "distanceScale": 1.0,
-        "targetOffset": [0.0, -0.6, 0.0]
+        "direction": [0.72, 0.32, -0.62],
+        "distanceScale": 0.9
+      },
+      "interior": null
+    },
+    {
+      "id": "quadra",
+      "nodeName": "quadra",
+      "label": "Quadra",
+      "focus": {
+        "useVisualCenter": true,
+        "position": [-23.634898770638898, 57.768847057900985, 45.322597437942804],
+        "target": [69.67167242389885, 4.583362102508552, 92.1012252461731]
       },
       "interior": null
     },

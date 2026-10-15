@@ -24,7 +24,6 @@
       canvas {
         display: block;
         opacity: 0;
-        transition: opacity 520ms cubic-bezier(0.22, 1, 0.36, 1);
       }
 
       canvas.is-ready {
@@ -32,6 +31,10 @@
       }
     </style>
     <script>
+      window.WHEREIF_GEOMETRY_ONLY = true;
+      window.WHEREIF_BASIC_LIGHTING = true;
+      window.WHEREIF_SHOW_FPS = true;
+      window.WHEREIF_FEATURE_PANEL = true;
       window.__whereIfPendingConfig = null;
       window.whereIfMap = {
         configure(config) {
@@ -45,6 +48,6 @@
   </head>
   <body>
     <script src="./viewer_config.js?v=night-sky-1"></script>
-    <script src="./viewer.bundle.js?v=night-sky-1"></script>
+  <script src="./viewer.bundle.js?v=map-event-balloons-13"></script>
   </body>
 </html>

@@ -4,7 +4,6 @@ import 'package:autth_injustice_app/authentication/domain/email_verification_typ
 import 'package:autth_injustice_app/core/failure/failure.dart';
 import 'package:autth_injustice_app/core/patterns/result.dart';
 
-//Precisa ainda fazer a redefinição de senha, confirmaçaõ de email por link e troca de email
 class FirebaseEmailVerificationService implements IEmailVerificationService {
   final fb.FirebaseAuth _firebaseAuth;
 
@@ -23,9 +22,10 @@ class FirebaseEmailVerificationService implements IEmailVerificationService {
     if (user == null) return Error(RemoteFailure('authUserNotFound'));
 
     try {
-      await user.reload();
+      await user.reload().timeout(const Duration(seconds: 8));
     } on fb.FirebaseAuthException catch (error) {
-      if (error.code == 'user-token-expired' || error.code == 'user-not-found') {
+      if (error.code == 'user-token-expired' ||
+          error.code == 'user-not-found') {
         return const Success(
           EmailVerificationCheck(status: EmailVerificationStatus.expired),
         );
@@ -36,7 +36,7 @@ class FirebaseEmailVerificationService implements IEmailVerificationService {
     }
 
     final refreshed = _firebaseAuth.currentUser;
-    if (refreshed == null) {
+    if (refreshed == null || refreshed.uid != user.uid) {
       return const Success(
         EmailVerificationCheck(status: EmailVerificationStatus.expired),
       );
@@ -69,11 +69,15 @@ class FirebaseEmailVerificationService implements IEmailVerificationService {
       switch (params.flow) {
         case EmailVerificationFlow.register:
           if (user.emailVerified) return const Success(null);
-          await user.sendEmailVerification();
+          await user
+              .sendEmailVerification()
+              .timeout(const Duration(seconds: 8));
           return const Success(null);
 
         case EmailVerificationFlow.changeEmail:
-          await user.verifyBeforeUpdateEmail(params.email);
+          await user
+              .verifyBeforeUpdateEmail(params.email)
+              .timeout(const Duration(seconds: 8));
           return const Success(null);
 
         case EmailVerificationFlow.forgotPassword:

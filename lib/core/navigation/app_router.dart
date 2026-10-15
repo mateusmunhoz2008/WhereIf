@@ -22,10 +22,17 @@ class AppRouter {
   }) {
     final effectivePath =
         path == AuthPaths.login ? loginReturnTo ?? MapPaths.map : path;
-    if (effectivePath.startsWith(EventsPaths.catalog)) return 1;
+
+    if (effectivePath.startsWith(EventsPaths.catalog)) return 0;
+
+    if (effectivePath.startsWith(EventManagementPaths.catalog)) return 0;
+
+    if (effectivePath.startsWith(MapPaths.map)) return 1;
+
     if (effectivePath.startsWith(NotificationsPaths.notifications)) return 2;
-    if (effectivePath.startsWith(EventManagementPaths.catalog)) return 1;
+
     if (effectivePath.startsWith(ComplementaryHoursPaths.summary)) return 3;
+
     return 0;
   }
 

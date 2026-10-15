@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'package:flutter/widgets.dart';
+import 'package:autth_injustice_app/core/network/network_status.dart';
+import 'package:autth_injustice_app/authentication/domain/services/login_attempt.dart';
 import 'package:autth_injustice_app/core/failure/failure.dart';
 import 'package:autth_injustice_app/core/patterns/result.dart';
 import 'package:autth_injustice_app/core/typedefs/types_defs.dart';
@@ -11,19 +15,75 @@ import 'package:firebase_auth/firebase_auth.dart' as fb;
 
 import 'i_auth_service.dart';
 
-/// Serviço de autenticação com Firebase.
-///
-/// Responsabilidades:
-/// - Autenticar o usuário via email/senha ou Google.
-/// - Ao logar/registrar, garantir que o documento Account exista no Firestore.
-/// - Manter o [AuthSession] reativo via Signal.
-/// - Restaurar a sessão mantida pelo Firebase Auth.
-class FirebaseAuthService implements IAuthService {
+class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
   final fb.FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
   final IAccountRemoteStorage _accountStorage;
   Future<void>? _googleInitialization;
   Future<void>? _sessionInitialization;
+  String? _restoringUid;
+  Future<void> _loginQueue = Future.value();
+  int _sessionGeneration = 0;
+  int _authOperations = 0;
+  String? _recoveringUid;
+  Timer? _recoveryTimer;
+  Duration _retryDelay = const Duration(seconds: 15);
+  late final StreamSubscription<fb.User?> _authSubscription;
+  late final StreamSubscription<void> _connectionSubscription;
+  bool _foreground = true;
+  bool _disposed = false;
+  LoginAttempt? _ownedAttempt;
+
+  Future<AuthSessionResult> _runLogin(Future<AuthSession> Function() work,
+      {Duration deadline = const Duration(seconds: 20)}) {
+    if (_disposed) {
+      return Future.value(Error(DefaultFailure('authGoogleCanceled')));
+    }
+    final attempt = LoginAttempt.current ?? LoginAttempt.begin();
+    _ownedAttempt = attempt;
+    final operation = _loginQueue.then<AuthSessionResult>((_) async {
+      if (_disposed || attempt.cancelled) {
+        return Error(DefaultFailure('authGoogleCanceled'));
+      }
+      _authOperations++;
+      final generation = ++_sessionGeneration;
+      _cancelRecovery();
+      try {
+        final session = await work();
+        final nativeUid = _firebaseAuth.currentUser?.uid;
+        if (nativeUid != session.account.uid) {
+          if (!_disposed &&
+              _currentSessionSignal.value?.account.uid != nativeUid) {
+            _currentSessionSignal.value = null;
+          }
+          return Error(DefaultFailure('authGoogleCanceled'));
+        }
+        if (_disposed ||
+            attempt.cancelled ||
+            generation != _sessionGeneration) {
+          await _clearFailedAuthentication();
+          return Error(DefaultFailure('authGoogleCanceled'));
+        }
+        _setSession(session);
+        return Success(session);
+      } catch (error) {
+        await _clearFailedAuthentication();
+        return Error(_mapAuthFailure(error));
+      } finally {
+        _authOperations--;
+      }
+    });
+    _loginQueue = operation.then<void>((_) {});
+    return Future.any<AuthSessionResult>([
+      operation,
+      attempt.cancellation
+          .then((_) => Error(DefaultFailure('authGoogleCanceled'))),
+    ]).timeout(deadline, onTimeout: () {
+      attempt.timedOut = true;
+      attempt.cancel();
+      return Error(DefaultFailure('connectionRequired'));
+    });
+  }
 
   final Signal<AuthSession?> _currentSessionSignal = Signal<AuthSession?>(null);
 
@@ -34,16 +94,15 @@ class FirebaseAuthService implements IAuthService {
   })  : _firebaseAuth = firebaseAuth ?? fb.FirebaseAuth.instance,
         _googleSignIn = googleSignIn ?? GoogleSignIn.instance,
         _accountStorage = accountStorage {
-    // Escuta mudanças de estado do Firebase Auth (ex: token revogado externamente)
-    _firebaseAuth.authStateChanges().listen(_onAuthStateChanged);
+    _authSubscription =
+        _firebaseAuth.authStateChanges().listen(_onAuthStateChanged);
+    _connectionSubscription =
+        NetworkStatus.instance.restored.stream.listen((_) {
+      _retryRecovery();
+    });
+    WidgetsBinding.instance.addObserver(this);
   }
 
-  // ──────────────────────────────────────────────
-  // Helpers internos
-  // ──────────────────────────────────────────────
-
-  /// Busca o Account no Firestore; se não existir, cria com dados iniciais.
-  /// Isso garante que todo usuário autenticado tenha um documento `/accounts/{uid}`.
   Future<Account> _loadOrCreateAccount(fb.User fbUser) async {
     final result = await _accountStorage.getAccount(fbUser.uid);
     if (result case Success<Account, Failure>(:final value)) {
@@ -55,58 +114,163 @@ class FirebaseAuthService implements IAuthService {
       throw failure ?? RemoteFailure('accountLoadError');
     }
 
-    // Documento não existe ainda: cria com valores padrão
     final initial = Account.initial(
       uid: fbUser.uid,
       email: fbUser.email ?? '',
       displayName: fbUser.displayName ?? '',
     );
-    final saveResult = await _accountStorage.saveAccount(initial);
+    final saveResult = await _accountStorage
+        .saveAccount(initial)
+        .timeout(const Duration(seconds: 5));
     if (saveResult case Error<void, Failure>(:final value)) {
       throw value;
     }
-    return initial;
+    final persisted = await _accountStorage.getAccount(fbUser.uid);
+    return persisted.fold(
+      onSuccess: (account) => account,
+      onFailure: (failure) => throw failure,
+    );
   }
 
   Future<AuthSession> _buildSession(
     fb.User fbUser, {
     bool refreshToken = false,
   }) async {
-    fb.IdTokenResult tokenResult;
-    if (refreshToken) {
-      try {
-        tokenResult = await fbUser.getIdTokenResult(true);
-      } catch (_) {
-        tokenResult = await fbUser.getIdTokenResult();
-      }
-    } else {
-      tokenResult = await fbUser.getIdTokenResult();
-    }
-
     final account = await _loadOrCreateAccount(fbUser);
-    final tokenExp = tokenResult.expirationTime ??
-        DateTime.now().add(const Duration(minutes: 50));
-    return AuthSession(
-      account: account,
-      token: Token(expiresAt: tokenExp),
-    );
+    try {
+      fb.IdTokenResult tokenResult;
+      if (refreshToken) {
+        try {
+          tokenResult = await fbUser
+              .getIdTokenResult(true)
+              .timeout(const Duration(seconds: 5));
+        } catch (_) {
+          tokenResult = await fbUser
+              .getIdTokenResult()
+              .timeout(const Duration(seconds: 5));
+        }
+      } else {
+        tokenResult =
+            await fbUser.getIdTokenResult().timeout(const Duration(seconds: 5));
+      }
+
+      final tokenExp = tokenResult.expirationTime ??
+          DateTime.now().add(const Duration(minutes: 50));
+      return AuthSession(
+        account: account,
+        token: Token(expiresAt: tokenExp),
+      );
+    } catch (error) {
+      if (error is! TimeoutException &&
+          !(error is fb.FirebaseAuthException &&
+              error.code == 'network-request-failed')) {
+        rethrow;
+      }
+      // Display cached account data offline without fabricating a valid token.
+      // Firebase still authenticates and authorizes every server operation.
+      return AuthSession(
+          account: account,
+          token: Token(expiresAt: DateTime.fromMillisecondsSinceEpoch(0)));
+    }
   }
 
   void _setSession(AuthSession session) {
+    if (_disposed) return;
+    _cancelRecovery();
     _currentSessionSignal.value = session;
   }
 
-  // ──────────────────────────────────────────────
-  // Listener do Firebase Auth
-  // ──────────────────────────────────────────────
+  void _cancelRecovery() {
+    _recoveryTimer?.cancel();
+    _recoveryTimer = null;
+    _recoveringUid = null;
+    _retryDelay = const Duration(seconds: 15);
+  }
+
+  void _scheduleRecovery(String uid) {
+    _recoveringUid = uid;
+    if (_disposed || !_foreground || _recoveryTimer != null) return;
+    _recoveryTimer = Timer(_retryDelay, () {
+      _recoveryTimer = null;
+      _retryRecovery();
+    });
+    _retryDelay = Duration(seconds: (_retryDelay.inSeconds * 2).clamp(15, 60));
+  }
+
+  void _retryRecovery() {
+    if (_disposed ||
+        !_foreground ||
+        _authOperations > 0 ||
+        _sessionInitialization != null ||
+        _recoveringUid == null ||
+        _firebaseAuth.currentUser?.uid != _recoveringUid) {
+      return;
+    }
+    _recoveryTimer?.cancel();
+    _recoveryTimer = null;
+    unawaited(initSession());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _foreground = state == AppLifecycleState.resumed;
+    if (_foreground) {
+      _retryRecovery();
+    } else {
+      _recoveryTimer?.cancel();
+      _recoveryTimer = null;
+    }
+  }
+
+  void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+    _ownedAttempt?.cancel();
+    _sessionGeneration++;
+    _cancelRecovery();
+    WidgetsBinding.instance.removeObserver(this);
+    unawaited(_authSubscription.cancel());
+    unawaited(_connectionSubscription.cancel());
+  }
 
   void _onAuthStateChanged(fb.User? user) {
+    if (_disposed) return;
     if (user == null) {
+      if (_authOperations == 0) {
+        _sessionGeneration++;
+      }
+      _cancelRecovery();
       _currentSessionSignal.value = null;
+    } else if (_authOperations > 0) {
+      if (_currentSessionSignal.value?.account.uid != user.uid) {
+        _currentSessionSignal.value = null;
+      }
+    } else if (_authOperations == 0 &&
+        _restoringUid != user.uid &&
+        _currentSessionSignal.value?.account.uid != user.uid) {
+      // A restored/switching Firebase identity must not leave the previous
+      // account visible while its profile is loaded.
+      _sessionGeneration++;
+      _cancelRecovery();
+      _currentSessionSignal.value = null;
+      unawaited(_restoreLatestIdentity());
+    }
+  }
+
+  Future<void> _restoreLatestIdentity() async {
+    await initSession();
+    // An old UID's in-flight initialization may have been shared above.
+    if (!_disposed &&
+        _authOperations == 0 &&
+        _firebaseAuth.currentUser != null &&
+        _currentSessionSignal.value?.account.uid !=
+            _firebaseAuth.currentUser?.uid) {
+      await initSession();
     }
   }
 
   Failure _mapAuthFailure(Object error) {
+    if (error is TimeoutException) return DefaultFailure('connectionRequired');
     if (error is Failure) return error;
 
     if (error is GoogleSignInException) {
@@ -144,12 +308,16 @@ class FirebaseAuthService implements IAuthService {
       await user.delete();
     } catch (_) {
       try {
-        await _firebaseAuth.signOut();
+        if (_firebaseAuth.currentUser?.uid == user.uid) {
+          await _firebaseAuth.signOut();
+        }
       } catch (_) {
         // Best effort: the next auth-state event remains the authority.
       }
     } finally {
-      _currentSessionSignal.value = null;
+      if (!_disposed && _currentSessionSignal.value?.account.uid == user.uid) {
+        _currentSessionSignal.value = null;
+      }
     }
   }
 
@@ -159,13 +327,9 @@ class FirebaseAuthService implements IAuthService {
     } catch (_) {
       // The operation already failed; session cleanup is best-effort.
     } finally {
-      _currentSessionSignal.value = null;
+      if (!_disposed) _currentSessionSignal.value = null;
     }
   }
-
-  // ──────────────────────────────────────────────
-  // Interface pública
-  // ──────────────────────────────────────────────
 
   @override
   Signal<AuthSession?> get currentSessionSignal => _currentSessionSignal;
@@ -175,56 +339,93 @@ class FirebaseAuthService implements IAuthService {
 
   @override
   Future<void> initSession() {
+    if (_disposed || _authOperations > 0) return Future.value();
     final currentInitialization = _sessionInitialization;
     if (currentInitialization != null) return currentInitialization;
 
-    final initialization = _restoreSession();
-    _sessionInitialization = initialization;
-    return initialization.whenComplete(() {
+    _restoringUid = _firebaseAuth.currentUser?.uid;
+    late final Future<void> initialization;
+    initialization = _restoreSession().whenComplete(() {
       if (identical(_sessionInitialization, initialization)) {
         _sessionInitialization = null;
+        _restoringUid = null;
       }
     });
+    _sessionInitialization = initialization;
+    return initialization;
   }
 
   Future<void> _restoreSession() async {
+    final generation = _sessionGeneration;
     final user = _firebaseAuth.currentUser;
     if (user == null) {
+      _cancelRecovery();
       _currentSessionSignal.value = null;
       return;
     }
 
+    bool stillCurrent() =>
+        !_disposed &&
+        generation == _sessionGeneration &&
+        _firebaseAuth.currentUser?.uid == user.uid;
+
     try {
-      final session = await _buildSession(user, refreshToken: true);
-      if (_firebaseAuth.currentUser?.uid != user.uid) return;
+      // Firebase refreshes expired tokens itself; do not force a network trip
+      // for every splash when a usable token is already cached.
+      final session = await _buildSession(user);
+      if (!stillCurrent()) return;
       _setSession(session);
-    } catch (_) {
-      _currentSessionSignal.value = null;
+    } catch (error) {
+      if (!stillCurrent()) return;
+      final invalidIdentity = error is fb.FirebaseAuthException &&
+          [
+            'user-disabled',
+            'user-not-found',
+            'user-token-expired',
+            'invalid-user-token'
+          ].contains(error.code);
+      debugPrint('[Auth] Session restoration failed: ${error.runtimeType}'
+          '${error is fb.FirebaseAuthException ? ' (${error.code})' : ''}');
+      if (invalidIdentity) {
+        _cancelRecovery();
+        _currentSessionSignal.value = null;
+        return;
+      }
+
+      // Firebase identity remains authenticated; an unavailable profile is
+      // not a logout. Reuse only this UID's profile, or a least-privilege
+      // identity from Firebase. Never create a Firestore document here.
+      final previous = _currentSessionSignal.value;
+      final account =
+          error is! ForbiddenFailure && previous?.account.uid == user.uid
+              ? previous!.account
+              : Account.initial(
+                  uid: user.uid,
+                  email: user.email ?? '',
+                  displayName: user.displayName ?? '');
+      _currentSessionSignal.value = AuthSession(
+          account: account,
+          token: Token(expiresAt: DateTime.fromMillisecondsSinceEpoch(0)));
+      _scheduleRecovery(user.uid);
     }
   }
 
   @override
-  Future<AuthSessionResult> signIn(String email, String password) async {
-    try {
+  Future<AuthSessionResult> signIn(String email, String password) {
+    return _runLogin(() async {
       final credential = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
       final user = credential.user;
-      if (user == null) return Error(NotFoundFailure('authUserNotFound'));
-
-      final session = await _buildSession(user);
-      _setSession(session);
-      return Success(session);
-    } catch (error) {
-      await _clearFailedAuthentication();
-      return Error(_mapAuthFailure(error));
-    }
+      if (user == null) throw NotFoundFailure('authUserNotFound');
+      return _buildSession(user);
+    });
   }
 
   @override
-  Future<AuthSessionResult> signInWithGoogle() async {
-    try {
+  Future<AuthSessionResult> signInWithGoogle() {
+    return _runLogin(() async {
       await _initializeGoogleSignIn();
       final googleUser = await _googleSignIn.authenticate();
       final googleAuth = googleUser.authentication;
@@ -237,16 +438,11 @@ class FirebaseAuthService implements IAuthService {
           await _firebaseAuth.signInWithCredential(credential);
       final user = userCredential.user;
       if (user == null) {
-        return Error(DefaultFailure('authUnexpectedError'));
+        throw DefaultFailure('authUnexpectedError');
       }
 
-      final session = await _buildSession(user);
-      _setSession(session);
-      return Success(session);
-    } catch (error) {
-      await _clearFailedAuthentication();
-      return Error(_mapAuthFailure(error));
-    }
+      return _buildSession(user);
+    }, deadline: const Duration(minutes: 2));
   }
 
   @override
@@ -254,36 +450,37 @@ class FirebaseAuthService implements IAuthService {
     required AccountName name,
     required String email,
     required String password,
-  }) async {
-    fb.User? createdUser;
-
-    try {
-      final credential = await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      final user = credential.user;
-      if (user == null) return Error(DefaultFailure('authUnexpectedError'));
-      createdUser = user;
-
-      await user.updateDisplayName(name.displayName);
-      await user.reload();
-
-      final session = await _buildSession(
-        _firebaseAuth.currentUser ?? user,
-      );
-      _setSession(session);
-      return Success(session);
-    } catch (error) {
-      if (createdUser != null) {
-        await _rollbackCreatedUser(createdUser);
-      }
-      return Error(_mapAuthFailure(error));
+  }) {
+    if (_disposed) {
+      return Future.value(Error(DefaultFailure('authGoogleCanceled')));
     }
+    LoginAttempt.begin();
+    return _runLogin(() async {
+      fb.User? createdUser;
+      try {
+        final credential = await _firebaseAuth.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        final user = credential.user;
+        if (user == null) throw DefaultFailure('authUnexpectedError');
+        createdUser = user;
+        await user.updateDisplayName(name.displayName);
+        await user.reload();
+        return await _buildSession(user);
+      } catch (_) {
+        if (createdUser != null) await _rollbackCreatedUser(createdUser);
+        rethrow;
+      }
+    }, deadline: const Duration(seconds: 30));
   }
 
   @override
   Future<VoidResult> signOut() async {
+    _authOperations++;
+    _sessionGeneration++;
+    _cancelRecovery();
+    LoginAttempt.current?.cancel();
     try {
       await _firebaseAuth.signOut();
       try {
@@ -295,10 +492,12 @@ class FirebaseAuthService implements IAuthService {
       } catch (_) {
         // Firebase is already signed out; Google cleanup is best-effort.
       }
-      _currentSessionSignal.value = null;
+      if (!_disposed) _currentSessionSignal.value = null;
       return const Success(null);
     } catch (error) {
       return Error(_mapAuthFailure(error));
+    } finally {
+      _authOperations--;
     }
   }
 }

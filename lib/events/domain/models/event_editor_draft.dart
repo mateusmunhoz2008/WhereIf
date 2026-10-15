@@ -1,10 +1,11 @@
-import 'event_category.dart';
+import 'package:autth_injustice_app/institution/domain/models/event_category.dart';
 import 'event_creation_input.dart';
 import 'event_details.dart';
 import 'event_external_link.dart';
 import 'event_preview.dart';
 import 'event_timing.dart';
 import 'event_update_input.dart';
+import 'package:autth_injustice_app/map/domain/models/map_location.dart';
 
 const _unsetEventDraftValue = Object();
 
@@ -20,6 +21,10 @@ class EventEditorDraft {
   final EventEndMode? endMode;
   final DateTime? endsAt;
   final String? location;
+  final List<MapLocation> mapLocations;
+  String? get displayLocation => mapLocations.isEmpty
+      ? location
+      : mapLocations.map((place) => place.label).join('\n');
   final String description;
   final String? externalUrl;
   final int? complementaryMinutes;
@@ -34,6 +39,7 @@ class EventEditorDraft {
     this.endMode,
     this.endsAt,
     this.location,
+    this.mapLocations = const [],
     this.description = '',
     this.externalUrl,
     this.complementaryMinutes,
@@ -61,7 +67,10 @@ class EventEditorDraft {
       startsAt: event.startsAt,
       endMode: event.endMode,
       endsAt: event.endsAt,
-      location: event.location.trim().isEmpty ? null : event.location,
+      location: event.mapLocations.isNotEmpty || event.location.trim().isEmpty
+          ? null
+          : event.location,
+      mapLocations: List.unmodifiable(event.mapLocations),
       description: event.description,
       externalUrl: event.externalUrl,
       complementaryMinutes: details.complementaryMinutes,
@@ -88,6 +97,7 @@ class EventEditorDraft {
       endMode: endMode ?? EventEndMode.manual,
       endsAt: endMode == EventEndMode.automatic ? endsAt : null,
       location: location?.trim() ?? '',
+      mapLocations: List.unmodifiable(mapLocations),
       description: description.trim(),
       externalUrl: EventExternalLink.normalize(externalUrl),
       imageUrl: displayImageSource ?? '',
@@ -106,6 +116,7 @@ class EventEditorDraft {
         final value? when value.isNotEmpty => value,
         _ => null,
       },
+      mapLocations: List.unmodifiable(mapLocations),
       description: description.trim(),
       externalUrl: EventExternalLink.normalize(externalUrl),
       complementaryMinutes: complementaryMinutes,
@@ -125,6 +136,7 @@ class EventEditorDraft {
         final value? when value.isNotEmpty => value,
         _ => null,
       },
+      mapLocations: List.unmodifiable(mapLocations),
       description: description.trim(),
       externalUrl: EventExternalLink.normalize(externalUrl),
       complementaryMinutes: complementaryMinutes,
@@ -140,6 +152,7 @@ class EventEditorDraft {
     Object? endMode = _unsetEventDraftValue,
     Object? endsAt = _unsetEventDraftValue,
     Object? location = _unsetEventDraftValue,
+    List<MapLocation>? mapLocations,
     String? description,
     Object? externalUrl = _unsetEventDraftValue,
     Object? complementaryMinutes = _unsetEventDraftValue,
@@ -164,6 +177,7 @@ class EventEditorDraft {
       location: identical(location, _unsetEventDraftValue)
           ? this.location
           : location as String?,
+      mapLocations: List.unmodifiable(mapLocations ?? this.mapLocations),
       description: description ?? this.description,
       externalUrl: identical(externalUrl, _unsetEventDraftValue)
           ? this.externalUrl

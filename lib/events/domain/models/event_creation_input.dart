@@ -1,6 +1,7 @@
-import 'event_category.dart';
+import 'package:autth_injustice_app/institution/domain/models/event_category.dart';
 import 'event_preview.dart';
 import 'event_timing.dart';
+import 'package:autth_injustice_app/map/domain/models/map_location.dart';
 
 class EventCreationInput {
   final String title;
@@ -9,6 +10,7 @@ class EventCreationInput {
   final EventEndMode endMode;
   final DateTime? endsAt;
   final String? locationLabel;
+  final List<MapLocation> mapLocations;
   final String description;
   final String? externalUrl;
   final int? complementaryMinutes;
@@ -25,6 +27,7 @@ class EventCreationInput {
     this.externalUrl,
     this.endsAt,
     this.locationLabel,
+    this.mapLocations = const [],
     this.complementaryMinutes,
     this.publishAt,
   })  : assert(title != ''),
@@ -48,6 +51,7 @@ class EventCreationInput {
       endMode: endMode,
       endsAt: endMode == EventEndMode.automatic ? endsAt : null,
       location: locationLabel ?? '',
+      mapLocations: List.unmodifiable(mapLocations),
       description: description,
       externalUrl: externalUrl,
       imageUrl: remoteImageUrl ?? imageSource,

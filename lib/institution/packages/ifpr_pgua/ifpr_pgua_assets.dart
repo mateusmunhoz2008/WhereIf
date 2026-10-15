@@ -14,7 +14,7 @@ abstract final class IfprPguaAssets {
   );
 
   static const campusMapStandard = InstitutionResource.asset(
-    path: 'assets/institutions/ifpr-pgua/map/campus_exterior_standard.glb',
+    path: 'assets/institutions/ifpr-pgua/map/campus_exterior_standard.glb.gz',
     kind: InstitutionResourceKind.mapBundle,
     contentType: 'model/gltf-binary',
   );

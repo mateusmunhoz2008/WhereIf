@@ -1,4 +1,4 @@
-import 'package:autth_injustice_app/events/domain/models/event_category.dart';
+import 'package:autth_injustice_app/institution/domain/models/event_category.dart';
 import 'package:autth_injustice_app/institution/domain/models/institution_resource.dart';
 import 'package:flutter/foundation.dart';
 

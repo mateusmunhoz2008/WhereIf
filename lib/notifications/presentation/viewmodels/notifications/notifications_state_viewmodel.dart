@@ -8,6 +8,16 @@ class NotificationsState with AsyncLoadState {
   final expandedNotificationId = signal<String?>(null);
   final markingAsReadIds = signal<Set<String>>(const {});
 
+  void reset() {
+    notifications.value = const [];
+    selectedType.value = null;
+    expandedNotificationId.value = null;
+    markingAsReadIds.value = const {};
+    loading.value = false;
+    loaded.value = false;
+    clearError();
+  }
+
   bool get hasNotifications => notifications.value.isNotEmpty;
 
   List<AppNotification> get visibleNotifications {

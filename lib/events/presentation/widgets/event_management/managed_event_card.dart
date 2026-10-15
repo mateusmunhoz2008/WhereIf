@@ -465,7 +465,6 @@ class _CardActionAreaState extends State<_CardActionArea> {
                     ),
                   ),
                 ),
-               
                 AnimatedScale(
                   scale: _pressed ? 0.965 : 1,
                   duration: Duration(milliseconds: _pressed ? 55 : 180),
@@ -741,11 +740,11 @@ class _EventInformation extends StatelessWidget {
             scale: scale,
             textScale: textScale,
           ),
-          if (event.location.trim().isNotEmpty) ...[
+          if (event.displayLocation.trim().isNotEmpty) ...[
             SizedBox(height: 4 * scale),
             _MetadataLine(
               icon: Icons.location_on_outlined,
-              label: event.location,
+              label: event.displayLocation,
               scale: scale,
               textScale: textScale,
             ),

@@ -1,11 +1,100 @@
-// Ajustes visuais do mapa. Depois de alterar, faça hot restart no Flutter.
 window.WHEREIF_MAP_TUNING = {
   renderer: {
-    // A imagem repousada ganha nitidez; durante gestos a resolucao cai para
-    // preservar a fluidez inclusive em aparelhos intermediarios.
-    maxPixelRatio: 1.6,
-    interactionPixelRatio: 0.5,
-    // Pode ser trocado em tempo real durante a calibracao do mapa.
+    approvedMapFeatures: {
+      lighting: true, pbr: true, shadows: true, reflections: false,
+      textures: false, shaders: true, sky: true, grading: false,
+      bloom: false, selection: true,
+      windows: true, windowLighting: false,
+    },
+    approvedMapQuality: { sharpness: 70, antialias: 'off' },
+    approvedInterfaceBlur: false,
+    approvedNavBlur: false,
+    approvedFeatureAppearance: {
+      morningShaderGain: 0.55,
+      sunsetShaderGain: 0.95,
+      nightGrassBrightness: 0.22,
+    },
+    // Pequeno preenchimento uniforme sem novas luzes nem mais renderizações.
+    visibilityLift: { ambient: 0.025, hemisphere: 0.04 },
+    approvedSunsetLook: {
+      temperature: 0, exposure: 0.53125,
+      ambient: 0.6, hemisphere: 0.6, fill: 0,
+      key: 10, rays: 0.075, contrast: 1.055, saturation: 0.96,
+      shadowRadius: 0.55, sunHighlights: 3.66,
+      foliageStrength: 0.05,
+      reflections: 16, wetness: 0, textureDetail: 1,
+      floorRoughness: 0.8605, textures: true,
+    },
+    // Materiais das copas do GLB; exclui troncos e gramado.
+    foliageMaterials: ['Material.001', 'Material.003', 'Material.004', 'Material.005', 'Material.006'],
+    approvedMiddayLook: {
+      temperature: 0.10,
+      exposure: 1.0,
+      ambient: 0.22,
+      hemisphere: 0.40,
+      fill: 0.16,
+      key: 6.0,
+      rays: 0,
+      contrast: 1.075,
+      saturation: 1.10,
+      shadowRadius: 0.9,
+      sunHighlights: 1.65,
+      foliageStrength: 0.12,
+      reflections: 1.2,
+      wetness: 0,
+      textureDetail: 0.28,
+      floorRoughness: 0.90,
+      textures: true,
+    },
+    middayLighting: {
+      sunColor: '#fff3d9',
+      sunPosition: { x: -0.48, y: 1.20, z: -0.32 },
+      ambientColor: '#e4ecff',
+      skyColor: '#e8f0ff',
+      groundColor: '#8b896e',
+      fillColor: '#e2edff',
+      fillPosition: { x: 0.60, y: 0.60, z: 0.45 },
+    },
+    middayMaterials: {
+      foliageColor: '#6b9637', foliageBlend: 0.20,
+      grassColor: '#649427', grassBlend: 0.50,
+      concreteBrightness: 1.48,
+      roadBrightness: 4.0,
+    },
+    middaySky: {
+      zenithColor: '#226fd3',
+      horizonColor: '#5eabea',
+      horizonHaze: 3.5,
+      resolution: 1536,
+      cloudCount: 96,
+      cloudWidthMin: 0.025,
+      cloudWidthMax: 0.055,
+      cloudHeightMin: 0.14,
+      cloudHeightMax: 0.26,
+      seed: 19073,
+    },
+    sunsetSky: {
+      zenithColor: '#226fd3', horizonColor: '#e98a5b', horizonHaze: 4.675,
+      resolution: 1536, cloudCount: 126,
+      cloudWidthMin: 0.0321, cloudWidthMax: 0.0535,
+      cloudHeightMin: 0.084, cloudHeightMax: 0.12,
+      brightness: 1.275, patchStrength: 2, cloudOpacity: 0.4875,
+      glowStrength: 1.5, glowSize: 0.1725,
+      sunDirection: [-0.78, 0.17, 0.62],
+      seed: 3815075111,
+    },
+    morningSky: {
+      zenithColor: '#226fd3', horizonColor: '#8b6eab', horizonHaze: 1.35,
+      resolution: 1536, cloudCount: 126,
+      cloudWidthMin: 0.033525, cloudWidthMax: 0.055875,
+      cloudHeightMin: 0.084, cloudHeightMax: 0.12,
+      brightness: 1.35, patchStrength: 0.95, cloudOpacity: 0.4875,
+      glowStrength: 1.5, glowSize: 0.295,
+      sunCoreStrength: 0,
+      sunDirection: [0.86, 0.17, -0.68], seed: 3815075111,
+    },
+    maxPixelRatio: 3,
+    interactionPixelRatio: 1.72,
     toneMapping: 'aces',
     exposure: 1.04,
     postProcessing: {
@@ -115,18 +204,24 @@ window.WHEREIF_MAP_TUNING = {
   },
 
   camera: {
+    // Only room selection raises the view; the saved exterior/floor angle stays intact.
+    interiorRoomMinElevationDegrees: { 'bloco-central': 50 },
+    interiorRoomDistanceScales: { 'bloco-central': 1.8 },
     fov: 42,
-    // Norte visual definido a partir da vista aprovada no S24.
-    zeroBearingDegrees: 142,
-    // O botao 0 restaura esta vista completa, incluindo alvo e distancia.
-    zeroZoneId: 'portaria',
-    // Abre diretamente no mesmo angulo usado ao focar o Bloco Didatico.
-    initialZoneId: 'bloco-didatico',
+    zeroBearingDegrees: null,
+    // Nao aplica foco automatico: preserva exatamente a vista inicial abaixo.
+    initialZoneId: null,
     verticalLensShift: 0,
-    // Enquadramento reconstruido a partir da referencia: campus ao fundo,
-    // gramado em primeiro plano e o bloco lateral apenas na borda direita.
-    initialPosition: [145.0, 42.5, -75.0],
-    initialTarget: [30.0, 1.14, -75.0],
+    initialPosition: [130.67262447658197, 85.32759890503753, -195.06204733341147],
+    initialTarget: [61.838498397742725, 4.58336210250856, -100.14313822563012],
+    topView: {
+      initialPosition: [28.90878931382164, 188.65580258402744, -21.743421327772552],
+      initialTarget: [28.908789050373283, 4.583362102508524, -21.741580597179535],
+      zoom: 3.0004558811435977,
+      // Limites relativos ao enquadramento salvo, nao ao mapa inteiro.
+      zoomInLimit: 0.20,
+      zoomOutLimit: 0.18,
+    },
     // Direcao da vista inicial: x = lateral, y = altura, z = profundidade.
     positionOffset: { x: 0.68, y: 0.42, z: 0.74 },
     // Objetos que definem o enquadramento. Ruas longas ficam fora do calculo.
@@ -169,10 +264,10 @@ window.WHEREIF_MAP_TUNING = {
       },
       // Mola deliberadamente visivel ao alcancar uma borda.
       elasticResistance: 0.36,
-      maxOvershootRatio: 0.075,
+      maxOvershootRatio: 0.045,
       zoomElasticResistance: 0.32,
       maxZoomOvershootRatio: 0.14,
-      returnDuration: 420,
+      returnDuration: 180,
       returnBounce: 0.55,
     },
   },
@@ -193,20 +288,21 @@ window.WHEREIF_MAP_TUNING = {
   lighting: {
     // Camada noturna independente dos horarios e acabamentos do dia.
     nightLook: {
+      temperature: 0,
       exposure: 0.25,
-      moonlight: 2.4,
+      moonlight: 5.1,
       ambient: 0,
       hemisphere: 0,
-      fill: 0,
+      fill: 0.225,
       windows: 1.5,
       reflections: 3.0,
-      wetness: 0.225,
+      wetness: 0,
       textureDetail: 0,
-      grassBrightness: 0.045,
+      grassBrightness: 0.06,
       floorRoughness: 1.0,
       floorReflection: 0.7,
       moonShafts: 0,
-      windowSpill: 0.075,
+      textures: true,
     },
     // Escurece a luz indireta quando o sol esta forte. A noite mantem sua
     // iluminacao original para o mapa continuar legivel.
@@ -218,16 +314,8 @@ window.WHEREIF_MAP_TUNING = {
       hemisphereScale: 0.55,
       fillScale: 0.58,
     },
-    // Ciclo diario baseado no horario local enviado pelo Flutter.
-    // Os valores entre os horarios sao interpolados para evitar trocas bruscas.
     dayCycle: {
       enabled: true,
-      // Refinamentos novos devem ser adicionados aqui, nunca alterando os
-      // keyframes-base que ja definem o restante do dia. Cada perfil so existe
-      // entre startMinute e endMinute e desaparece suavemente nas bordas.
-      // Exemplo:
-      // { id: 'midday', startMinute: 690, endMinute: 870,
-      //   fadeMinutes: 20, profile: { key: { color: '#ffd77a' } } }
       isolatedPhases: [
         {
           id: 'warm-morning-grade',
@@ -594,7 +682,6 @@ window.WHEREIF_MAP_TUNING = {
           shadowRadius: 0.55,
         },
         {
-          // O dourado permanece forte ate as 19h para alongar o por do sol.
           minute: 1140,
           exposure: 0.88,
           rays: { color: '#ffad55', opacity: 0.075 },
@@ -772,9 +859,9 @@ window.WHEREIF_MAP_TUNING = {
       maxSize: 2.8,
       brightStarChance: 0.04,
       brightStarMaxSize: 6.0,
-      fadeInStartMinute: 1140,
-      fullAtMinute: 1200,
-      fadeOutStartMinute: 300,
+      fadeInStartMinute: 1110,
+      fullAtMinute: 1140,
+      fadeOutStartMinute: 330,
       hiddenAtMinute: 360,
     },
     // A luz principal ja projeta os raios e as sombras no mundo. Focos extras
@@ -799,18 +886,12 @@ window.WHEREIF_MAP_TUNING = {
     },
     shadows: {
       enabled: true,
-      // O WebView do Xclipse 940 aceita texturas maiores, mas deixa o mapa de
-      // profundidade vazio acima de 2048. Este e o maior valor validado no S24
-      // que preserva nitidez e projeta todas as sombras corretamente.
-      mapSize: 1280,
+      mapSize: 4096,
       tightFit: true,
       fitPadding: 0.035,
-      // Concentra a textura na parte do campus que esta na tela. Assim 2048
-      // ganha definicao visual de uma textura muito maior sem quebrar o S24.
-      dynamicFit: true,
-      // Durante o gesto a camera continua em 60 fps, mas a textura pesada de
-      // sombra e atualizada em uma cadencia menor. Ao soltar, ela e refeita
-      // imediatamente na qualidade total.
+      // A mesma area do campus permanece na textura de sombra em qualquer
+      // angulo, evitando saltos quando o usuario termina um gesto.
+      dynamicFit: false,
       interactionUpdateInterval: 48,
       viewPadding: 0.065,
       minimumViewSpanRatio: 0.18,
@@ -834,16 +915,16 @@ window.WHEREIF_MAP_TUNING = {
 
   selection: {
     tapTolerance: 18,
-    initialOutlineWidth: 11,
-    outlineWidth: 4,
-    entranceDuration: 760,
-    exitDuration: 260,
+    initialOutlineWidth: 2.4,
+    outlineWidth: 1.15,
+    entranceDuration: 420,
+    exitDuration: 180,
     startColor: '#ffffff',
     restingOpacity: 0.92,
-    flashIntensity: 0.48,
+    flashIntensity: 0.18,
     flashSpatialFrequency: 0.075,
     flashCycles: 1.15,
-    focusDuration: 620,
+    focusDuration: 650,
     focusSafeWidth: 0.95,
     focusSafeHeight: 0.76,
     focusPadding: 1.0,
@@ -853,3 +934,62 @@ window.WHEREIF_MAP_TUNING = {
     largeFocusElevation: 0.64,
   },
 };
+
+// Amanhecer usa a mesma paleta do entardecer, com a direcao solar invertida.
+// Copias independentes permitem reforcar o sol sem alterar o por do sol.
+{
+  const tuning = window.WHEREIF_MAP_TUNING;
+  const cycle = tuning.lighting.dayCycle;
+  const original = cycle.keyframes;
+  const mirroredSunset = (sourceMinute, minute, strength) => {
+    const frame = JSON.parse(JSON.stringify(original.find((f) => f.minute === sourceMinute)));
+    frame.minute = minute;
+    for (const light of [frame.key, frame.fill]) {
+      light.positionOffset.x *= -1;
+      light.positionOffset.z *= -1;
+    }
+    frame.key.intensity *= strength;
+    frame.rays.opacity *= 1.35;
+    frame.shadowRadius = 0.50;
+    return frame;
+  };
+  const dawn = [
+    mirroredSunset(1155, 345, 1.15),
+    mirroredSunset(1080, 360, 1.25),
+    mirroredSunset(1080, 375, 1.25),
+    mirroredSunset(1080, 390, 1.18),
+  ];
+  const eveningMinutes = new Map([[1140, 1100], [1155, 1110], [1170, 1125], [1200, 1140]]);
+  cycle.keyframes = original.filter((f) => ![360, 375, 390].includes(f.minute))
+    .map((f) => ({ ...f, minute: eveningMinutes.get(f.minute) ?? f.minute }))
+    .concat(dawn).sort((a, b) => a.minute - b.minute);
+  cycle.windows.schedule = [
+    { minute: 0, amount: 1 }, { minute: 330, amount: 1 },
+    { minute: 360, amount: 0 }, { minute: 1110, amount: 0 },
+    { minute: 1140, amount: 1 },
+  ];
+  tuning.renderer.dawnSurface = {
+    startMinute: 330, endMinute: 510, fadeMinutes: 30,
+    environmentScale: 8,
+    pavement: { roughness: 0.27, clearcoat: 0.65, clearcoatRoughness: 0.12 },
+  };
+  const approvedDawn = JSON.parse(JSON.stringify(dawn.find(f => f.minute === 360)));
+  approvedDawn.exposure = 0.375;
+  approvedDawn.key.intensity = 3.5;
+  approvedDawn.ambient.intensity = 0.24;
+  approvedDawn.hemisphere.intensity = 0.36;
+  approvedDawn.fill.intensity = 0.225;
+  approvedDawn.rays.opacity = 0.23125;
+  approvedDawn.shadowRadius = 3;
+  approvedDawn.grading.contrast = 1.265;
+  approvedDawn.grading.saturation = 0.88;
+  cycle.isolatedPhases.push({
+    id: 'approved-dawn', startMinute: 330, endMinute: 480, fadeMinutes: 30,
+    profile: approvedDawn,
+  });
+  tuning.renderer.approvedDawnSurface = {
+    startMinute: 330, endMinute: 480, fadeMinutes: 30,
+    values: { reflections: 12.4, wetness: 0, textureDetail: 1.6,
+      floorRoughness: 0.74425, sunHighlights: 6, textures: true },
+  };
+}

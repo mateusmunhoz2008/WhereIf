@@ -1,4 +1,5 @@
 import 'package:autth_injustice_app/authentication/presentation/commands/auth_commands.dart';
+import 'package:autth_injustice_app/authentication/domain/services/login_attempt.dart';
 
 import 'login_state_viewmodel.dart';
 
@@ -7,6 +8,14 @@ class LoginCommands {
 
   final SignInCommand _signInCommand;
   final SignInWithGoogleCommand _signInWithGoogleCommand;
+  LoginAttempt? _attempt;
+
+  void cancel() {
+    _attempt?.cancel();
+    _attempt = null;
+    state.setLoading(false);
+    state.clearError();
+  }
 
   LoginCommands({
     required this.state,
@@ -19,6 +28,8 @@ class LoginCommands {
     required String email,
     required String password,
   }) async {
+    if (state.loading.value) return false;
+    final attempt = _attempt = LoginAttempt.begin();
     state.setLoading(true);
     state.clearError();
 
@@ -28,6 +39,13 @@ class LoginCommands {
         password: password,
       ));
 
+      if (attempt.cancelled) {
+        if (identical(_attempt, attempt) && attempt.timedOut) {
+          state.showError('connectionRequired');
+        }
+        return false;
+      }
+
       return result.fold(
         onSuccess: (_) => true,
         onFailure: (failure) {
@@ -36,19 +54,27 @@ class LoginCommands {
         },
       );
     } catch (_) {
-      state.showError('authUnexpectedError');
+      if (!attempt.cancelled) state.showError('authUnexpectedError');
       return false;
     } finally {
-      state.setLoading(false);
+      if (identical(_attempt, attempt)) state.setLoading(false);
     }
   }
 
   Future<bool> signInWithGoogle() async {
+    if (state.loading.value) return false;
+    final attempt = _attempt = LoginAttempt.begin();
     state.setLoading(true);
     state.clearError();
 
     try {
       final result = await _signInWithGoogleCommand.executeWith(());
+      if (attempt.cancelled) {
+        if (identical(_attempt, attempt) && attempt.timedOut) {
+          state.showError('connectionRequired');
+        }
+        return false;
+      }
       return result.fold(
         onSuccess: (_) => true,
         onFailure: (failure) {
@@ -57,10 +83,10 @@ class LoginCommands {
         },
       );
     } catch (_) {
-      state.showError('authUnexpectedError');
+      if (!attempt.cancelled) state.showError('authUnexpectedError');
       return false;
     } finally {
-      state.setLoading(false);
+      if (identical(_attempt, attempt)) state.setLoading(false);
     }
   }
 }
