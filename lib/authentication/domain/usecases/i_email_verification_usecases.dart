@@ -8,3 +8,7 @@ abstract interface class IGetEmailVerificationStatusUseCase
 abstract interface class IResendEmailVerificationUseCase
     implements
         IUseCase<EmailVerificationActionResult, EmailVerificationParams> {}
+
+abstract interface class ICancelEmailVerificationUseCase
+    implements
+        IUseCase<EmailVerificationActionResult, EmailVerificationParams> {}

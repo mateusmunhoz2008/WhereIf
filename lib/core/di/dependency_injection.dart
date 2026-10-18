@@ -130,6 +130,9 @@ void _registerAuthentication() {
   injector.addSingleton<IEmailVerificationFacade>(
     EmailVerificationFacadeImpl.new,
   );
+  injector.addSingleton<ICancelEmailVerificationUseCase>(
+    CancelEmailVerificationUseCase.new,
+  );
   injector.addSingleton<IResetPasswordUseCase>(ResetPasswordUseCase.new);
   injector.addSingleton<IPasswordResetFacade>(
     PasswordResetFacadeImpl.new,

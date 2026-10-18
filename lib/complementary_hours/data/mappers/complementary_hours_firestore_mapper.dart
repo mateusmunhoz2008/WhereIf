@@ -29,6 +29,19 @@ class ComplementaryHoursFirestoreMapper {
     );
   }
 
+  static int sumMinutes(
+    Iterable<QueryDocumentSnapshot<Map<String, dynamic>>> docs, {
+    String? excludingId,
+  }) {
+    var total = 0;
+    for (final doc in docs) {
+      if (doc.id == excludingId) continue;
+      final minutes = doc.data()['durationMinutes'];
+      if (minutes is int) total += minutes;
+    }
+    return total;
+  }
+
   static DateTime _timestamp(dynamic value) =>
       value is Timestamp ? value.toDate() : DateTime.now();
 }

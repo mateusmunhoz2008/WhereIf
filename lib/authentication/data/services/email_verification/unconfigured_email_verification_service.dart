@@ -19,4 +19,11 @@ class UnconfiguredEmailVerificationService
   ) async {
     return Error(RemoteFailure('authBackendUnavailable'));
   }
+
+  @override
+  Future<EmailVerificationActionResult> cancel(
+    EmailVerificationParams params,
+  ) async {
+    return Error(RemoteFailure('authBackendUnavailable'));
+  }
 }

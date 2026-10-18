@@ -65,4 +65,11 @@ class _FakeEmailVerificationRepository implements IEmailVerificationRepository {
     resendCalls++;
     return const Success(null);
   }
+
+  @override
+  Future<EmailVerificationActionResult> cancel(
+    EmailVerificationParams params,
+  ) async {
+    return const Success(null);
+  }
 }

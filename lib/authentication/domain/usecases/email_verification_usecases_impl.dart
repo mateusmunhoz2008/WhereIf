@@ -48,6 +48,24 @@ final class ResendEmailVerificationUseCase
   }
 }
 
+final class CancelEmailVerificationUseCase
+    implements ICancelEmailVerificationUseCase {
+  final IEmailVerificationRepository _repository;
+
+  const CancelEmailVerificationUseCase({
+    required IEmailVerificationRepository emailVerificationRepository,
+  }) : _repository = emailVerificationRepository;
+
+  @override
+  Future<EmailVerificationActionResult> call(EmailVerificationParams params) {
+    final normalized = _normalize(params);
+    if (normalized == null) {
+      return Future.value(Error(InvalidInputFailure('invalidEmail')));
+    }
+    return _repository.cancel(normalized);
+  }
+}
+
 EmailVerificationParams? _normalize(EmailVerificationParams params) {
   final email = params.email.trim().toLowerCase();
   if (email.isEmpty || !email.contains('@')) return null;

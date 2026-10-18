@@ -8,4 +8,6 @@ abstract interface class IEmailVerificationFacade {
   Future<EmailVerificationActionResult> resend(
     EmailVerificationParams params,
   );
+
+  Future<EmailVerificationActionResult> cancel(EmailVerificationParams params);
 }

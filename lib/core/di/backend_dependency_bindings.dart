@@ -71,7 +71,7 @@ abstract final class BackendDependencyBindings {
         ),
       )
       ..addSingleton<IEmailVerificationService>(
-        () => FirebaseEmailVerificationService(firebaseAuth: firebaseAuth),
+        FirebaseEmailVerificationService.new,
       )
       ..addSingleton<IPasswordResetService>(
         UnconfiguredPasswordResetService.new,

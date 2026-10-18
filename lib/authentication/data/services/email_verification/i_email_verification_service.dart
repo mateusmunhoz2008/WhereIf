@@ -17,4 +17,8 @@ abstract interface class IEmailVerificationService {
   Future<EmailVerificationActionResult> resend(
     EmailVerificationParams params,
   );
+
+  /// Abandona um cadastro não verificado, removendo o usuário do provedor.
+  /// Nunca remove uma conta que já confirmou o e-mail.
+  Future<EmailVerificationActionResult> cancel(EmailVerificationParams params);
 }

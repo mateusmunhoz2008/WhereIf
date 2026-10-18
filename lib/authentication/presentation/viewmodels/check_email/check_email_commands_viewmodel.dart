@@ -69,6 +69,18 @@ class CheckEmailCommands {
     }
   }
 
+  /// Melhor esforço: se falhar, o cadastro pendente é retomado ou substituído
+  /// quando a pessoa tentar se cadastrar de novo.
+  Future<void> cancelRegistration({
+    required String email,
+    required EmailVerificationFlow flow,
+  }) async {
+    cancelMonitoring();
+    try {
+      await _facade.cancel((email: email, flow: flow));
+    } catch (_) {}
+  }
+
   Future<bool> resend({
     required String email,
     required EmailVerificationFlow flow,

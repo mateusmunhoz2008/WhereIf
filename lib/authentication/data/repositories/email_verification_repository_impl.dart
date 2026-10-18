@@ -22,4 +22,9 @@ class EmailVerificationRepositoryImpl implements IEmailVerificationRepository {
   ) {
     return _service.resend(params);
   }
+
+  @override
+  Future<EmailVerificationActionResult> cancel(EmailVerificationParams params) {
+    return _service.cancel(params);
+  }
 }

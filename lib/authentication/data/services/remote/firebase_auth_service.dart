@@ -16,6 +16,11 @@ import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'i_auth_service.dart';
 
 class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
+  /// Opcional: ID do cliente web (OAuth tipo 3) para o Google Sign-In.
+  /// Use --dart-define=GOOGLE_SERVER_CLIENT_ID=... se o Android não o achar.
+  static const _googleServerClientId =
+      String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
+
   final fb.FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
   final IAccountRemoteStorage _accountStorage;
@@ -34,8 +39,18 @@ class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
   bool _disposed = false;
   LoginAttempt? _ownedAttempt;
 
-  Future<AuthSessionResult> _runLogin(Future<AuthSession> Function() work,
-      {Duration deadline = const Duration(seconds: 20)}) {
+  /// Conta com senha cujo e-mail ainda não foi confirmado. Contas Google
+  /// já chegam verificadas.
+  bool _needsEmailVerification(fb.User user) {
+    return !user.emailVerified &&
+        user.providerData.any((info) => info.providerId == 'password');
+  }
+
+  Future<AuthSessionResult> _runLogin(
+    Future<AuthSession> Function() work, {
+    Duration deadline = const Duration(seconds: 20),
+    bool publishSession = true,
+  }) {
     if (_disposed) {
       return Future.value(Error(DefaultFailure('authGoogleCanceled')));
     }
@@ -64,9 +79,10 @@ class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
           await _clearFailedAuthentication();
           return Error(DefaultFailure('authGoogleCanceled'));
         }
-        _setSession(session);
+        if (publishSession) _setSession(session);
         return Success(session);
       } catch (error) {
+        debugPrint('[Auth] Login failed: $error');
         await _clearFailedAuthentication();
         return Error(_mapAuthFailure(error));
       } finally {
@@ -241,6 +257,10 @@ class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
       }
       _cancelRecovery();
       _currentSessionSignal.value = null;
+    } else if (_needsEmailVerification(user)) {
+      // Conta com e-mail não confirmado nunca vira sessão do app.
+      _cancelRecovery();
+      _currentSessionSignal.value = null;
     } else if (_authOperations > 0) {
       if (_currentSessionSignal.value?.account.uid != user.uid) {
         _currentSessionSignal.value = null;
@@ -299,8 +319,18 @@ class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
     return DefaultFailure('authUnexpectedError');
   }
 
-  Future<void> _initializeGoogleSignIn() {
-    return _googleInitialization ??= _googleSignIn.initialize();
+  Future<void> _initializeGoogleSignIn() async {
+    final pending = _googleInitialization ??= _googleSignIn.initialize(
+      serverClientId:
+          _googleServerClientId.isEmpty ? null : _googleServerClientId,
+    );
+    try {
+      await pending;
+    } catch (_) {
+      // Não guarda uma inicialização que falhou, senão nunca tenta de novo.
+      _googleInitialization = null;
+      rethrow;
+    }
   }
 
   Future<void> _rollbackCreatedUser(fb.User user) async {
@@ -318,6 +348,43 @@ class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
       if (!_disposed && _currentSessionSignal.value?.account.uid == user.uid) {
         _currentSessionSignal.value = null;
       }
+    }
+  }
+
+  /// Cria o usuário. Se o e-mail já existe mas o cadastro anterior nunca foi
+  /// verificado (app fechado no meio) e a senha confere, retoma esse cadastro
+  /// em vez de travar em "e-mail já em uso".
+  Future<({fb.User user, bool created})> _createOrResumeRegistration({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final credential = await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final user = credential.user;
+      if (user == null) throw DefaultFailure('authUnexpectedError');
+      return (user: user, created: true);
+    } on fb.FirebaseAuthException catch (error) {
+      if (error.code != 'email-already-in-use') rethrow;
+
+      fb.User? existing;
+      try {
+        final credential = await _firebaseAuth.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        existing = credential.user;
+      } on fb.FirebaseAuthException catch (_) {
+        throw error; // senha diferente: o e-mail está mesmo em uso
+      }
+
+      if (existing == null || !_needsEmailVerification(existing)) {
+        await _clearFailedAuthentication();
+        rethrow;
+      }
+      return (user: existing, created: false);
     }
   }
 
@@ -359,6 +426,11 @@ class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
     final generation = _sessionGeneration;
     final user = _firebaseAuth.currentUser;
     if (user == null) {
+      _cancelRecovery();
+      _currentSessionSignal.value = null;
+      return;
+    }
+    if (_needsEmailVerification(user)) {
       _cancelRecovery();
       _currentSessionSignal.value = null;
       return;
@@ -419,6 +491,9 @@ class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
       );
       final user = credential.user;
       if (user == null) throw NotFoundFailure('authUserNotFound');
+      if (_needsEmailVerification(user)) {
+        throw DefaultFailure('authEmailNotVerified');
+      }
       return _buildSession(user);
     });
   }
@@ -458,21 +533,34 @@ class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
     return _runLogin(() async {
       fb.User? createdUser;
       try {
-        final credential = await _firebaseAuth.createUserWithEmailAndPassword(
+        final registration = await _createOrResumeRegistration(
           email: email,
           password: password,
         );
-        final user = credential.user;
-        if (user == null) throw DefaultFailure('authUnexpectedError');
-        createdUser = user;
-        await user.updateDisplayName(name.displayName);
-        await user.reload();
-        return await _buildSession(user);
+        if (registration.created) createdUser = registration.user;
+
+        await registration.user.updateDisplayName(name.displayName);
+        await registration.user.reload();
+        final user = _firebaseAuth.currentUser ?? registration.user;
+
+        // Sessão apenas informativa para o fluxo de cadastro: NÃO é
+        // publicada e nenhum documento /accounts é criado até o e-mail
+        // ser verificado (ver initSession).
+        return AuthSession(
+          account: Account.initial(
+            uid: user.uid,
+            email: user.email ?? email,
+            displayName: name.displayName,
+          ),
+          token: Token(
+            expiresAt: DateTime.now().add(const Duration(minutes: 50)),
+          ),
+        );
       } catch (_) {
         if (createdUser != null) await _rollbackCreatedUser(createdUser);
         rethrow;
       }
-    }, deadline: const Duration(seconds: 30));
+    }, deadline: const Duration(seconds: 30), publishSession: false);
   }
 
   @override

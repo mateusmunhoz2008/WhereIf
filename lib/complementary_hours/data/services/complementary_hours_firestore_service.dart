@@ -91,31 +91,25 @@ class ComplementaryHoursFirestoreService implements IComplementaryHoursService {
     String recordId,
   ) async {
     try {
-      final ref = _records(uid).doc(recordId);
       final accountRef = _firestore.collection('accounts').doc(uid);
-      await _firestore.runTransaction((transaction) async {
-        final snapshot = await transaction.get(ref);
-        final account = await transaction.get(accountRef);
-        if (_firebaseAuth.currentUser?.uid != uid) {
-          throw UnauthenticatedFailure();
-        }
-        if (!snapshot.exists) {
-          throw NotFoundFailure('complementaryHoursRecordNotFound');
-        }
-        final minutes = snapshot.data()?['durationMinutes'];
-        final total = account.data()?['totalComplementaryMinutes'];
-        if (account.exists && minutes is int && minutes > 0 && total is int) {
-          final remaining = total - minutes;
-          transaction.update(accountRef, {
-            'totalComplementaryMinutes': remaining < 0 ? 0 : remaining,
-            'updatedAt': Timestamp.now(),
-          });
-        }
-        transaction.delete(ref);
-      }).timeout(FirestoreAccess.deadline);
+      final recordsRef = accountRef.collection('personalActivityRecords');
+
+      final snapshot = await recordsRef.get();
+      if (!snapshot.docs.any((doc) => doc.id == recordId)) {
+        return Error(NotFoundFailure('complementaryHoursRecordNotFound'));
+      }
+
+      final remainingTotal = ComplementaryHoursFirestoreMapper.sumMinutes(
+        snapshot.docs,
+        excludingId: recordId,
+      );
+
+      final batch = _firestore.batch()
+        ..delete(recordsRef.doc(recordId))
+        ..update(accountRef, {'totalComplementaryMinutes': remainingTotal});
+      await batch.commit();
+
       return const Success(null);
-    } on Failure catch (failure) {
-      return Error(failure);
     } on FirebaseException {
       return Error(RemoteFailure('complementaryHoursDeleteError'));
     } catch (_) {

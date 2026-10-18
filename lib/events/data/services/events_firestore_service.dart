@@ -172,71 +172,54 @@ class EventsFirestoreService implements IEventsService {
     required bool addedToPersonalHistory,
   }) async {
     try {
-      final recordRef = _personalRecord(uid, eventId);
       final accountRef = _firestore.collection('accounts').doc(uid);
+      final recordsRef = accountRef.collection('personalActivityRecords');
+      final recordRef = recordsRef.doc(eventId);
 
-      final saved = await _firestore.runTransaction<bool>((transaction) async {
-        final existing = await transaction.get(recordRef);
-        if (existing.exists == addedToPersonalHistory) {
-          return addedToPersonalHistory;
-        }
-        final account = await transaction.get(accountRef);
-        if (!account.exists) throw UnauthenticatedFailure();
-        final total =
-            (account.data()?['totalComplementaryMinutes'] as num?)?.toInt() ??
-                0;
+      // Soma de todos os outros registros (corrige contas antigas também).
+      final othersTotal = ComplementaryHoursFirestoreMapper.sumMinutes(
+        (await recordsRef.get()).docs,
+        excludingId: eventId,
+      );
 
-        if (!addedToPersonalHistory) {
-          final minutes =
-              ComplementaryHoursFirestoreMapper.fromSnapshot(existing)
-                      .durationMinutes ??
-                  0;
-          transaction.delete(recordRef);
-          if (minutes > 0) {
-            transaction.update(accountRef, {
-              'totalComplementaryMinutes': math.max(0, total - minutes),
-            });
-          }
-          return false;
-        }
-
-        final snapshot = await transaction.get(_events.doc(eventId));
-        if (!snapshot.exists) throw NotFoundFailure('eventNotFound');
-        final preview = EventFirestoreMapper.previewFromSnapshot(
-          snapshot,
-          _institutionPackage,
-        );
-        final minutes =
-            EventFirestoreMapper.complementaryMinutesFromSnapshot(snapshot);
-        if (minutes != null && minutes < 0) {
-          throw InvalidInputFailure('eventDetailsUnavailable');
-        }
-        transaction.set(
-            recordRef,
-            ComplementaryHoursFirestoreMapper.toMap(
-              ComplementaryHoursRecord(
-                id: eventId,
-                eventName: preview.title,
-                eventDate: preview.startsAt,
-                durationMinutes: minutes,
-              ),
-            ));
-        if (minutes != null && minutes > 0) {
-          transaction.update(accountRef, {
-            'totalComplementaryMinutes': math.max(0, total) + minutes,
-          });
-        }
-        return true;
-      }, timeout: const Duration(seconds: 8));
-      return Success(saved);
-    } on TimeoutException {
-      return Error(RemoteFailure('connectionRequired'));
-    } on Failure catch (failure) {
-      return Error(failure);
-    } on FirebaseException catch (error) {
-      if (FirestoreAccess.networkError(error)) {
-        return Error(RemoteFailure('connectionRequired'));
+      if (!addedToPersonalHistory) {
+        final batch = _firestore.batch()
+          ..delete(recordRef)
+          ..update(accountRef, {'totalComplementaryMinutes': othersTotal});
+        await batch.commit();
+        return const Success(false);
       }
+
+      final eventSnapshot = await _events.doc(eventId).get();
+      if (!eventSnapshot.exists) return Error(NotFoundFailure('eventNotFound'));
+
+      final preview = EventFirestoreMapper.previewFromSnapshot(
+        eventSnapshot,
+        _institutionPackage,
+      );
+      final complementaryMinutes =
+          EventFirestoreMapper.complementaryMinutesFromSnapshot(eventSnapshot);
+
+      final batch = _firestore.batch()
+        ..set(
+          recordRef,
+          ComplementaryHoursFirestoreMapper.toMap(
+            ComplementaryHoursRecord(
+              id: eventId,
+              eventName: preview.title,
+              eventDate: preview.startsAt,
+              durationMinutes: complementaryMinutes,
+            ),
+          ),
+        )
+        ..update(accountRef, {
+          'totalComplementaryMinutes':
+              othersTotal + (complementaryMinutes ?? 0),
+        });
+      await batch.commit();
+
+      return const Success(true);
+    } on FirebaseException {
       return Error(RemoteFailure('eventDetailsUnavailable'));
     } catch (_) {
       return Error(RemoteFailure('eventDetailsUnavailable'));

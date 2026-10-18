@@ -184,6 +184,13 @@ class _CheckEmailPageState extends State<CheckEmailPage>
   }
 
   Future<void> _handlePop() async {
+    if (widget.args.flow == EmailVerificationFlow.register &&
+        !_viewModel.state.confirmed.value) {
+      await _viewModel.commands.cancelRegistration(
+        email: widget.args.email,
+        flow: widget.args.flow,
+      );
+    }
     await _contentController.reverse();
     if (mounted) context.pop(false);
   }
