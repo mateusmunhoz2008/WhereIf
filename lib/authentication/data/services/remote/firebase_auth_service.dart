@@ -11,6 +11,7 @@ import 'package:autth_injustice_app/account/domain/models/account_name.dart';
 import 'package:autth_injustice_app/authentication/domain/models/auth_session.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 
 import 'i_auth_service.dart';
@@ -302,6 +303,9 @@ class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
 
     if (error is fb.FirebaseAuthException) {
       return switch (error.code) {
+        'popup-closed-by-user' ||
+        'cancelled-popup-request' =>
+          DefaultFailure('authGoogleCanceled'),
         'invalid-credential' ||
         'invalid-email' ||
         'user-not-found' ||
@@ -321,8 +325,12 @@ class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
 
   Future<void> _initializeGoogleSignIn() async {
     final pending = _googleInitialization ??= _googleSignIn.initialize(
-      serverClientId:
-          _googleServerClientId.isEmpty ? null : _googleServerClientId,
+      clientId: kIsWeb && _googleServerClientId.isNotEmpty
+          ? _googleServerClientId
+          : null,
+      serverClientId: !kIsWeb && _googleServerClientId.isNotEmpty
+          ? _googleServerClientId
+          : null,
     );
     try {
       await pending;
@@ -501,6 +509,16 @@ class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
   @override
   Future<AuthSessionResult> signInWithGoogle() {
     return _runLogin(() async {
+      if (kIsWeb) {
+        // Na web, authenticate() não é suportado. O popup do Firebase Auth
+        // faz o mesmo papel e não precisa de serverClientId.
+        final userCredential =
+            await _firebaseAuth.signInWithPopup(fb.GoogleAuthProvider());
+        final user = userCredential.user;
+        if (user == null) throw DefaultFailure('authUnexpectedError');
+        return _buildSession(user);
+      }
+
       await _initializeGoogleSignIn();
       final googleUser = await _googleSignIn.authenticate();
       final googleAuth = googleUser.authentication;
