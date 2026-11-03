@@ -20,4 +20,12 @@ class AccountSecurityRepositoryImpl implements IAccountSecurityRepository {
   ) {
     return _service.requestEmailChange(params);
   }
+
+  @override
+  AccountCredentialInfo get credentialInfo => _service.credentialInfo;
+
+  @override
+  Future<AccountSecurityResult> deleteAccount(DeleteAccountParams params) {
+    return _service.deleteAccount(params);
+  }
 }

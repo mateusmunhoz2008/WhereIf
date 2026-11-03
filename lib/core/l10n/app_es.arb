@@ -596,7 +596,13 @@
   "mapEventDetails": "Ver evento",
   "mapLocationUnavailable": "Este lugar no está disponible en el mapa actual.",
   "mapFloorEventCount": "{count, plural, =1 {1 evento} other {{count} eventos}}",
-  "@mapFloorEventCount": {"placeholders": {"count": {"type": "int"}}},
+  "@mapFloorEventCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@onboardingProgress": {
     "description": "Accessible onboarding progress label",
     "placeholders": {
@@ -607,5 +613,17 @@
         "type": "int"
       }
     }
-  }
+  },
+  "accountDeleteTitle": "¿Eliminar cuenta?",
+  "accountDeleteMessage": "Se borrarán tu perfil, tus horas complementarias y tus notificaciones leídas. Esta acción no se puede deshacer.",
+  "accountDeleted": "Cuenta eliminada.",
+  "accountManagedByGoogle": "Tu cuenta usa el inicio de sesión de Google. El correo y la contraseña los gestiona Google.",
+  "authEmailNotVerified": "Confirma tu correo antes de entrar. Si no recibiste el enlace, regístrate de nuevo con el mismo correo y contraseña.",
+  "authGoogleAccountMismatch": "Elige la misma cuenta de Google con la que iniciaste sesión.",
+  "authRequiresRecentLogin": "Por seguridad, inicia sesión de nuevo e inténtalo otra vez.",
+  "emailVerificationCheckFailed": "No se pudo verificar el correo. Inténtalo de nuevo.",
+  "accountCurrentPasswordInvalid": "La contraseña actual es incorrecta.",
+  "accountEmailSameAsCurrent": "El nuevo correo es igual al actual.",
+  "accountPasswordNotAvailable": "Esta cuenta no usa contraseña.",
+  "accountDeleteError": "No se pudo eliminar la cuenta. Inténtalo de nuevo."
 }

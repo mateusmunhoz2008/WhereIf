@@ -603,7 +603,13 @@
   "mapEventDetails": "View event",
   "mapLocationUnavailable": "This location is not available on the current map.",
   "mapFloorEventCount": "{count, plural, =1 {1 event} other {{count} events}}",
-  "@mapFloorEventCount": {"placeholders": {"count": {"type": "int"}}},
+  "@mapFloorEventCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@onboardingProgress": {
     "description": "Accessible onboarding progress label",
     "placeholders": {
@@ -614,5 +620,17 @@
         "type": "int"
       }
     }
-  }
+  },
+  "accountDeleteTitle": "Delete account?",
+  "accountDeleteMessage": "Your profile, complementary hours and read notifications will be erased. This can't be undone.",
+  "accountDeleted": "Account deleted.",
+  "accountManagedByGoogle": "Your account uses Google sign-in. Email and password are managed by Google.",
+  "authEmailNotVerified": "Confirm your email before signing in. If you didn't get the link, sign up again with the same email and password.",
+  "authGoogleAccountMismatch": "Choose the same Google account you signed in with.",
+  "authRequiresRecentLogin": "For security, sign in again and retry.",
+  "emailVerificationCheckFailed": "Couldn't check the email. Please try again.",
+  "accountCurrentPasswordInvalid": "The current password is incorrect.",
+  "accountEmailSameAsCurrent": "The new email is the same as the current one.",
+  "accountPasswordNotAvailable": "This account doesn't use a password.",
+  "accountDeleteError": "Couldn't delete the account. Please try again."
 }

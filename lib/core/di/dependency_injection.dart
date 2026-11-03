@@ -82,6 +82,7 @@ import 'package:autth_injustice_app/user_management/domain/usecases/i_user_manag
 import 'package:autth_injustice_app/user_management/domain/usecases/user_management_usecases_impl.dart';
 import 'package:autth_injustice_app/user_management/presentation/viewmodels/user_management_viewmodel.dart';
 import 'package:autth_injustice_app/user_management/presentation/viewmodels/user_details/user_details_viewmodel.dart';
+import 'package:autth_injustice_app/settings/presentation/viewmodels/delete_account/delete_account_viewmodel.dart';
 
 final injector = AutoInjector();
 
@@ -266,4 +267,6 @@ void _registerSettings() {
   injector.addSingleton<ChangeEmailViewModel>(ChangeEmailViewModel.new);
   injector.addSingleton<ChangeNameViewModel>(ChangeNameViewModel.new);
   injector.addSingleton<ChangePasswordViewModel>(ChangePasswordViewModel.new);
+  injector.addSingleton<IPermanentlyDeleteAccountUseCase>(PermanentlyDeleteAccountUseCase.new,);
+  injector.addSingleton<DeleteAccountViewModel>(DeleteAccountViewModel.new);
 }

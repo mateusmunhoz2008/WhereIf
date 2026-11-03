@@ -87,6 +87,27 @@ extension AppLocalizationsErrorExt on BuildContext {
       case 'passwordStrengthExcellent':
         return l10n.passwordStrengthExcellent;
 
+      // Login e verificação de e-mail
+      case 'authEmailNotVerified':
+        return l10n.authEmailNotVerified;
+      case 'authGoogleAccountMismatch':
+        return l10n.authGoogleAccountMismatch;
+      case 'authRequiresRecentLogin':
+        return l10n.authRequiresRecentLogin;
+      case 'emailVerificationCheckFailed':
+        return l10n.emailVerificationCheckFailed;
+
+      // Segurança e exclusão de conta
+      case 'accountCurrentPasswordInvalid':
+        return l10n.accountCurrentPasswordInvalid;
+      case 'accountCurrentPasswordRequired':
+        return l10n.accountCurrentPasswordRequired;
+      case 'accountEmailSameAsCurrent':
+        return l10n.accountEmailSameAsCurrent;
+      case 'accountPasswordNotAvailable':
+        return l10n.accountPasswordNotAvailable;
+      case 'accountDeleteError':
+        return l10n.accountDeleteError;
       default:
         return key;
     }

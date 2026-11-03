@@ -1455,4 +1455,48 @@ class AppLocalizationsEs extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get accountDeleteTitle => '¿Eliminar cuenta?';
+
+  @override
+  String get accountDeleteMessage =>
+      'Se borrarán tu perfil, tus horas complementarias y tus notificaciones leídas. Esta acción no se puede deshacer.';
+
+  @override
+  String get accountDeleted => 'Cuenta eliminada.';
+
+  @override
+  String get accountManagedByGoogle =>
+      'Tu cuenta usa el inicio de sesión de Google. El correo y la contraseña los gestiona Google.';
+
+  @override
+  String get authEmailNotVerified =>
+      'Confirma tu correo antes de entrar. Si no recibiste el enlace, regístrate de nuevo con el mismo correo y contraseña.';
+
+  @override
+  String get authGoogleAccountMismatch =>
+      'Elige la misma cuenta de Google con la que iniciaste sesión.';
+
+  @override
+  String get authRequiresRecentLogin =>
+      'Por seguridad, inicia sesión de nuevo e inténtalo otra vez.';
+
+  @override
+  String get emailVerificationCheckFailed =>
+      'No se pudo verificar el correo. Inténtalo de nuevo.';
+
+  @override
+  String get accountCurrentPasswordInvalid =>
+      'La contraseña actual es incorrecta.';
+
+  @override
+  String get accountEmailSameAsCurrent => 'El nuevo correo es igual al actual.';
+
+  @override
+  String get accountPasswordNotAvailable => 'Esta cuenta no usa contraseña.';
+
+  @override
+  String get accountDeleteError =>
+      'No se pudo eliminar la cuenta. Inténtalo de nuevo.';
 }

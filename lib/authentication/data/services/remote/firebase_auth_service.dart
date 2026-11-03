@@ -315,6 +315,7 @@ class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
         'weak-password' => DefaultFailure('authWeakPassword'),
         'network-request-failed' => DefaultFailure('authNetworkError'),
         'too-many-requests' => DefaultFailure('authTooManyRequests'),
+        'user-mismatch' => DefaultFailure('authGoogleAccountMismatch'),
         'user-disabled' => DefaultFailure('authAccountDisabled'),
         _ => DefaultFailure('authUnexpectedError'),
       };
@@ -359,9 +360,6 @@ class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
     }
   }
 
-  /// Cria o usuário. Se o e-mail já existe mas o cadastro anterior nunca foi
-  /// verificado (app fechado no meio) e a senha confere, retoma esse cadastro
-  /// em vez de travar em "e-mail já em uso".
   Future<({fb.User user, bool created})> _createOrResumeRegistration({
     required String email,
     required String password,
@@ -579,6 +577,28 @@ class FirebaseAuthService with WidgetsBindingObserver implements IAuthService {
         rethrow;
       }
     }, deadline: const Duration(seconds: 30), publishSession: false);
+  }
+
+  @override
+  Future<VoidResult> reauthenticateWithGoogle() async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) return Error(UnauthenticatedFailure());
+
+    try {
+      if (kIsWeb) {
+        await user.reauthenticateWithPopup(fb.GoogleAuthProvider());
+      } else {
+        await _initializeGoogleSignIn();
+        final googleUser = await _googleSignIn.authenticate();
+        final credential = fb.GoogleAuthProvider.credential(
+          idToken: googleUser.authentication.idToken,
+        );
+        await user.reauthenticateWithCredential(credential);
+      }
+      return const Success(null);
+    } catch (error) {
+      return Error(_mapAuthFailure(error));
+    }
   }
 
   @override

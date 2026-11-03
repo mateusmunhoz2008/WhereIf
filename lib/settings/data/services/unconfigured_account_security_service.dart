@@ -18,4 +18,14 @@ class UnconfiguredAccountSecurityService implements IAccountSecurityService {
   ) async {
     return Error(RemoteFailure('authBackendUnavailable'));
   }
+
+  @override
+  AccountCredentialInfo get credentialInfo =>
+      const AccountCredentialInfo(hasPassword: false, hasGoogle: false);
+
+  @override
+  Future<AccountSecurityResult> deleteAccount(
+      DeleteAccountParams params) async {
+    return Error(RemoteFailure('authBackendUnavailable'));
+  }
 }

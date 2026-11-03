@@ -1441,4 +1441,50 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get accountDeleteTitle => 'Delete account?';
+
+  @override
+  String get accountDeleteMessage =>
+      'Your profile, complementary hours and read notifications will be erased. This can\'t be undone.';
+
+  @override
+  String get accountDeleted => 'Account deleted.';
+
+  @override
+  String get accountManagedByGoogle =>
+      'Your account uses Google sign-in. Email and password are managed by Google.';
+
+  @override
+  String get authEmailNotVerified =>
+      'Confirm your email before signing in. If you didn\'t get the link, sign up again with the same email and password.';
+
+  @override
+  String get authGoogleAccountMismatch =>
+      'Choose the same Google account you signed in with.';
+
+  @override
+  String get authRequiresRecentLogin =>
+      'For security, sign in again and retry.';
+
+  @override
+  String get emailVerificationCheckFailed =>
+      'Couldn\'t check the email. Please try again.';
+
+  @override
+  String get accountCurrentPasswordInvalid =>
+      'The current password is incorrect.';
+
+  @override
+  String get accountEmailSameAsCurrent =>
+      'The new email is the same as the current one.';
+
+  @override
+  String get accountPasswordNotAvailable =>
+      'This account doesn\'t use a password.';
+
+  @override
+  String get accountDeleteError =>
+      'Couldn\'t delete the account. Please try again.';
 }

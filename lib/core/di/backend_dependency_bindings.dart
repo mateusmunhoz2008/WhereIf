@@ -19,11 +19,11 @@ import 'package:autth_injustice_app/institution/domain/institution_package.dart'
 import 'package:autth_injustice_app/institution/domain/models/institution_backend_config.dart';
 import 'package:autth_injustice_app/notifications/data/services/i_notifications_service.dart';
 import 'package:autth_injustice_app/settings/data/services/i_account_security_service.dart';
-import 'package:autth_injustice_app/settings/data/services/unconfigured_account_security_service.dart';
 import 'package:autth_injustice_app/user_management/data/services/i_user_management_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:autth_injustice_app/settings/data/services/firebase_account_security_service.dart';
 
 abstract final class BackendDependencyBindings {
   static void register(
@@ -77,8 +77,7 @@ abstract final class BackendDependencyBindings {
         UnconfiguredPasswordResetService.new,
       )
       ..addSingleton<IAccountSecurityService>(
-        UnconfiguredAccountSecurityService.new,
-      )
+          FirebaseAccountSecurityService.new)
       ..addSingleton<IEventsService>(
         () => EventsFirestoreService(
           firestore: firestore,

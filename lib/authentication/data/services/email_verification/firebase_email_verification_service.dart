@@ -3,23 +3,21 @@ import 'package:autth_injustice_app/authentication/data/services/remote/i_auth_s
 import 'package:autth_injustice_app/authentication/domain/email_verification_types.dart';
 import 'package:autth_injustice_app/core/failure/failure.dart';
 import 'package:autth_injustice_app/core/patterns/result.dart';
+import 'package:autth_injustice_app/account/data/services/i_account_remote_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 
-/// Cobre `register` e `changeEmail` via polling nativo do Firebase Auth
-/// (`reload()` + `emailVerified`/`email`). O fluxo `forgotPassword` não é
-/// suportado por este adaptador (fora de escopo por enquanto).
-///
-/// No fluxo `register`, quando o e-mail é confirmado este serviço pede ao
-/// [IAuthService] para ativar a sessão (cria o documento `/accounts/{uid}`).
 class FirebaseEmailVerificationService implements IEmailVerificationService {
   final fb.FirebaseAuth _firebaseAuth;
   final IAuthService _authService;
+  final IAccountRemoteStorage _accountStorage;
 
   FirebaseEmailVerificationService({
     fb.FirebaseAuth? firebaseAuth,
     required IAuthService authService,
+    required IAccountRemoteStorage accountStorage,
   })  : _firebaseAuth = firebaseAuth ?? fb.FirebaseAuth.instance,
-        _authService = authService;
+        _authService = authService,
+        _accountStorage = accountStorage;
 
   @override
   Future<EmailVerificationStatusResult> getStatus(
@@ -63,9 +61,22 @@ class FirebaseEmailVerificationService implements IEmailVerificationService {
     if (confirmed && params.flow == EmailVerificationFlow.register) {
       await _authService.initSession();
       if (_authService.currentSession == null) {
-        // Verificou, mas não conseguiu abrir a sessão (ex.: Firestore
-        // indisponível). O botão "tentar novamente" da tela repete este passo.
         return Error(RemoteFailure('accountLoadError'));
+      }
+    }
+
+    if (confirmed && params.flow == EmailVerificationFlow.changeEmail) {
+      final account = _authService.currentSession?.account;
+      if (account != null &&
+          account.email.toLowerCase() != params.email.toLowerCase()) {
+        final saved = await _accountStorage.updateAccount(
+          account.copyWith(
+            email: refreshed.email ?? params.email,
+            updatedAt: DateTime.now(),
+          ),
+        );
+        if (saved case Error<void, Failure>(:final value)) return Error(value);
+        await _authService.initSession(); // recarrega o e-mail novo na sessão
       }
     }
 

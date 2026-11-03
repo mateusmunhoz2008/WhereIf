@@ -23,4 +23,6 @@ abstract interface class IAuthService {
   });
 
   Future<VoidResult> signOut();
+
+  Future<VoidResult> reauthenticateWithGoogle();
 }

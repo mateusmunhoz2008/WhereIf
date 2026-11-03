@@ -27,3 +27,17 @@ final class RequestEmailChangeUseCase implements IRequestEmailChangeUseCase {
     return _repository.requestEmailChange(params);
   }
 }
+
+final class PermanentlyDeleteAccountUseCase
+    implements IPermanentlyDeleteAccountUseCase {
+  final IAccountSecurityRepository _repository;
+
+  const PermanentlyDeleteAccountUseCase({
+    required IAccountSecurityRepository accountSecurityRepository,
+  }) : _repository = accountSecurityRepository;
+
+  @override
+  Future<AccountSecurityResult> call(DeleteAccountParams params) {
+    return _repository.deleteAccount(params);
+  }
+}

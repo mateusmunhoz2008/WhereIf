@@ -6,4 +6,7 @@ abstract interface class IAccountSecurityRepository {
   Future<AccountSecurityResult> requestEmailChange(
     RequestEmailChangeParams params,
   );
+
+  AccountCredentialInfo get credentialInfo;
+  Future<AccountSecurityResult> deleteAccount(DeleteAccountParams params);
 }

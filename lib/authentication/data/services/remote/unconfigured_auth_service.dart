@@ -48,4 +48,9 @@ class UnconfiguredAuthService implements IAuthService {
     _session.value = null;
     return const Success(null);
   }
+
+  @override
+  Future<VoidResult> reauthenticateWithGoogle() async {
+    return Error(RemoteFailure('authBackendUnavailable'));
+  }
 }

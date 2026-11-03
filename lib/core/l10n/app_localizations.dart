@@ -2685,6 +2685,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1 {1 event} other {{count} events}}'**
   String mapFloorEventCount(int count);
+
+  /// No description provided for @accountDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account?'**
+  String get accountDeleteTitle;
+
+  /// No description provided for @accountDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile, complementary hours and read notifications will be erased. This can\'t be undone.'**
+  String get accountDeleteMessage;
+
+  /// No description provided for @accountDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted.'**
+  String get accountDeleted;
+
+  /// No description provided for @accountManagedByGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account uses Google sign-in. Email and password are managed by Google.'**
+  String get accountManagedByGoogle;
+
+  /// No description provided for @authEmailNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your email before signing in. If you didn\'t get the link, sign up again with the same email and password.'**
+  String get authEmailNotVerified;
+
+  /// No description provided for @authGoogleAccountMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the same Google account you signed in with.'**
+  String get authGoogleAccountMismatch;
+
+  /// No description provided for @authRequiresRecentLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'For security, sign in again and retry.'**
+  String get authRequiresRecentLogin;
+
+  /// No description provided for @emailVerificationCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check the email. Please try again.'**
+  String get emailVerificationCheckFailed;
+
+  /// No description provided for @accountCurrentPasswordInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The current password is incorrect.'**
+  String get accountCurrentPasswordInvalid;
+
+  /// No description provided for @accountEmailSameAsCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'The new email is the same as the current one.'**
+  String get accountEmailSameAsCurrent;
+
+  /// No description provided for @accountPasswordNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This account doesn\'t use a password.'**
+  String get accountPasswordNotAvailable;
+
+  /// No description provided for @accountDeleteError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the account. Please try again.'**
+  String get accountDeleteError;
 }
 
 class _AppLocalizationsDelegate

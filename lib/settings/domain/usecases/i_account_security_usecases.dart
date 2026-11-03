@@ -6,3 +6,6 @@ abstract interface class IChangePasswordUseCase
 
 abstract interface class IRequestEmailChangeUseCase
     implements IUseCase<AccountSecurityResult, RequestEmailChangeParams> {}
+
+abstract interface class IPermanentlyDeleteAccountUseCase
+    implements IUseCase<AccountSecurityResult, DeleteAccountParams> {}

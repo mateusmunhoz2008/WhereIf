@@ -188,7 +188,7 @@ class _CheckEmailPageState extends State<CheckEmailPage>
         !_viewModel.state.confirmed.value) {
       await _viewModel.commands.cancelRegistration(
         email: widget.args.email,
-        flow: widget.args.flow,
+        flow: widget.args.flow, 
       );
     }
     await _contentController.reverse();

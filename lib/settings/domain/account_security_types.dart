@@ -12,3 +12,17 @@ typedef RequestEmailChangeParams = ({
   String currentPassword,
   String newEmail,
 });
+
+typedef DeleteAccountParams = ({String? currentPassword});
+
+class AccountCredentialInfo {
+  final bool hasPassword;
+  final bool hasGoogle;
+
+  const AccountCredentialInfo({
+    required this.hasPassword,
+    required this.hasGoogle,
+  });
+
+  bool get isGoogleOnly => hasGoogle && !hasPassword;
+}

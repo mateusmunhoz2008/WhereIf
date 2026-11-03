@@ -596,7 +596,13 @@
   "mapEventDetails": "Ver evento",
   "mapLocationUnavailable": "Esse local não está disponível no mapa atual.",
   "mapFloorEventCount": "{count, plural, =1 {1 evento} other {{count} eventos}}",
-  "@mapFloorEventCount": {"placeholders": {"count": {"type": "int"}}},
+  "@mapFloorEventCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@onboardingProgress": {
     "description": "Accessible onboarding progress label",
     "placeholders": {
@@ -607,5 +613,17 @@
         "type": "int"
       }
     }
-  }
+  },
+  "accountDeleteTitle": "Excluir conta?",
+  "accountDeleteMessage": "Seu perfil, suas horas complementares e suas notificações lidas serão apagados. Essa ação não pode ser desfeita.",
+  "accountDeleted": "Conta excluída.",
+  "accountManagedByGoogle": "Sua conta usa o login do Google. O e-mail e a senha são gerenciados pelo Google.",
+  "authEmailNotVerified": "Confirme seu e-mail antes de entrar. Se não recebeu o link, faça o cadastro novamente com o mesmo e-mail e senha.",
+  "authGoogleAccountMismatch": "Escolha a mesma conta Google usada para entrar.",
+  "authRequiresRecentLogin": "Por segurança, entre novamente e tente de novo.",
+  "emailVerificationCheckFailed": "Não foi possível verificar o e-mail. Tente novamente.",
+  "accountCurrentPasswordInvalid": "A senha atual está incorreta.",
+  "accountEmailSameAsCurrent": "O novo e-mail é igual ao atual.",
+  "accountPasswordNotAvailable": "Essa conta não usa senha.",
+  "accountDeleteError": "Não foi possível excluir a conta. Tente novamente."
 }
