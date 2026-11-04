@@ -31,6 +31,22 @@ class NotificationsFirestoreService implements INotificationsService {
         .collection('readNotifications');
   }
 
+  Future<Timestamp?> _accountCreatedAt(String uid) async {
+    final snapshot = await _firestore.collection('accounts').doc(uid).get();
+    final value = snapshot.data()?['createdAt'];
+    return value is Timestamp ? value : null;
+  }
+
+  Future<QuerySnapshot<Map<String, dynamic>>> _visibleFeed(String uid) async {
+    final createdAt = await _accountCreatedAt(uid);
+
+    Query<Map<String, dynamic>> query = _notifications;
+    if (createdAt != null) {
+      query = query.where('createdAt', isGreaterThanOrEqualTo: createdAt);
+    }
+    return query.orderBy('createdAt', descending: true).limit(_feedLimit).get();
+  }
+
   @override
   Future<NotificationsResult> getNotifications(String uid) async {
     try {
@@ -38,10 +54,8 @@ class NotificationsFirestoreService implements INotificationsService {
         return Error(UnauthenticatedFailure());
       }
       final results = await Future.wait([
-        FirestoreAccess.query(_notifications
-            .orderBy('createdAt', descending: true)
-            .limit(_feedLimit)),
-        FirestoreAccess.query(_readMarkers(uid)),
+        _visibleFeed(uid),
+        _readMarkers(uid).get(),
       ]);
       final feedSnapshot = results[0];
       final readSnapshot = results[1];
@@ -101,9 +115,7 @@ class NotificationsFirestoreService implements INotificationsService {
   @override
   Future<NotificationActionResult> markAllAsRead(String uid) async {
     try {
-      final feedSnapshot = await FirestoreAccess.query(_notifications
-          .orderBy('createdAt', descending: true)
-          .limit(_feedLimit));
+      final feedSnapshot = await _visibleFeed(uid);
       if (_firebaseAuth.currentUser?.uid != uid) {
         return Error(UnauthenticatedFailure());
       }
